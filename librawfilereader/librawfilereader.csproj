@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="ThermoFisher.CommonCore.BackgroundSubtraction">
+      <HintPath>lib/ThermoFisher.CommonCore.BackgroundSubtraction.dll</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.Data">
+      <HintPath>lib/ThermoFisher.CommonCore.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.MassPrecisionEstimator">
+      <HintPath>lib/ThermoFisher.CommonCore.MassPrecisionEstimator.dll</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.RawFileReader">
+      <HintPath>lib/ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenMcdf">
+      <HintPath>lib/OpenMcdf.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenMcdf.Extensions">
+      <HintPath>lib/OpenMcdf.Extensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.FlatBuffers" Version="23.5.26" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,67 @@
+namespace librawfilereader;
+
+enum Polarity : int8 {
+    Positive = 1,
+    Negative = -1,
+    Unknown = 0
+}
+
+enum SpectrumMode : int8 {
+    Unknown = 0,
+    Centroid = 1,
+    Profile = 2
+}
+
+enum DissociationMethod : uint8 {
+    Unknown = 0,
+    CID = 1,
+    HCD = 2,
+    ETD = 4,
+    ETCID = 5,
+    ETHCD = 6,
+
+    ECD = 8,
+    ECCID = 9,
+    ECHCD = 10,
+
+    NETD = 16,
+    PTD = 32,
+    MPD = 64,
+}
+
+struct IsolationWindowT {
+    lower: float64;
+    target: float64;
+    upper: float64;
+}
+
+struct ActivationT {
+    dissociation_method: DissociationMethod;
+    collision_energy: float64;
+}
+
+table SpectrumData {
+    mz: [float64];
+    intensity: [float32];
+}
+
+struct PrecursorT {
+    mz: float64;
+    intensity: float32;
+    charge: int32;
+    parent_index: int32;
+    isolation_window: IsolationWindowT;
+    activation: ActivationT;
+}
+
+table SpectrumDescription {
+    index: int32;
+    ms_level: uint8 = 2;
+    time: float64;
+    polarity: Polarity = Positive;
+    mode: SpectrumMode = Profile;
+    precursor: PrecursorT;
+    data: SpectrumData;
+}
+
+root_type SpectrumDescription;
