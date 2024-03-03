@@ -4,7 +4,9 @@ use std::fs;
 use std::path;
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock, RwLock};
+
 use tempdir::{self, TempDir};
+use include_dir::{Dir, include_dir};
 
 use netcorehost::{
     nethost, pdcstring::PdCString,
@@ -12,6 +14,8 @@ use netcorehost::{
 };
 
 use crate::buffer::configure_allocator;
+
+static DOTNET_LIB_DIR: Dir<'_> = include_dir!("lib/");
 
 const PREFIX: &'static str = "librawfilereader/bin/Release";
 
@@ -128,6 +132,10 @@ pub fn load_runtime() -> Arc<AssemblyDelegateLoader> {
     let delegate_loader = Arc::new(context
         .get_delegate_loader_for_assembly(assembly(NET_VERSION))
         .unwrap());
+
+    DOTNET_LIB_DIR.entries().iter().for_each(|e| {
+        eprintln!("Entry {}", e.path().display());
+    });
 
     configure_allocator(&delegate_loader);
     delegate_loader

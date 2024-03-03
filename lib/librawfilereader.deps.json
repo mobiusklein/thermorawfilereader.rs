@@ -1,0 +1,125 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v7.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v7.0": {
+      "librawfilereader/1.0.0": {
+        "dependencies": {
+          "Google.FlatBuffers": "23.5.26",
+          "OpenMcdf": "2.2.1.2",
+          "OpenMcdf.Extensions": "2.1.6.28924",
+          "ThermoFisher.CommonCore.BackgroundSubtraction": "7.1.21.0",
+          "ThermoFisher.CommonCore.Data": "7.1.21.0",
+          "ThermoFisher.CommonCore.MassPrecisionEstimator": "7.1.21.0",
+          "ThermoFisher.CommonCore.RawFileReader": "7.1.21.0"
+        },
+        "runtime": {
+          "librawfilereader.dll": {}
+        }
+      },
+      "Google.FlatBuffers/23.5.26": {
+        "runtime": {
+          "lib/netstandard2.1/Google.FlatBuffers.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "OpenMcdf/2.2.1.2": {
+        "runtime": {
+          "OpenMcdf.dll": {
+            "assemblyVersion": "2.2.1.2",
+            "fileVersion": "2.2.1.3"
+          }
+        }
+      },
+      "OpenMcdf.Extensions/2.1.6.28924": {
+        "runtime": {
+          "OpenMcdf.Extensions.dll": {
+            "assemblyVersion": "2.1.6.28924",
+            "fileVersion": "2.2.1.3"
+          }
+        }
+      },
+      "ThermoFisher.CommonCore.BackgroundSubtraction/7.1.21.0": {
+        "runtime": {
+          "ThermoFisher.CommonCore.BackgroundSubtraction.dll": {
+            "assemblyVersion": "7.1.21.0",
+            "fileVersion": "7.1.21.0"
+          }
+        }
+      },
+      "ThermoFisher.CommonCore.Data/7.1.21.0": {
+        "runtime": {
+          "ThermoFisher.CommonCore.Data.dll": {
+            "assemblyVersion": "7.1.21.0",
+            "fileVersion": "7.1.21.0"
+          }
+        }
+      },
+      "ThermoFisher.CommonCore.MassPrecisionEstimator/7.1.21.0": {
+        "runtime": {
+          "ThermoFisher.CommonCore.MassPrecisionEstimator.dll": {
+            "assemblyVersion": "7.1.21.0",
+            "fileVersion": "7.1.21.0"
+          }
+        }
+      },
+      "ThermoFisher.CommonCore.RawFileReader/7.1.21.0": {
+        "runtime": {
+          "ThermoFisher.CommonCore.RawFileReader.dll": {
+            "assemblyVersion": "7.1.21.0",
+            "fileVersion": "7.1.21.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "librawfilereader/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Google.FlatBuffers/23.5.26": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-pd/qgndhZl3B421wiffK09MvZ3c7sS2ZNusjzBJudpaJXGM9Gqfe2fYugYNAkN7c48BLo1E0Q4jefkOsaz1dfQ==",
+      "path": "google.flatbuffers/23.5.26",
+      "hashPath": "google.flatbuffers.23.5.26.nupkg.sha512"
+    },
+    "OpenMcdf/2.2.1.2": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "OpenMcdf.Extensions/2.1.6.28924": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ThermoFisher.CommonCore.BackgroundSubtraction/7.1.21.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ThermoFisher.CommonCore.Data/7.1.21.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ThermoFisher.CommonCore.MassPrecisionEstimator/7.1.21.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ThermoFisher.CommonCore.RawFileReader/7.1.21.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

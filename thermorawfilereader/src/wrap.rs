@@ -12,6 +12,7 @@ use netcorehost::{
 use crate::gen::schema_generated::librawfilereader::root_as_spectrum_description;
 use crate::buffer::{RawVec, configure_allocator};
 use crate::schema::{root_as_spectrum_description_unchecked, Polarity, PrecursorT, SpectrumDescription, SpectrumMode};
+use crate::runtime::load_runtime;
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -199,29 +200,29 @@ impl RawFileReaderHandle {
 }
 
 
-const PREFIX: &'static str = "librawfilereader/bin/Release";
+// const PREFIX: &'static str = "librawfilereader/bin/Release";
 
-fn runtime_cfg(version: &str) -> PdCString {
-    format!("{PREFIX}/{version}/librawfilereader.runtimeconfig.json").parse().unwrap()
-}
+// fn runtime_cfg(version: &str) -> PdCString {
+//     format!("{PREFIX}/{version}/librawfilereader.runtimeconfig.json").parse().unwrap()
+// }
 
-fn assembly(version: &str) -> PdCString {
-    format!("{PREFIX}/{version}/librawfilereader.dll").parse().unwrap()
-}
+// fn assembly(version: &str) -> PdCString {
+//     format!("{PREFIX}/{version}/librawfilereader.dll").parse().unwrap()
+// }
 
-const NET_VERSION: &str = "net7.0";
+// const NET_VERSION: &str = "net7.0";
 
 
-pub fn load_runtime() -> Arc<AssemblyDelegateLoader> {
-    let hostfxr = nethost::load_hostfxr().unwrap();
-    let context = hostfxr
-        .initialize_for_runtime_config(runtime_cfg(NET_VERSION))
-        .unwrap();
+// pub fn load_runtime() -> Arc<AssemblyDelegateLoader> {
+//     let hostfxr = nethost::load_hostfxr().unwrap();
+//     let context = hostfxr
+//         .initialize_for_runtime_config(runtime_cfg(NET_VERSION))
+//         .unwrap();
 
-    let delegate_loader = Arc::new(context
-        .get_delegate_loader_for_assembly(assembly(NET_VERSION))
-        .unwrap());
+//     let delegate_loader = Arc::new(context
+//         .get_delegate_loader_for_assembly(assembly(NET_VERSION))
+//         .unwrap());
 
-    configure_allocator(&delegate_loader);
-    delegate_loader
-}
+//     configure_allocator(&delegate_loader);
+//     delegate_loader
+// }
