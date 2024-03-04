@@ -1,7 +1,7 @@
 use std::ffi::c_void;
 use std::fmt::Display;
 use std::path::PathBuf;
-use std::ptr;
+use std::{io, ptr};
 use std::sync::Arc;
 
 use netcorehost::{
@@ -96,7 +96,7 @@ impl Drop for RawFileReaderHandle {
 }
 
 impl RawFileReaderHandle {
-    pub fn open<P: Into<PathBuf>>(path: P) -> Self {
+    pub fn open<P: Into<PathBuf>>(path: P) -> io::Result<Self> {
         let context = get_runtime();
         let open_fn = context.get_function::<fn(text_ptr: *const u8, text_length: i32) -> *mut c_void>(
             pdcstr!("librawfilereader.Exports, librawfilereader"),
@@ -107,10 +107,19 @@ impl RawFileReaderHandle {
         let path = path.to_string_lossy().to_string();
         let raw_file_reader = open_fn(path.as_ptr(), path.len() as i32);
 
-        Self {
+        let handle = Self {
             raw_file_reader,
             context
+        };
+
+        match handle.status() {
+            RawFileReaderError::Ok => {},
+            RawFileReaderError::FileNotFound => return Err(io::Error::new(io::ErrorKind::NotFound, "File not found")),
+            RawFileReaderError::InvalidFormat => return Err(io::Error::new(io::ErrorKind::InvalidData, "File does not appear to be a valid RAW file")),
+            RawFileReaderError::Error => return Err(io::Error::new(io::ErrorKind::Other, "An unknown error occured")),
         }
+
+        Ok(handle)
     }
 
     pub fn first_spectrum(&self) -> i32 {
@@ -172,7 +181,7 @@ impl RawFileReaderHandle {
             pdcstr!("SpectrumDescriptionFor"),
             pdcstr!("librawfilereader.Exports+BufferFn, librawfilereader")
         ).unwrap();
-        let buffer = buffer_fn(self.raw_file_reader, index);
+        let buffer = buffer_fn(self.raw_file_reader, index + 1);
         RawSpectrumWrapper::new(buffer)
     }
 
@@ -286,5 +295,25 @@ impl<'a> IntoIterator for &'a RawFileReaderHandle {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    use std::io;
+
+    use super::*;
+
+    #[test]
+    fn test_read() -> io::Result<()> {
+        let handle = RawFileReaderHandle::open("../tests/data/small.RAW")?;
+
+        assert_eq!(handle.len(), 48);
+        let buf = handle.get(5);
+        let descr = buf.view();
+        assert_eq!(descr.index(), 5);
+
+        Ok(())
     }
 }

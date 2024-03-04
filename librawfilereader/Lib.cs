@@ -274,7 +274,7 @@ namespace librawfilereader
             var filterStringOffset = builder.CreateString(filterString);
             SpectrumDescription.StartSpectrumDescription(builder);
             SpectrumDescription.AddData(builder, dataOffset);
-            SpectrumDescription.AddIndex(builder, stats.ScanNumber);
+            SpectrumDescription.AddIndex(builder, stats.ScanNumber - 1);
             SpectrumDescription.AddMsLevel(builder, (byte)level);
             SpectrumDescription.AddPolarity(builder, polarity);
             SpectrumDescription.AddMode(builder, mode);
