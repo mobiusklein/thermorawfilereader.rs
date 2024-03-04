@@ -2,7 +2,7 @@
 use std::fs;
 use std::io::Write;
 use std::io::{self, prelude::*};
-use std::path;
+use std::path::{self, Path};
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock, RwLock};
 
@@ -117,6 +117,17 @@ impl DotNetLibraryBundle {
 }
 
 static BUNDLE: OnceLock<DotNetLibraryBundle> = OnceLock::new();
+
+pub fn set_runtime_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
+    let path: &Path = path.as_ref();
+    if !path.exists() {
+        fs::DirBuilder::new().create(path)?;
+    }
+
+    let bundle = DotNetLibraryBundle::new(Some(path.to_str().unwrap())).unwrap();
+    BUNDLE.set(bundle);
+    Ok(())
+}
 
 pub fn get_runtime() -> Arc<AssemblyDelegateLoader> {
     let bundle = BUNDLE.get_or_init(|| DotNetLibraryBundle::default());

@@ -62,6 +62,7 @@ table SpectrumDescription {
     mode: SpectrumMode = Profile;
     precursor: PrecursorT;
     data: SpectrumData;
+    filter_string: string;
 }
 
 root_type SpectrumDescription;

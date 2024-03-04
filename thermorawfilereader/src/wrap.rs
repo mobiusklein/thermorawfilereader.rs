@@ -11,6 +11,7 @@ use netcorehost::{
 
 use dotnetrawfilereader_sys::RawVec;
 
+use crate::get_runtime;
 use crate::gen::schema_generated::librawfilereader::root_as_spectrum_description;
 use crate::schema::{root_as_spectrum_description_unchecked, Polarity, PrecursorT, SpectrumDescription, SpectrumMode};
 
@@ -42,7 +43,6 @@ impl From<u32> for RawFileReaderError {
     }
 }
 
-#[allow(unused)]
 pub struct RawSpectrumWrapper {
     data: RawVec<u8>,
 }
@@ -96,7 +96,8 @@ impl Drop for RawFileReaderHandle {
 }
 
 impl RawFileReaderHandle {
-    pub fn open<P: Into<PathBuf>>(context: Arc<AssemblyDelegateLoader>, path: P) -> Self {
+    pub fn open<P: Into<PathBuf>>(path: P) -> Self {
+        let context = get_runtime();
         let open_fn = context.get_function::<fn(text_ptr: *const u8, text_length: i32) -> *mut c_void>(
             pdcstr!("librawfilereader.Exports, librawfilereader"),
             pdcstr!("Open"),
@@ -179,6 +180,7 @@ impl RawFileReaderHandle {
         let buf = self.get(index);
         let descr = buf.view();
         eprintln!("{}|{:?} -> {:?} | has data? {}", descr.index(), descr.polarity(), descr.precursor(), descr.data().is_some());
+        eprintln!("Filter: {}", descr.filter_string().unwrap());
         descr.data().map(|dat| {
             let intens_opt = dat.intensity();
             let intens = intens_opt.as_ref().unwrap();
@@ -186,6 +188,10 @@ impl RawFileReaderHandle {
             eprintln!("Received {} data points, base peak intensity {}", intens.len(), val);
             ()
         });
+    }
+
+    pub fn iter(&self) -> RawFileReaderIter<'_> {
+        RawFileReaderIter::new(self)
     }
 
     pub fn status(&self) -> RawFileReaderError {
@@ -197,5 +203,88 @@ impl RawFileReaderHandle {
         ).unwrap();
         let code = status_fn(self.raw_file_reader);
         code.into()
+    }
+}
+
+
+pub struct RawFileReaderIter<'a> {
+    handle: &'a RawFileReaderHandle,
+    index: usize,
+    size: usize
+}
+
+impl<'a> RawFileReaderIter<'a> {
+    fn new(handle: &'a RawFileReaderHandle) -> Self {
+        let size = handle.len() as usize;
+        Self {
+            handle,
+            index: 0,
+            size
+        }
+    }
+}
+
+impl<'a> Iterator for RawFileReaderIter<'a> {
+    type Item = RawSpectrumWrapper;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.size {
+            let buffer = self.handle.get(self.index as i32);
+            self.index += 1;
+            Some(buffer)
+        } else {
+            None
+        }
+    }
+}
+
+pub struct RawFileReaderIntoIter {
+    handle: RawFileReaderHandle,
+    index: usize,
+    size: usize
+}
+
+impl RawFileReaderIntoIter {
+    fn new(handle: RawFileReaderHandle) -> Self {
+        let size = handle.len() as usize;
+        Self {
+            handle,
+            index: 0,
+            size
+        }
+    }
+}
+
+impl Iterator for RawFileReaderIntoIter {
+    type Item = RawSpectrumWrapper;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.size {
+            let buffer = self.handle.get(self.index as i32);
+            self.index += 1;
+            Some(buffer)
+        } else {
+            None
+        }
+    }
+}
+
+impl IntoIterator for RawFileReaderHandle {
+    type Item = RawSpectrumWrapper;
+
+    type IntoIter = RawFileReaderIntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        RawFileReaderIntoIter::new(self)
+    }
+}
+
+impl<'a> IntoIterator for &'a RawFileReaderHandle {
+    type Item = RawSpectrumWrapper;
+
+    type IntoIter = RawFileReaderIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }

@@ -270,12 +270,15 @@ namespace librawfilereader
 
             var builder = new FlatBufferBuilder(1024);
             var dataOffset = LoadSpectrumData(scanNumber, stats, builder);
+            var filterString = filter.ToString();
+            var filterStringOffset = builder.CreateString(filterString);
             SpectrumDescription.StartSpectrumDescription(builder);
             SpectrumDescription.AddData(builder, dataOffset);
             SpectrumDescription.AddIndex(builder, stats.ScanNumber);
             SpectrumDescription.AddMsLevel(builder, (byte)level);
             SpectrumDescription.AddPolarity(builder, polarity);
             SpectrumDescription.AddMode(builder, mode);
+            SpectrumDescription.AddFilterString(builder, filterStringOffset);
             if (level > 1)
             {
                 var precursorProps = ExtractPrecursorProperties(scanNumber, level, filter);

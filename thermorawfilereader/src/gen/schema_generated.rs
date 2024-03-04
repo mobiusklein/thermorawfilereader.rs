@@ -956,6 +956,7 @@ impl<'a> SpectrumDescription<'a> {
   pub const VT_MODE: flatbuffers::VOffsetT = 12;
   pub const VT_PRECURSOR: flatbuffers::VOffsetT = 14;
   pub const VT_DATA: flatbuffers::VOffsetT = 16;
+  pub const VT_FILTER_STRING: flatbuffers::VOffsetT = 18;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -968,6 +969,7 @@ impl<'a> SpectrumDescription<'a> {
   ) -> flatbuffers::WIPOffset<SpectrumDescription<'bldr>> {
     let mut builder = SpectrumDescriptionBuilder::new(_fbb);
     builder.add_time(args.time);
+    if let Some(x) = args.filter_string { builder.add_filter_string(x); }
     if let Some(x) = args.data { builder.add_data(x); }
     if let Some(x) = args.precursor { builder.add_precursor(x); }
     builder.add_index(args.index);
@@ -1027,6 +1029,13 @@ impl<'a> SpectrumDescription<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SpectrumData>>(SpectrumDescription::VT_DATA, None)}
   }
+  #[inline]
+  pub fn filter_string(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SpectrumDescription::VT_FILTER_STRING, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for SpectrumDescription<'_> {
@@ -1043,6 +1052,7 @@ impl flatbuffers::Verifiable for SpectrumDescription<'_> {
      .visit_field::<SpectrumMode>("mode", Self::VT_MODE, false)?
      .visit_field::<PrecursorT>("precursor", Self::VT_PRECURSOR, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<SpectrumData>>("data", Self::VT_DATA, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("filter_string", Self::VT_FILTER_STRING, false)?
      .finish();
     Ok(())
   }
@@ -1055,6 +1065,7 @@ pub struct SpectrumDescriptionArgs<'a> {
     pub mode: SpectrumMode,
     pub precursor: Option<&'a PrecursorT>,
     pub data: Option<flatbuffers::WIPOffset<SpectrumData<'a>>>,
+    pub filter_string: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for SpectrumDescriptionArgs<'a> {
   #[inline]
@@ -1067,6 +1078,7 @@ impl<'a> Default for SpectrumDescriptionArgs<'a> {
       mode: SpectrumMode::Profile,
       precursor: None,
       data: None,
+      filter_string: None,
     }
   }
 }
@@ -1105,6 +1117,10 @@ impl<'a: 'b, 'b> SpectrumDescriptionBuilder<'a, 'b> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SpectrumData>>(SpectrumDescription::VT_DATA, data);
   }
   #[inline]
+  pub fn add_filter_string(&mut self, filter_string: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SpectrumDescription::VT_FILTER_STRING, filter_string);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> SpectrumDescriptionBuilder<'a, 'b> {
     let start = _fbb.start_table();
     SpectrumDescriptionBuilder {
@@ -1129,6 +1145,7 @@ impl core::fmt::Debug for SpectrumDescription<'_> {
       ds.field("mode", &self.mode());
       ds.field("precursor", &self.precursor());
       ds.field("data", &self.data());
+      ds.field("filter_string", &self.filter_string());
       ds.finish()
   }
 }
