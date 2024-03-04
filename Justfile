@@ -6,7 +6,11 @@ clean-dotnet:
     cd librawfilereader && dotnet clean
 
 dotnet:
-    cd librawfilereader && dotnet build -c Release
+    cd librawfilereader && dotnet build -c Debug
 
 bundle:
-    cd librawfilereader && dotnet publish -c Release -o ../dotnetrawfilereader-sys/lib/
+    rm -rf dotnetrawfilereader-sys/lib/*
+    cd librawfilereader && dotnet publish -c Debug -o ../dotnetrawfilereader-sys/lib/
+
+check:
+    cargo r -- tests/data/small.RAW 1

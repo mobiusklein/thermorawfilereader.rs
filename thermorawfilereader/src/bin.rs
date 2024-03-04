@@ -10,6 +10,15 @@ pub fn main() -> io::Result<()> {
         path
     )?;
 
-    handle.describe(target);
+    if target < 0 {
+        eprintln!("Counting MSn spectra");
+        let ms2_scans = handle.iter().filter(|buf| {
+            buf.view().ms_level() == 2
+        }).count();
+        eprintln!("Found {ms2_scans} MSn spectra");
+    } else {
+        handle.describe(target);
+    }
+
     Ok(())
 }

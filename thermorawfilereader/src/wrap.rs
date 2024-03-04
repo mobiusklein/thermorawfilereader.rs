@@ -112,7 +112,9 @@ impl RawFileReaderHandle {
             context
         };
 
-        match handle.status() {
+        eprintln!("Checking status of handle {}", handle.status());
+
+        match &handle.status() {
             RawFileReaderError::Ok => {},
             RawFileReaderError::FileNotFound => return Err(io::Error::new(io::ErrorKind::NotFound, "File not found")),
             RawFileReaderError::InvalidFormat => return Err(io::Error::new(io::ErrorKind::InvalidData, "File does not appear to be a valid RAW file")),
@@ -175,6 +177,7 @@ impl RawFileReaderHandle {
     }
 
     pub fn get(&self, index: i32) -> RawSpectrumWrapper {
+        eprintln!("Getting Index {index}");
         self.validate_impl();
         let buffer_fn = self.context.get_function::<fn(*mut c_void, i32) -> RawVec<u8>>(
             pdcstr!("librawfilereader.Exports, librawfilereader"),
@@ -313,6 +316,18 @@ mod test {
         let buf = handle.get(5);
         let descr = buf.view();
         assert_eq!(descr.index(), 5);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_read_512kb() -> io::Result<()> {
+        let handle = RawFileReaderHandle::open("../tests/data/small.RAW")?;
+
+        assert_eq!(handle.len(), 48);
+        let buf = handle.get(1);
+        let descr = buf.view();
+        assert_eq!(descr.index(), 1);
 
         Ok(())
     }

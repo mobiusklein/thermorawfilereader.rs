@@ -1,4 +1,4 @@
-use std::{mem, ops::Deref, slice, ptr};
+use std::{ops::Deref, ptr, slice};
 
 use netcorehost::{
     pdcstr,
@@ -33,15 +33,19 @@ impl<T> Deref for RawVec<T> {
 }
 
 pub extern "system" fn rust_allocate_memory(size: usize, vec: *mut RawVec<u8>) {
+    eprintln!("Allocating FFI buffer of size {size}");
     let mut buf = Vec::<u8>::with_capacity(size);
+    buf.resize(size, 0);
+    let capacity = buf.capacity();
+    let len = buf.len();
+    let data = buf.leak();
     unsafe {
         *vec = RawVec {
-            data: buf.as_mut_ptr(),
-            len: buf.len(),
-            capacity: buf.capacity(),
+            data: data.as_mut_ptr(),
+            len,
+            capacity,
         }
     };
-    mem::forget(buf);
 }
 
 pub fn configure_allocator(delegate_loader: &AssemblyDelegateLoader) {
