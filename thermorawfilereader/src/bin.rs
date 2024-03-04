@@ -23,17 +23,11 @@ pub fn main() {
     let path = args.next().unwrap();
     let target = args.next().unwrap().parse::<i32>().unwrap();
 
-    eprintln!("Loads");
     let delegate_loader = get_runtime();
-
     let handle = RawFileReaderHandle::open(
         delegate_loader,
         path
     );
-    eprintln!("Status = {}", handle.status());
     let i = handle.len();
-    eprintln!("Num Spectra = {i}");
     handle.describe(target);
-
-    eprintln!("Done");
 }
