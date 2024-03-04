@@ -51,13 +51,6 @@ namespace librawfilereader
         public nuint Capacity;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ByteView
-    {
-        public byte* Data;
-        public nuint Len;
-    }
-
     public enum RawFileReaderError : uint
     {
         Ok,
@@ -278,7 +271,10 @@ namespace librawfilereader
                 polarity = Polarity.Unknown;
             }
 
+
+
             var builder = new FlatBufferBuilder(1024);
+
             var dataOffset = LoadSpectrumData(scanNumber, stats, builder);
             var filterString = filter.ToString();
             var filterStringOffset = builder.CreateString(filterString);
@@ -345,57 +341,49 @@ namespace librawfilereader
             RustAllocateMemory(size, &vec);
 
             if ((IntPtr)vec.Data == IntPtr.Zero) {
-                System.Console.WriteLine("Null pointer detected");
+                return vec;
             }
 
-            System.Console.WriteLine("Copying Buffer of Size {0} to Capacity {1}", size, vec.Capacity);
             fixed (byte* buf = buffer)
             {
                 vec.Len = size;
-                for(nuint i = 0; i < size; i++) {
-                    vec.Data[i] = buf[i];
-                }
-                // Buffer.MemoryCopy(
-                //     buf, vec.Data, vec.Capacity, vec.Len
-                // );
+                Buffer.MemoryCopy(
+                    buf, vec.Data, vec.Capacity, vec.Len
+                );
 
             }
             return vec;
         }
 
-        public delegate IntPtr OpenFn(IntPtr textPtr, int textLength);
-
-        private static unsafe IntPtr BufferToGCHandle(byte[] buffer) {
-            var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            return GCHandle.ToIntPtr(handle);
-        }
-
         [UnmanagedCallersOnly]
-        public static void FreeGCHandleBuffer(IntPtr handle_ptr)
-        {
-            GCHandle.FromIntPtr(handle_ptr).Free();
-        }
-
         public static unsafe IntPtr Open(IntPtr textPtr, int textLength)
         {
             var text = Marshal.PtrToStringAnsi(textPtr, textLength);
             var handle = new RawFileReader(text);
-            var handleToken = HandleCounter;
-            HandleCounter += 1;
-            OpenHandles[handleToken] = handle;
+            IntPtr handleToken;
+            lock (OpenHandles) {
+                handleToken = HandleCounter;
+                HandleCounter += 1;
+                OpenHandles[handleToken] = handle;
+            }
             return handleToken;
         }
 
-        public delegate void CloseFn(IntPtr handleToken);
-
         private static RawFileReader GetHandleForToken(IntPtr handleToken) {
-            return OpenHandles[handleToken];
+            RawFileReader handle;
+            lock (OpenHandles) {
+                handle = OpenHandles[handleToken];
+            }
+            return handle;
         }
 
+        [UnmanagedCallersOnly]
         public static unsafe void Close(IntPtr handleToken)
         {
-            if (OpenHandles.ContainsKey(handleToken)) {
-                OpenHandles.Remove(handleToken);
+            lock (OpenHandles) {
+                if (OpenHandles.ContainsKey(handleToken)) {
+                    OpenHandles.Remove(handleToken);
+                }
             }
         }
 
@@ -407,18 +395,21 @@ namespace librawfilereader
 
         public delegate int SpectrumIndexFn(IntPtr handleToken);
 
+        [UnmanagedCallersOnly]
         public static unsafe int FirstSpectrum(IntPtr handleToken)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             return reader.FirstSpectrum();
         }
 
+        [UnmanagedCallersOnly]
         public static unsafe int LastSpectrum(IntPtr handleToken)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             return reader.LastSpectrum();
         }
 
+        [UnmanagedCallersOnly]
         public static unsafe int SpectrumCount(IntPtr handleToken)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
@@ -435,12 +426,13 @@ namespace librawfilereader
 
         public delegate RawVec BufferFn(IntPtr handleToken, int scanNumber);
 
+        [UnmanagedCallersOnly]
         public static unsafe RawVec SpectrumDescriptionFor(IntPtr handleToken, int scanNumber)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             var buffer = reader.SpectrumDescriptionFor(scanNumber);
-            var size = buffer.Length;
             var bytes = buffer.ToSizedArray();
+            var size = bytes.Length;
             return BufferToRustVec(bytes, (nuint)size);
         }
     }

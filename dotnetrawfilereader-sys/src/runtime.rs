@@ -1,13 +1,12 @@
 #![allow(unused)]
 use std::fs;
-use std::io::Write;
+use std::env;
 use std::io::{self, prelude::*};
-use std::path::{self, Path};
-use std::path::PathBuf;
+use std::path::{self, Path, PathBuf};
 use std::sync::{Arc, OnceLock, RwLock};
 
 use include_dir::{include_dir, Dir};
-use tempdir::{TempDir};
+use tempdir::TempDir;
 
 use netcorehost::{hostfxr::AssemblyDelegateLoader, nethost, pdcstring::PdCString};
 
@@ -31,7 +30,18 @@ pub struct DotNetLibraryBundle {
 
 impl Default for DotNetLibraryBundle {
     fn default() -> Self {
-        Self::new(None).unwrap()
+        match env::var("DOTNET_RAWFILEREADER_BUNDLE_PATH") {
+            Ok(val) => Self::new(Some(&val)).unwrap(),
+            Err(err) => {
+                match err {
+                    env::VarError::NotPresent => Self::new(None).unwrap(),
+                    env::VarError::NotUnicode(err) => {
+                        eprintln!("Failed to decode `DOTNET_RAWFILEREADER_BUNDLE_PATH` {}", err.to_string_lossy());
+                        Self::new(None).unwrap()
+                    },
+                }
+            },
+        }
     }
 }
 
@@ -39,11 +49,10 @@ impl DotNetLibraryBundle {
     pub fn new(dir: Option<&str>) -> io::Result<Self> {
         let dir = if let Some(path) = dir {
             let pathbuf = PathBuf::from(path);
-            if pathbuf.exists() {
-                BundleStore::Path(pathbuf)
-            } else {
-                BundleStore::TempDir(TempDir::new(path)?)
+            if !pathbuf.exists() {
+                fs::create_dir(&pathbuf)?;
             }
+            BundleStore::Path(pathbuf)
         } else {
             BundleStore::TempDir(TempDir::new(TMP_NAME)?)
         };
@@ -83,6 +92,9 @@ impl DotNetLibraryBundle {
         for entry in DOTNET_LIB_DIR.entries() {
             if let Some(data_handle) = entry.as_file() {
                 let destintation = path.join(entry.path());
+                if destintation.exists() {
+                    continue;
+                }
                 let mut outhandle = io::BufWriter::new(fs::File::create(destintation)?);
                 outhandle.write_all(data_handle.contents())?;
             }

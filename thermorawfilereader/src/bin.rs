@@ -11,13 +11,13 @@ pub fn main() -> io::Result<()> {
     )?;
 
     if target < 0 {
-        eprintln!("Counting MSn spectra");
+        println!("Counting MSn spectra");
         let ms2_scans = handle.iter().filter(|buf| {
             buf.view().ms_level() == 2
         }).count();
-        eprintln!("Found {ms2_scans} MSn spectra");
+        println!("Found {ms2_scans} MSn spectra");
     } else {
-        handle.describe(target);
+        handle.describe(target as usize);
     }
 
     Ok(())

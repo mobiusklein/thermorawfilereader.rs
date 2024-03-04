@@ -12,6 +12,10 @@ pub struct RawVec<T> {
     pub(crate) capacity: usize,
 }
 
+unsafe impl<T> Send for RawVec<T> {}
+
+unsafe impl<T> Sync for RawVec<T> {}
+
 impl<T> RawVec<T> {
     pub fn free(&mut self) {
         if self.data != ptr::null_mut() {
@@ -32,8 +36,13 @@ impl<T> Deref for RawVec<T> {
     }
 }
 
+impl<T> Drop for RawVec<T> {
+    fn drop(&mut self) {
+        self.free()
+    }
+}
+
 pub extern "system" fn rust_allocate_memory(size: usize, vec: *mut RawVec<u8>) {
-    eprintln!("Allocating FFI buffer of size {size}");
     let mut buf = Vec::<u8>::with_capacity(size);
     buf.resize(size, 0);
     let capacity = buf.capacity();
