@@ -9,4 +9,4 @@ dotnet:
     cd librawfilereader && dotnet build -c Release
 
 bundle:
-    cd librawfilereader && dotnet publish -c Release -o ../lib
+    cd librawfilereader && dotnet publish -c Release -o ../dotnetrawfilereader-sys/lib/

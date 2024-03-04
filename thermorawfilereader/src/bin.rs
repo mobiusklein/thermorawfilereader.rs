@@ -2,8 +2,7 @@ use std::env;
 
 use netcorehost::{hostfxr::AssemblyDelegateLoader, pdcstr};
 
-use thermorawfilereader;
-use thermorawfilereader::{load_runtime, RawFileReaderHandle};
+use thermorawfilereader::{get_runtime, RawFileReaderHandle};
 
 #[allow(unused)]
 fn test_add(delegate_loader: &AssemblyDelegateLoader) {
@@ -25,7 +24,7 @@ pub fn main() {
     let target = args.next().unwrap().parse::<i32>().unwrap();
 
     eprintln!("Loads");
-    let delegate_loader = load_runtime();
+    let delegate_loader = get_runtime();
 
     let handle = RawFileReaderHandle::open(
         delegate_loader,

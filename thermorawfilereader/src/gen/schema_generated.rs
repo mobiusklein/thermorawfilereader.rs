@@ -325,8 +325,8 @@ impl flatbuffers::SimpleToVerifyInSlice for DissociationMethod {}
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
 pub struct IsolationWindowT(pub [u8; 24]);
-impl Default for IsolationWindowT {
-  fn default() -> Self {
+impl Default for IsolationWindowT { 
+  fn default() -> Self { 
     Self([0; 24])
   }
 }
@@ -481,8 +481,8 @@ impl<'a> IsolationWindowT {
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
 pub struct ActivationT(pub [u8; 16]);
-impl Default for ActivationT {
-  fn default() -> Self {
+impl Default for ActivationT { 
+  fn default() -> Self { 
     Self([0; 16])
   }
 }
@@ -605,8 +605,8 @@ impl<'a> ActivationT {
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
 pub struct PrecursorT(pub [u8; 64]);
-impl Default for PrecursorT {
-  fn default() -> Self {
+impl Default for PrecursorT { 
+  fn default() -> Self { 
     Self([0; 64])
   }
 }

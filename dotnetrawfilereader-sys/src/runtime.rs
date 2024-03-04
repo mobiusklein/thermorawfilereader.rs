@@ -1,6 +1,7 @@
 #![allow(unused)]
-use std::io;
+use std::io::{self, prelude::*};
 use std::fs;
+use std::io::Write;
 use std::path;
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock, RwLock};
@@ -15,9 +16,11 @@ use netcorehost::{
 
 use crate::buffer::configure_allocator;
 
-static DOTNET_LIB_DIR: Dir<'_> = include_dir!("lib/");
+static DOTNET_LIB_DIR: Dir<'_> = include_dir!("dotnetrawfilereader-sys/lib/");
 
 const PREFIX: &'static str = "librawfilereader/bin/Release";
+
+const TMP_NAME: &'static str = concat!("rawfilereader_libs_", env!("CARGO_PKG_VERSION"));
 
 fn runtime_cfg(version: &str) -> PdCString {
     format!("{PREFIX}/{version}/librawfilereader.runtimeconfig.json").parse().unwrap()
@@ -52,14 +55,14 @@ impl Default for DotNetLibraryBundle {
 impl DotNetLibraryBundle {
     pub fn new(dir: Option<&str>) -> io::Result<Self> {
         let dir = if let Some(path) = dir {
-            let path = PathBuf::from(path);
-            if path.exists() {
-                BundleStore::Path(path)
+            let pathbuf = PathBuf::from(path);
+            if pathbuf.exists() {
+                BundleStore::Path(pathbuf)
             } else {
-                BundleStore::TempDir(TempDir::new(path.to_str().unwrap())?)
+                BundleStore::TempDir(TempDir::new(path)?)
             }
         } else {
-            BundleStore::TempDir(TempDir::new(concat!("rawfilereader_libs_", env!("CARGO_PKG_VERSION")))?)
+            BundleStore::TempDir(TempDir::new(TMP_NAME)?)
         };
         Ok(Self { dir, assembly_loader: RwLock::new(None) })
     }
@@ -82,12 +85,25 @@ impl DotNetLibraryBundle {
     }
 
     pub fn write_bundle(&self) -> io::Result<()> {
+        let path = self.path();
+        if !path.exists() {
+            fs::create_dir(path)?;
+        }
+
+        for entry in DOTNET_LIB_DIR.entries() {
+            if let Some(data_handle) = entry.as_file() {
+                let destintation = path.join(entry.path());
+                let mut outhandle = io::BufWriter::new(fs::File::create(destintation)?);
+                outhandle.write_all(data_handle.contents())?;
+            }
+        }
+
         Ok(())
     }
 
     pub fn create_runtime(&self) -> Arc<AssemblyDelegateLoader> {
         let hostfxr = nethost::load_hostfxr().unwrap();
-
+        self.write_bundle().unwrap();
         let runtime_path = self.path().join("librawfilereader.runtimeconfig.json");
         let runtime_path_encoded: PdCString = runtime_path.to_string_lossy().parse().unwrap();
 
@@ -105,6 +121,8 @@ impl DotNetLibraryBundle {
                 assembly_path_encoded
             )
             .unwrap());
+
+        configure_allocator(&delegate_loader);
 
         delegate_loader
     }
@@ -133,10 +151,19 @@ pub fn load_runtime() -> Arc<AssemblyDelegateLoader> {
         .get_delegate_loader_for_assembly(assembly(NET_VERSION))
         .unwrap());
 
-    DOTNET_LIB_DIR.entries().iter().for_each(|e| {
-        eprintln!("Entry {}", e.path().display());
-    });
-
     configure_allocator(&delegate_loader);
     delegate_loader
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_bundle_writing() -> io::Result<()> {
+        let handle = DotNetLibraryBundle::new(None)?;
+        let runtime = handle.runtime();
+        Ok(())
+    }
 }
