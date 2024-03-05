@@ -82,8 +82,8 @@ namespace librawfilereader
         {
             Path = path;
             // Manager = RawFileReaderFactory.CreateThreadManager(Path);
-            // Handle = RawFileReaderAdapter.FileFactory(Path);
-            Handle = (IRawDataPlus)RawFileReaderAdapter.ThreadedFileFactory(Path);
+            Handle = RawFileReaderAdapter.FileFactory(Path);
+            // Handle = (IRawDataPlus)RawFileReaderAdapter.ThreadedFileFactory(Path);
             Status = RawFileReaderError.Ok;
             Status = Configure();
         }
@@ -338,7 +338,9 @@ namespace librawfilereader
             SpectrumDescription.AddFilterString(builder, filterStringOffset);
             var (precursorPropsOf, acquisitionProperties) = ExtractPrecursorAndTrailerMetadata(scanNumber, level, filter, accessor);
             SpectrumDescription.AddInjectionTime(builder, (float)acquisitionProperties.InjectionTime);
-            SpectrumDescription.AddCompensationVoltage(builder, (float)acquisitionProperties.CompensationVoltage);
+            if (acquisitionProperties.CompensationVoltage.HasValue) {
+                SpectrumDescription.AddCompensationVoltage(builder, (float)acquisitionProperties.CompensationVoltage.Value);
+            }
             if (level > 1)
             {
                 PrecursorProperties precursorProps = (PrecursorProperties)precursorPropsOf;
