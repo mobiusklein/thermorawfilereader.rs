@@ -63,6 +63,8 @@ table SpectrumDescription {
     precursor: PrecursorT;
     data: SpectrumData;
     filter_string: string;
+    injection_time: float32;
+    compensation_voltage: float32 = null;
 }
 
 root_type SpectrumDescription;

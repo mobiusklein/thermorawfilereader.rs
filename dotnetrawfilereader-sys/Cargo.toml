@@ -7,10 +7,15 @@ edition = "2021"
 
 [lib]
 
+[features]
+default = ["nethost-download"]
+
+nethost-download = ["netcorehost/nethost-download"]
+
 [dependencies]
 include_dir = "0.7.3"
 netcorehost = { version = "0.17.0", default-features = false, features = [
-    "nethost-download",
-    "net7_0"
+    "net7_0",
+    "nethost"
 ]}
 tempdir = "0.3.7"

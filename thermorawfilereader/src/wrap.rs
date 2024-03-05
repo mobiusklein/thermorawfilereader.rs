@@ -124,8 +124,6 @@ impl RawFileReaderHandle {
             size: 0,
         };
 
-        eprintln!("Checking status of handle {}", handle.status());
-
         match &handle.status() {
             RawFileReaderError::Ok => {}
             RawFileReaderError::FileNotFound => {

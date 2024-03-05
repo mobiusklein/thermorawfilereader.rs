@@ -43,6 +43,18 @@ namespace librawfilereader
         public ActivationProperties Activation;
     }
 
+    public struct AcquisitionProperties {
+        public double InjectionTime;
+        public double? CompensationVoltage = null;
+        public MassAnalyzerType? Analyzer = null;
+
+        public AcquisitionProperties(double injectionTime, double? compensationVoltage=null, MassAnalyzerType? analyzer=null) {
+            InjectionTime = injectionTime;
+            CompensationVoltage = compensationVoltage;
+            Analyzer = analyzer;
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct RawVec
     {
@@ -62,38 +74,49 @@ namespace librawfilereader
     public struct RawFileReader : IDisposable
     {
         public string Path;
+        // public IRawFileThreadManager Manager;
         public IRawDataPlus Handle;
         public RawFileReaderError Status;
 
         public RawFileReader(string path)
         {
             Path = path;
-            Handle = RawFileReaderAdapter.FileFactory(Path);
+            // Manager = RawFileReaderFactory.CreateThreadManager(Path);
+            // Handle = RawFileReaderAdapter.FileFactory(Path);
+            Handle = (IRawDataPlus)RawFileReaderAdapter.ThreadedFileFactory(Path);
             Status = RawFileReaderError.Ok;
             Status = Configure();
         }
 
+        IRawDataPlus GetHandle() {
+            // var accessor = Manager.CreateThreadAccessor();
+            // accessor.SelectInstrument(Device.MS, 1);
+            // return accessor;
+            return Handle;
+        }
+
         public int FirstSpectrum()
         {
-            return Handle.RunHeaderEx.FirstSpectrum;
+            return GetHandle().RunHeaderEx.FirstSpectrum;
         }
 
         public int LastSpectrum()
         {
-            return Handle.RunHeaderEx.LastSpectrum;
+            return GetHandle().RunHeaderEx.LastSpectrum;
         }
 
         public int SpectrumCount()
         {
-            return Handle.RunHeaderEx.SpectraCount;
+            return GetHandle().RunHeaderEx.SpectraCount;
         }
 
         public void Dispose()
         {
+            // Manager.Dispose();
             Handle.Dispose();
         }
 
-        private short MSLevelFromFilter(IScanFilter filter)
+        short MSLevelFromFilter(IScanFilter filter)
         {
             short msLevel = 1;
             {
@@ -118,14 +141,26 @@ namespace librawfilereader
                 {
                     msLevel = 5;
                 }
+                else if (MSOrderType.Ms6 == level)
+                {
+                    msLevel = 6;
+                }
+                else if (MSOrderType.Ms7 == level)
+                {
+                    msLevel = 7;
+                }
+                else if (MSOrderType.Ms8 == level)
+                {
+                    msLevel = 8;
+                }
             }
             return msLevel;
         }
 
-        public int FindPreviousPrecursor(int scanNumber, short msLevel) {
+        int FindPreviousPrecursor(int scanNumber, short msLevel, IRawDataPlus accessor) {
             int i = scanNumber -  1;
             while(i > 0) {
-                var filter = Handle.GetFilterForScanNumber(i);
+                var filter = accessor.GetFilterForScanNumber(i);
                 var levelOf = MSLevelFromFilter(filter);
                 if (levelOf < msLevel) {
                     return i;
@@ -137,7 +172,7 @@ namespace librawfilereader
             return i;
         }
 
-        public ActivationProperties ExtractActivation(int scanNumber, short msLevel, IScanFilter filter) {
+        ActivationProperties ExtractActivation(int scanNumber, short msLevel, IScanFilter filter) {
             ActivationProperties activation = new ActivationProperties
             {
                 Dissociation = DissociationMethod.Unknown,
@@ -176,15 +211,17 @@ namespace librawfilereader
             return activation;
         }
 
-        public PrecursorProperties ExtractPrecursorProperties(int scanNumber, short msLevel, IScanFilter filter)
+        (PrecursorProperties?, AcquisitionProperties) ExtractPrecursorAndTrailerMetadata(int scanNumber, short msLevel, IScanFilter filter, IRawDataPlus accessor)
         {
-            var trailers = Handle.GetTrailerExtraInformation(scanNumber);
+            var trailers = accessor.GetTrailerExtraInformation(scanNumber);
 
             var n = trailers.Length;
             double monoisotopicMZ = 0.0;
             int precursorCharge = 0;
             double isolationWidth = 0.0;
+            AcquisitionProperties acquisitionProperties = new AcquisitionProperties(0.0, null, filter.MassAnalyzer);
             int masterScanNumber = -1;
+
             for (int i = 0; i < n; i++)
             {
                 var label = trailers.Labels[i].Trim(':');
@@ -207,37 +244,48 @@ namespace librawfilereader
                 {
                     masterScanNumber = int.Parse(trailers.Values[i]);
                 }
+                else if (label == "Ion Injection Time (ms)") {
+                    acquisitionProperties.InjectionTime = double.Parse(trailers.Values[i]);
+                }
+            }
+
+            if (filter.CompensationVoltage == TriState.On) {
+                acquisitionProperties.CompensationVoltage = filter.CompensationVoltageValue(msLevel - 1);
             }
 
             if (msLevel > 1 && isolationWidth == 0.0)
             {
                 isolationWidth = filter.GetIsolationWidth(msLevel - 2) / 2;
             }
-            double isolationOffset = filter.GetIsolationWidthOffset(msLevel - 2);
-            if (monoisotopicMZ == 0.0)
-            {
-                monoisotopicMZ = filter.GetMass(msLevel - 2);
-            }
+            if (msLevel > 1) {
+                double isolationOffset = filter.GetIsolationWidthOffset(msLevel - 2);
+                if (monoisotopicMZ == 0.0)
+                {
+                    monoisotopicMZ = filter.GetMass(msLevel - 2);
+                }
 
-            if (masterScanNumber == -1) {
-                masterScanNumber = FindPreviousPrecursor(scanNumber, msLevel);
-            }
+                if (masterScanNumber == -1) {
+                    masterScanNumber = FindPreviousPrecursor(scanNumber, msLevel, accessor);
+                }
 
-            ActivationProperties activation = ExtractActivation(scanNumber, msLevel, filter);
-            IsolationWindow window = new IsolationWindow(isolationWidth, monoisotopicMZ, isolationOffset);
-            PrecursorProperties props = new PrecursorProperties
-            {
-                PrecursorCharge = precursorCharge,
-                MasterScanNumber = masterScanNumber,
-                MonoisotopicMZ = monoisotopicMZ,
-                IsolationWindow = window,
-                Activation = activation
-            };
-            return props;
+                ActivationProperties activation = ExtractActivation(scanNumber, msLevel, filter);
+                IsolationWindow window = new IsolationWindow(isolationWidth, monoisotopicMZ, isolationOffset);
+                PrecursorProperties props = new PrecursorProperties
+                {
+                    PrecursorCharge = precursorCharge,
+                    MasterScanNumber = masterScanNumber,
+                    MonoisotopicMZ = monoisotopicMZ,
+                    IsolationWindow = window,
+                    Activation = activation
+                };
+                return (props, acquisitionProperties);
+            } else {
+                return (null, acquisitionProperties);
+            }
         }
 
-        public Offset<SpectrumData> LoadSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder) {
-            var segScan = Handle.GetSegmentedScanFromScanNumber(scanNumber, stats);
+        Offset<SpectrumData> LoadSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder, IRawDataPlus accessor) {
+            var segScan = accessor.GetSegmentedScanFromScanNumber(scanNumber, stats);
 
             var mzOffset = SpectrumData.CreateMzVector(bufferBuilder, segScan.Positions);
             SpectrumData.StartIntensityVector(bufferBuilder, segScan.PositionCount);
@@ -249,14 +297,7 @@ namespace librawfilereader
             return offset;
         }
 
-        public ByteBuffer SpectrumDescriptionFor(int scanNumber)
-        {
-            var stats = Handle.GetScanStatsForScanNumber(scanNumber);
-            SpectrumMode mode = stats.IsCentroidScan ? SpectrumMode.Centroid : SpectrumMode.Profile;
-
-            var filter = Handle.GetFilterForScanNumber(scanNumber);
-            short level = MSLevelFromFilter(filter);
-
+        Polarity GetPolarity(IScanFilter filter) {
             Polarity polarity = Polarity.Positive;
             if (PolarityType.Positive == filter.Polarity)
             {
@@ -270,12 +311,22 @@ namespace librawfilereader
             {
                 polarity = Polarity.Unknown;
             }
+            return polarity;
+        }
+        public ByteBuffer SpectrumDescriptionFor(int scanNumber)
+        {
+            var accessor = GetHandle();
+            var stats = accessor.GetScanStatsForScanNumber(scanNumber);
+            SpectrumMode mode = stats.IsCentroidScan ? SpectrumMode.Centroid : SpectrumMode.Profile;
 
+            var filter = accessor.GetFilterForScanNumber(scanNumber);
+            short level = MSLevelFromFilter(filter);
+            Polarity polarity = GetPolarity(filter);
 
 
             var builder = new FlatBufferBuilder(1024);
 
-            var dataOffset = LoadSpectrumData(scanNumber, stats, builder);
+            var dataOffset = LoadSpectrumData(scanNumber, stats, builder, accessor);
             var filterString = filter.ToString();
             var filterStringOffset = builder.CreateString(filterString);
             SpectrumDescription.StartSpectrumDescription(builder);
@@ -285,9 +336,12 @@ namespace librawfilereader
             SpectrumDescription.AddPolarity(builder, polarity);
             SpectrumDescription.AddMode(builder, mode);
             SpectrumDescription.AddFilterString(builder, filterStringOffset);
+            var (precursorPropsOf, acquisitionProperties) = ExtractPrecursorAndTrailerMetadata(scanNumber, level, filter, accessor);
+            SpectrumDescription.AddInjectionTime(builder, (float)acquisitionProperties.InjectionTime);
+            SpectrumDescription.AddCompensationVoltage(builder, (float)acquisitionProperties.CompensationVoltage);
             if (level > 1)
             {
-                var precursorProps = ExtractPrecursorProperties(scanNumber, level, filter);
+                PrecursorProperties precursorProps = (PrecursorProperties)precursorPropsOf;
                 var precursor = PrecursorT.CreatePrecursorT(
                     builder,
                     precursorProps.MonoisotopicMZ,
@@ -309,17 +363,20 @@ namespace librawfilereader
 
         private RawFileReaderError Configure()
         {
+            // var accessor = Manager.CreateThreadAccessor();
+            var accessor = GetHandle();
+
             if (!File.Exists(Path))
             {
                 return RawFileReaderError.FileNotFound;
             }
-            if (Handle.IsError)
+            if (accessor.IsError)
             {
                 return RawFileReaderError.InvalidFormat;
             }
             else
             {
-                Handle.SelectInstrument(Device.MS, 1);
+                accessor.SelectInstrument(Device.MS, 1);
             }
             return RawFileReaderError.Ok;
         }

@@ -11,10 +11,16 @@ edition = "2021"
 name="fficheck"
 path="src/bin.rs"
 
+[features]
+
+default = ["nethost-download"]
+
+nethost-download = ["netcorehost/nethost-download"]
+
 [dependencies]
 flatbuffers = "23.5.26"
 netcorehost = { version = "0.17.0", default-features = false, features = [
-    "nethost-download",
-    "net7_0"
+    "net7_0",
+    "nethost"
 ]}
 dotnetrawfilereader-sys = { version = "0.1.0", path = "../dotnetrawfilereader-sys/"}

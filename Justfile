@@ -10,6 +10,10 @@ dotnet:
 
 bundle:
     rm -rf dotnetrawfilereader-sys/lib/*
+    cd librawfilereader && dotnet publish -c Release -o ../dotnetrawfilereader-sys/lib/
+
+bundle-debug:
+    rm -rf dotnetrawfilereader-sys/lib/*
     cd librawfilereader && dotnet publish -c Debug -o ../dotnetrawfilereader-sys/lib/
 
 check:

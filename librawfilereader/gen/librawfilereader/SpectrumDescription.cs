@@ -34,8 +34,10 @@ public struct SpectrumDescription : IFlatbufferObject
   public ArraySegment<byte>? GetFilterStringBytes() { return __p.__vector_as_arraysegment(18); }
 #endif
   public byte[] GetFilterStringArray() { return __p.__vector_as_array<byte>(18); }
+  public float InjectionTime { get { int o = __p.__offset(20); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
+  public float? CompensationVoltage { get { int o = __p.__offset(22); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float?)null; } }
 
-  public static void StartSpectrumDescription(FlatBufferBuilder builder) { builder.StartTable(8); }
+  public static void StartSpectrumDescription(FlatBufferBuilder builder) { builder.StartTable(10); }
   public static void AddIndex(FlatBufferBuilder builder, int index) { builder.AddInt(0, index, 0); }
   public static void AddMsLevel(FlatBufferBuilder builder, byte msLevel) { builder.AddByte(1, msLevel, 2); }
   public static void AddTime(FlatBufferBuilder builder, double time) { builder.AddDouble(2, time, 0.0); }
@@ -44,6 +46,8 @@ public struct SpectrumDescription : IFlatbufferObject
   public static void AddPrecursor(FlatBufferBuilder builder, Offset<librawfilereader.PrecursorT> precursorOffset) { builder.AddStruct(5, precursorOffset.Value, 0); }
   public static void AddData(FlatBufferBuilder builder, Offset<librawfilereader.SpectrumData> dataOffset) { builder.AddOffset(6, dataOffset.Value, 0); }
   public static void AddFilterString(FlatBufferBuilder builder, StringOffset filterStringOffset) { builder.AddOffset(7, filterStringOffset.Value, 0); }
+  public static void AddInjectionTime(FlatBufferBuilder builder, float injectionTime) { builder.AddFloat(8, injectionTime, 0.0f); }
+  public static void AddCompensationVoltage(FlatBufferBuilder builder, float? compensationVoltage) { builder.AddFloat(9, compensationVoltage); }
   public static Offset<librawfilereader.SpectrumDescription> EndSpectrumDescription(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<librawfilereader.SpectrumDescription>(o);
@@ -66,6 +70,8 @@ static public class SpectrumDescriptionVerify
       && verifier.VerifyField(tablePos, 14 /*Precursor*/, 64 /*librawfilereader.PrecursorT*/, 8, false)
       && verifier.VerifyTable(tablePos, 16 /*Data*/, librawfilereader.SpectrumDataVerify.Verify, false)
       && verifier.VerifyString(tablePos, 18 /*FilterString*/, false)
+      && verifier.VerifyField(tablePos, 20 /*InjectionTime*/, 4 /*float*/, 4, false)
+      && verifier.VerifyField(tablePos, 22 /*CompensationVoltage*/, 4 /*float*/, 4, false)
       && verifier.VerifyTableEnd(tablePos);
   }
 }

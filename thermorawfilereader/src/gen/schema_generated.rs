@@ -957,6 +957,8 @@ impl<'a> SpectrumDescription<'a> {
   pub const VT_PRECURSOR: flatbuffers::VOffsetT = 14;
   pub const VT_DATA: flatbuffers::VOffsetT = 16;
   pub const VT_FILTER_STRING: flatbuffers::VOffsetT = 18;
+  pub const VT_INJECTION_TIME: flatbuffers::VOffsetT = 20;
+  pub const VT_COMPENSATION_VOLTAGE: flatbuffers::VOffsetT = 22;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -969,6 +971,8 @@ impl<'a> SpectrumDescription<'a> {
   ) -> flatbuffers::WIPOffset<SpectrumDescription<'bldr>> {
     let mut builder = SpectrumDescriptionBuilder::new(_fbb);
     builder.add_time(args.time);
+    if let Some(x) = args.compensation_voltage { builder.add_compensation_voltage(x); }
+    builder.add_injection_time(args.injection_time);
     if let Some(x) = args.filter_string { builder.add_filter_string(x); }
     if let Some(x) = args.data { builder.add_data(x); }
     if let Some(x) = args.precursor { builder.add_precursor(x); }
@@ -1036,6 +1040,20 @@ impl<'a> SpectrumDescription<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SpectrumDescription::VT_FILTER_STRING, None)}
   }
+  #[inline]
+  pub fn injection_time(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(SpectrumDescription::VT_INJECTION_TIME, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn compensation_voltage(&self) -> Option<f32> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(SpectrumDescription::VT_COMPENSATION_VOLTAGE, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for SpectrumDescription<'_> {
@@ -1053,6 +1071,8 @@ impl flatbuffers::Verifiable for SpectrumDescription<'_> {
      .visit_field::<PrecursorT>("precursor", Self::VT_PRECURSOR, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<SpectrumData>>("data", Self::VT_DATA, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("filter_string", Self::VT_FILTER_STRING, false)?
+     .visit_field::<f32>("injection_time", Self::VT_INJECTION_TIME, false)?
+     .visit_field::<f32>("compensation_voltage", Self::VT_COMPENSATION_VOLTAGE, false)?
      .finish();
     Ok(())
   }
@@ -1066,6 +1086,8 @@ pub struct SpectrumDescriptionArgs<'a> {
     pub precursor: Option<&'a PrecursorT>,
     pub data: Option<flatbuffers::WIPOffset<SpectrumData<'a>>>,
     pub filter_string: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub injection_time: f32,
+    pub compensation_voltage: Option<f32>,
 }
 impl<'a> Default for SpectrumDescriptionArgs<'a> {
   #[inline]
@@ -1079,6 +1101,8 @@ impl<'a> Default for SpectrumDescriptionArgs<'a> {
       precursor: None,
       data: None,
       filter_string: None,
+      injection_time: 0.0,
+      compensation_voltage: None,
     }
   }
 }
@@ -1121,6 +1145,14 @@ impl<'a: 'b, 'b> SpectrumDescriptionBuilder<'a, 'b> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SpectrumDescription::VT_FILTER_STRING, filter_string);
   }
   #[inline]
+  pub fn add_injection_time(&mut self, injection_time: f32) {
+    self.fbb_.push_slot::<f32>(SpectrumDescription::VT_INJECTION_TIME, injection_time, 0.0);
+  }
+  #[inline]
+  pub fn add_compensation_voltage(&mut self, compensation_voltage: f32) {
+    self.fbb_.push_slot_always::<f32>(SpectrumDescription::VT_COMPENSATION_VOLTAGE, compensation_voltage);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> SpectrumDescriptionBuilder<'a, 'b> {
     let start = _fbb.start_table();
     SpectrumDescriptionBuilder {
@@ -1146,6 +1178,8 @@ impl core::fmt::Debug for SpectrumDescription<'_> {
       ds.field("precursor", &self.precursor());
       ds.field("data", &self.data());
       ds.field("filter_string", &self.filter_string());
+      ds.field("injection_time", &self.injection_time());
+      ds.field("compensation_voltage", &self.compensation_voltage());
       ds.finish()
   }
 }
