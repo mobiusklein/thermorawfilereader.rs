@@ -11,10 +11,12 @@ dotnet:
 bundle:
     rm -rf dotnetrawfilereader-sys/lib/*
     cd librawfilereader && dotnet publish -c Release -o ../dotnetrawfilereader-sys/lib/
+    md5sum dotnetrawfilereader-sys/lib/* | sort | tee dotnetrawfilereader-sys/lib/checksum
 
 bundle-debug:
     rm -rf dotnetrawfilereader-sys/lib/*
     cd librawfilereader && dotnet publish -c Debug -o ../dotnetrawfilereader-sys/lib/
+    md5sum dotnetrawfilereader-sys/lib/* | sort | tee dotnetrawfilereader-sys/lib/checksum
 
 check:
     cargo r -- tests/data/small.RAW 1

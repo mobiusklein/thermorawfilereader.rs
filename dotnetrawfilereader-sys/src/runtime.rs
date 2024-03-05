@@ -85,16 +85,26 @@ impl DotNetLibraryBundle {
 
     pub fn write_bundle(&self) -> io::Result<()> {
         let path = self.path();
-        if !path.exists() {
+        let do_write = if !path.exists() {
             fs::create_dir(path)?;
+            true
+        } else {
+            if path.join("checksum").exists(){
+                let checksum = fs::read(path.join("checksum"))?;
+                let lib_checksum = DOTNET_LIB_DIR.get_file("checksum").unwrap().contents();
+                checksum != lib_checksum
+            } else {
+                true
+            }
+        };
+
+        if !do_write {
+            return Ok(())
         }
 
         for entry in DOTNET_LIB_DIR.entries() {
             if let Some(data_handle) = entry.as_file() {
                 let destintation = path.join(entry.path());
-                if destintation.exists() {
-                    continue;
-                }
                 let mut outhandle = io::BufWriter::new(fs::File::create(destintation)?);
                 outhandle.write_all(data_handle.contents())?;
             }
