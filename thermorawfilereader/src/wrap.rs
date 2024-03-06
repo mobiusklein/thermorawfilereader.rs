@@ -243,6 +243,8 @@ impl RawFileReaderHandle {
                 descr.data().is_some()
             );
             println!("Filter: {}", descr.filter_string().unwrap());
+            let acq = descr.acquisition().unwrap();
+            println!("{:?} {}-{}", acq.mass_analyzer(), acq.low_mz(), acq.high_mz());
             descr.data().map(|dat| {
                 let intens_opt = dat.intensity();
                 let intens = intens_opt.as_ref().unwrap();

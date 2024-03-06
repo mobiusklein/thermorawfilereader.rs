@@ -18,5 +18,10 @@ bundle-debug:
     cd librawfilereader && dotnet publish -c Debug -o ../dotnetrawfilereader-sys/lib/
     md5sum dotnetrawfilereader-sys/lib/* | sort | tee dotnetrawfilereader-sys/lib/checksum
 
-check:
-    cargo r -- tests/data/small.RAW 1
+index := "1"
+
+check i=index:
+    cargo r -- tests/data/small.RAW {{i}}
+
+test:
+    cargo t

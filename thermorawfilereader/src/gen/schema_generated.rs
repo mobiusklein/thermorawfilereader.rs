@@ -321,6 +321,115 @@ impl<'a> flatbuffers::Verifiable for DissociationMethod {
 }
 
 impl flatbuffers::SimpleToVerifyInSlice for DissociationMethod {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_MASS_ANALYZER: u8 = 0;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_MASS_ANALYZER: u8 = 7;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_MASS_ANALYZER: [MassAnalyzer; 8] = [
+  MassAnalyzer::Unknown,
+  MassAnalyzer::ITMS,
+  MassAnalyzer::TQMS,
+  MassAnalyzer::SQMS,
+  MassAnalyzer::TOFMS,
+  MassAnalyzer::FTMS,
+  MassAnalyzer::Sector,
+  MassAnalyzer::ASTMS,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct MassAnalyzer(pub u8);
+#[allow(non_upper_case_globals)]
+impl MassAnalyzer {
+  pub const Unknown: Self = Self(0);
+  pub const ITMS: Self = Self(1);
+  pub const TQMS: Self = Self(2);
+  pub const SQMS: Self = Self(3);
+  pub const TOFMS: Self = Self(4);
+  pub const FTMS: Self = Self(5);
+  pub const Sector: Self = Self(6);
+  pub const ASTMS: Self = Self(7);
+
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 7;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::Unknown,
+    Self::ITMS,
+    Self::TQMS,
+    Self::SQMS,
+    Self::TOFMS,
+    Self::FTMS,
+    Self::Sector,
+    Self::ASTMS,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::Unknown => Some("Unknown"),
+      Self::ITMS => Some("ITMS"),
+      Self::TQMS => Some("TQMS"),
+      Self::SQMS => Some("SQMS"),
+      Self::TOFMS => Some("TOFMS"),
+      Self::FTMS => Some("FTMS"),
+      Self::Sector => Some("Sector"),
+      Self::ASTMS => Some("ASTMS"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for MassAnalyzer {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for MassAnalyzer {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for MassAnalyzer {
+    type Output = MassAnalyzer;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for MassAnalyzer {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for MassAnalyzer {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for MassAnalyzer {}
 // struct IsolationWindowT, aligned to 8
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
@@ -933,6 +1042,171 @@ impl core::fmt::Debug for SpectrumData<'_> {
       ds.finish()
   }
 }
+pub enum AcquisitionTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AcquisitionT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AcquisitionT<'a> {
+  type Inner = AcquisitionT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> AcquisitionT<'a> {
+  pub const VT_LOW_MZ: flatbuffers::VOffsetT = 4;
+  pub const VT_HIGH_MZ: flatbuffers::VOffsetT = 6;
+  pub const VT_INJECTION_TIME: flatbuffers::VOffsetT = 8;
+  pub const VT_COMPENSATION_VOLTAGE: flatbuffers::VOffsetT = 10;
+  pub const VT_MASS_ANALYZER: flatbuffers::VOffsetT = 12;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AcquisitionT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args AcquisitionTArgs
+  ) -> flatbuffers::WIPOffset<AcquisitionT<'bldr>> {
+    let mut builder = AcquisitionTBuilder::new(_fbb);
+    builder.add_high_mz(args.high_mz);
+    builder.add_low_mz(args.low_mz);
+    if let Some(x) = args.compensation_voltage { builder.add_compensation_voltage(x); }
+    builder.add_injection_time(args.injection_time);
+    builder.add_mass_analyzer(args.mass_analyzer);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn low_mz(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(AcquisitionT::VT_LOW_MZ, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn high_mz(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(AcquisitionT::VT_HIGH_MZ, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn injection_time(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(AcquisitionT::VT_INJECTION_TIME, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn compensation_voltage(&self) -> Option<f32> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(AcquisitionT::VT_COMPENSATION_VOLTAGE, None)}
+  }
+  #[inline]
+  pub fn mass_analyzer(&self) -> MassAnalyzer {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<MassAnalyzer>(AcquisitionT::VT_MASS_ANALYZER, Some(MassAnalyzer::FTMS)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for AcquisitionT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<f64>("low_mz", Self::VT_LOW_MZ, false)?
+     .visit_field::<f64>("high_mz", Self::VT_HIGH_MZ, false)?
+     .visit_field::<f32>("injection_time", Self::VT_INJECTION_TIME, false)?
+     .visit_field::<f32>("compensation_voltage", Self::VT_COMPENSATION_VOLTAGE, false)?
+     .visit_field::<MassAnalyzer>("mass_analyzer", Self::VT_MASS_ANALYZER, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AcquisitionTArgs {
+    pub low_mz: f64,
+    pub high_mz: f64,
+    pub injection_time: f32,
+    pub compensation_voltage: Option<f32>,
+    pub mass_analyzer: MassAnalyzer,
+}
+impl<'a> Default for AcquisitionTArgs {
+  #[inline]
+  fn default() -> Self {
+    AcquisitionTArgs {
+      low_mz: 0.0,
+      high_mz: 0.0,
+      injection_time: 0.0,
+      compensation_voltage: None,
+      mass_analyzer: MassAnalyzer::FTMS,
+    }
+  }
+}
+
+pub struct AcquisitionTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> AcquisitionTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_low_mz(&mut self, low_mz: f64) {
+    self.fbb_.push_slot::<f64>(AcquisitionT::VT_LOW_MZ, low_mz, 0.0);
+  }
+  #[inline]
+  pub fn add_high_mz(&mut self, high_mz: f64) {
+    self.fbb_.push_slot::<f64>(AcquisitionT::VT_HIGH_MZ, high_mz, 0.0);
+  }
+  #[inline]
+  pub fn add_injection_time(&mut self, injection_time: f32) {
+    self.fbb_.push_slot::<f32>(AcquisitionT::VT_INJECTION_TIME, injection_time, 0.0);
+  }
+  #[inline]
+  pub fn add_compensation_voltage(&mut self, compensation_voltage: f32) {
+    self.fbb_.push_slot_always::<f32>(AcquisitionT::VT_COMPENSATION_VOLTAGE, compensation_voltage);
+  }
+  #[inline]
+  pub fn add_mass_analyzer(&mut self, mass_analyzer: MassAnalyzer) {
+    self.fbb_.push_slot::<MassAnalyzer>(AcquisitionT::VT_MASS_ANALYZER, mass_analyzer, MassAnalyzer::FTMS);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> AcquisitionTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    AcquisitionTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AcquisitionT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AcquisitionT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AcquisitionT");
+      ds.field("low_mz", &self.low_mz());
+      ds.field("high_mz", &self.high_mz());
+      ds.field("injection_time", &self.injection_time());
+      ds.field("compensation_voltage", &self.compensation_voltage());
+      ds.field("mass_analyzer", &self.mass_analyzer());
+      ds.finish()
+  }
+}
 pub enum SpectrumDescriptionOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -957,8 +1231,7 @@ impl<'a> SpectrumDescription<'a> {
   pub const VT_PRECURSOR: flatbuffers::VOffsetT = 14;
   pub const VT_DATA: flatbuffers::VOffsetT = 16;
   pub const VT_FILTER_STRING: flatbuffers::VOffsetT = 18;
-  pub const VT_INJECTION_TIME: flatbuffers::VOffsetT = 20;
-  pub const VT_COMPENSATION_VOLTAGE: flatbuffers::VOffsetT = 22;
+  pub const VT_ACQUISITION: flatbuffers::VOffsetT = 20;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -971,8 +1244,7 @@ impl<'a> SpectrumDescription<'a> {
   ) -> flatbuffers::WIPOffset<SpectrumDescription<'bldr>> {
     let mut builder = SpectrumDescriptionBuilder::new(_fbb);
     builder.add_time(args.time);
-    if let Some(x) = args.compensation_voltage { builder.add_compensation_voltage(x); }
-    builder.add_injection_time(args.injection_time);
+    if let Some(x) = args.acquisition { builder.add_acquisition(x); }
     if let Some(x) = args.filter_string { builder.add_filter_string(x); }
     if let Some(x) = args.data { builder.add_data(x); }
     if let Some(x) = args.precursor { builder.add_precursor(x); }
@@ -1041,18 +1313,11 @@ impl<'a> SpectrumDescription<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SpectrumDescription::VT_FILTER_STRING, None)}
   }
   #[inline]
-  pub fn injection_time(&self) -> f32 {
+  pub fn acquisition(&self) -> Option<AcquisitionT<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(SpectrumDescription::VT_INJECTION_TIME, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn compensation_voltage(&self) -> Option<f32> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(SpectrumDescription::VT_COMPENSATION_VOLTAGE, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<AcquisitionT>>(SpectrumDescription::VT_ACQUISITION, None)}
   }
 }
 
@@ -1071,8 +1336,7 @@ impl flatbuffers::Verifiable for SpectrumDescription<'_> {
      .visit_field::<PrecursorT>("precursor", Self::VT_PRECURSOR, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<SpectrumData>>("data", Self::VT_DATA, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("filter_string", Self::VT_FILTER_STRING, false)?
-     .visit_field::<f32>("injection_time", Self::VT_INJECTION_TIME, false)?
-     .visit_field::<f32>("compensation_voltage", Self::VT_COMPENSATION_VOLTAGE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<AcquisitionT>>("acquisition", Self::VT_ACQUISITION, false)?
      .finish();
     Ok(())
   }
@@ -1086,8 +1350,7 @@ pub struct SpectrumDescriptionArgs<'a> {
     pub precursor: Option<&'a PrecursorT>,
     pub data: Option<flatbuffers::WIPOffset<SpectrumData<'a>>>,
     pub filter_string: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub injection_time: f32,
-    pub compensation_voltage: Option<f32>,
+    pub acquisition: Option<flatbuffers::WIPOffset<AcquisitionT<'a>>>,
 }
 impl<'a> Default for SpectrumDescriptionArgs<'a> {
   #[inline]
@@ -1101,8 +1364,7 @@ impl<'a> Default for SpectrumDescriptionArgs<'a> {
       precursor: None,
       data: None,
       filter_string: None,
-      injection_time: 0.0,
-      compensation_voltage: None,
+      acquisition: None,
     }
   }
 }
@@ -1145,12 +1407,8 @@ impl<'a: 'b, 'b> SpectrumDescriptionBuilder<'a, 'b> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SpectrumDescription::VT_FILTER_STRING, filter_string);
   }
   #[inline]
-  pub fn add_injection_time(&mut self, injection_time: f32) {
-    self.fbb_.push_slot::<f32>(SpectrumDescription::VT_INJECTION_TIME, injection_time, 0.0);
-  }
-  #[inline]
-  pub fn add_compensation_voltage(&mut self, compensation_voltage: f32) {
-    self.fbb_.push_slot_always::<f32>(SpectrumDescription::VT_COMPENSATION_VOLTAGE, compensation_voltage);
+  pub fn add_acquisition(&mut self, acquisition: flatbuffers::WIPOffset<AcquisitionT<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<AcquisitionT>>(SpectrumDescription::VT_ACQUISITION, acquisition);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> SpectrumDescriptionBuilder<'a, 'b> {
@@ -1178,8 +1436,7 @@ impl core::fmt::Debug for SpectrumDescription<'_> {
       ds.field("precursor", &self.precursor());
       ds.field("data", &self.data());
       ds.field("filter_string", &self.filter_string());
-      ds.field("injection_time", &self.injection_time());
-      ds.field("compensation_voltage", &self.compensation_voltage());
+      ds.field("acquisition", &self.acquisition());
       ds.finish()
   }
 }

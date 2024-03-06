@@ -29,6 +29,17 @@ enum DissociationMethod : uint8 {
     MPD = 64,
 }
 
+enum MassAnalyzer : uint8 {
+    Unknown,
+    ITMS,
+    TQMS,
+    SQMS,
+    TOFMS,
+    FTMS,
+    Sector,
+    ASTMS
+}
+
 struct IsolationWindowT {
     lower: float64;
     target: float64;
@@ -54,6 +65,14 @@ struct PrecursorT {
     activation: ActivationT;
 }
 
+table AcquisitionT {
+    low_mz: float64;
+    high_mz: float64;
+    injection_time: float32;
+    compensation_voltage: float32 = null;
+    mass_analyzer: MassAnalyzer = FTMS;
+}
+
 table SpectrumDescription {
     index: int32;
     ms_level: uint8 = 2;
@@ -63,8 +82,7 @@ table SpectrumDescription {
     precursor: PrecursorT;
     data: SpectrumData;
     filter_string: string;
-    injection_time: float32;
-    compensation_voltage: float32 = null;
+    acquisition: AcquisitionT;
 }
 
 root_type SpectrumDescription;
