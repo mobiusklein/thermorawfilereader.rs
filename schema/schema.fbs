@@ -1,3 +1,5 @@
+// This schema is purely for in-memory use, no guarantee is made for serialization
+
 namespace librawfilereader;
 
 enum Polarity : int8 {
@@ -40,6 +42,37 @@ enum MassAnalyzer : uint8 {
     ASTMS
 }
 
+enum IonizationMode : uint8
+{
+    ElectronImpact,
+    ChemicalIonization,
+    FastAtomBombardment,
+    ElectroSpray,
+    AtmosphericPressureChemicalIonization,
+    NanoSpray,
+    ThermoSpray,
+    FieldDesorption,
+    MatrixAssistedLaserDesorptionIonization,
+    GlowDischarge,
+    Any,
+    PaperSprayIonization,
+    CardNanoSprayIonization,
+    IonizationMode1,
+    IonizationMode2,
+    IonizationMode3,
+    IonizationMode4,
+    IonizationMode5,
+    IonizationMode6,
+    IonizationMode7,
+    IonizationMode8,
+    IonizationMode9,
+    IonModeBeyondKnown
+}
+
+table InstrumentConfigurationT {
+
+}
+
 struct IsolationWindowT {
     lower: float64;
     target: float64;
@@ -71,6 +104,8 @@ table AcquisitionT {
     injection_time: float32;
     compensation_voltage: float32 = null;
     mass_analyzer: MassAnalyzer = FTMS;
+    scan_event: int32 = 1;
+    ionization_mode: IonizationMode = NanoSpray;
 }
 
 table SpectrumDescription {

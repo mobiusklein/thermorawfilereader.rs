@@ -3,9 +3,9 @@
 1c716c16be80fbe272571f035b2276d8 *dotnetrawfilereader-sys/lib/ThermoFisher.CommonCore.MassPrecisionEstimator.dll
 1f1873824be022e558863203985e125a *dotnetrawfilereader-sys/lib/ThermoFisher.CommonCore.Data.dll
 267c2506cf058eece741ddc0218af50a *dotnetrawfilereader-sys/lib/librawfilereader.deps.json
+33b46cb27588c46272f9558d76174a5d *dotnetrawfilereader-sys/lib/librawfilereader.pdb
 3730cf820500fc8e614e5ac7902aad19 *dotnetrawfilereader-sys/lib/ThermoFisher.CommonCore.BackgroundSubtraction.dll
-5c624939fa875a3c0e575a2fe6e5aaa8 *dotnetrawfilereader-sys/lib/librawfilereader.pdb
+98d96ff38e852363108fb986efe21529 *dotnetrawfilereader-sys/lib/librawfilereader.dll
 d3f0c37e9712f80319c7c8a2fb189ee1 *dotnetrawfilereader-sys/lib/ThermoFisher.CommonCore.RawFileReader.dll
 e3f54f0ec58158a9edf08858f6279fe5 *dotnetrawfilereader-sys/lib/OpenMcdf.Extensions.dll
-f85e5b98125af985a6836d8517ffbfe8 *dotnetrawfilereader-sys/lib/librawfilereader.dll
 fd43dbfef5c06aa572a5341115c58998 *dotnetrawfilereader-sys/lib/OpenMcdf.dll

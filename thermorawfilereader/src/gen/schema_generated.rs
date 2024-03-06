@@ -430,12 +430,181 @@ impl<'a> flatbuffers::Verifiable for MassAnalyzer {
 }
 
 impl flatbuffers::SimpleToVerifyInSlice for MassAnalyzer {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_IONIZATION_MODE: u8 = 0;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_IONIZATION_MODE: u8 = 22;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_IONIZATION_MODE: [IonizationMode; 23] = [
+  IonizationMode::ElectronImpact,
+  IonizationMode::ChemicalIonization,
+  IonizationMode::FastAtomBombardment,
+  IonizationMode::ElectroSpray,
+  IonizationMode::AtmosphericPressureChemicalIonization,
+  IonizationMode::NanoSpray,
+  IonizationMode::ThermoSpray,
+  IonizationMode::FieldDesorption,
+  IonizationMode::MatrixAssistedLaserDesorptionIonization,
+  IonizationMode::GlowDischarge,
+  IonizationMode::Any,
+  IonizationMode::PaperSprayIonization,
+  IonizationMode::CardNanoSprayIonization,
+  IonizationMode::IonizationMode1,
+  IonizationMode::IonizationMode2,
+  IonizationMode::IonizationMode3,
+  IonizationMode::IonizationMode4,
+  IonizationMode::IonizationMode5,
+  IonizationMode::IonizationMode6,
+  IonizationMode::IonizationMode7,
+  IonizationMode::IonizationMode8,
+  IonizationMode::IonizationMode9,
+  IonizationMode::IonModeBeyondKnown,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct IonizationMode(pub u8);
+#[allow(non_upper_case_globals)]
+impl IonizationMode {
+  pub const ElectronImpact: Self = Self(0);
+  pub const ChemicalIonization: Self = Self(1);
+  pub const FastAtomBombardment: Self = Self(2);
+  pub const ElectroSpray: Self = Self(3);
+  pub const AtmosphericPressureChemicalIonization: Self = Self(4);
+  pub const NanoSpray: Self = Self(5);
+  pub const ThermoSpray: Self = Self(6);
+  pub const FieldDesorption: Self = Self(7);
+  pub const MatrixAssistedLaserDesorptionIonization: Self = Self(8);
+  pub const GlowDischarge: Self = Self(9);
+  pub const Any: Self = Self(10);
+  pub const PaperSprayIonization: Self = Self(11);
+  pub const CardNanoSprayIonization: Self = Self(12);
+  pub const IonizationMode1: Self = Self(13);
+  pub const IonizationMode2: Self = Self(14);
+  pub const IonizationMode3: Self = Self(15);
+  pub const IonizationMode4: Self = Self(16);
+  pub const IonizationMode5: Self = Self(17);
+  pub const IonizationMode6: Self = Self(18);
+  pub const IonizationMode7: Self = Self(19);
+  pub const IonizationMode8: Self = Self(20);
+  pub const IonizationMode9: Self = Self(21);
+  pub const IonModeBeyondKnown: Self = Self(22);
+
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 22;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::ElectronImpact,
+    Self::ChemicalIonization,
+    Self::FastAtomBombardment,
+    Self::ElectroSpray,
+    Self::AtmosphericPressureChemicalIonization,
+    Self::NanoSpray,
+    Self::ThermoSpray,
+    Self::FieldDesorption,
+    Self::MatrixAssistedLaserDesorptionIonization,
+    Self::GlowDischarge,
+    Self::Any,
+    Self::PaperSprayIonization,
+    Self::CardNanoSprayIonization,
+    Self::IonizationMode1,
+    Self::IonizationMode2,
+    Self::IonizationMode3,
+    Self::IonizationMode4,
+    Self::IonizationMode5,
+    Self::IonizationMode6,
+    Self::IonizationMode7,
+    Self::IonizationMode8,
+    Self::IonizationMode9,
+    Self::IonModeBeyondKnown,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::ElectronImpact => Some("ElectronImpact"),
+      Self::ChemicalIonization => Some("ChemicalIonization"),
+      Self::FastAtomBombardment => Some("FastAtomBombardment"),
+      Self::ElectroSpray => Some("ElectroSpray"),
+      Self::AtmosphericPressureChemicalIonization => Some("AtmosphericPressureChemicalIonization"),
+      Self::NanoSpray => Some("NanoSpray"),
+      Self::ThermoSpray => Some("ThermoSpray"),
+      Self::FieldDesorption => Some("FieldDesorption"),
+      Self::MatrixAssistedLaserDesorptionIonization => Some("MatrixAssistedLaserDesorptionIonization"),
+      Self::GlowDischarge => Some("GlowDischarge"),
+      Self::Any => Some("Any"),
+      Self::PaperSprayIonization => Some("PaperSprayIonization"),
+      Self::CardNanoSprayIonization => Some("CardNanoSprayIonization"),
+      Self::IonizationMode1 => Some("IonizationMode1"),
+      Self::IonizationMode2 => Some("IonizationMode2"),
+      Self::IonizationMode3 => Some("IonizationMode3"),
+      Self::IonizationMode4 => Some("IonizationMode4"),
+      Self::IonizationMode5 => Some("IonizationMode5"),
+      Self::IonizationMode6 => Some("IonizationMode6"),
+      Self::IonizationMode7 => Some("IonizationMode7"),
+      Self::IonizationMode8 => Some("IonizationMode8"),
+      Self::IonizationMode9 => Some("IonizationMode9"),
+      Self::IonModeBeyondKnown => Some("IonModeBeyondKnown"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for IonizationMode {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for IonizationMode {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for IonizationMode {
+    type Output = IonizationMode;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for IonizationMode {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for IonizationMode {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for IonizationMode {}
 // struct IsolationWindowT, aligned to 8
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
 pub struct IsolationWindowT(pub [u8; 24]);
-impl Default for IsolationWindowT { 
-  fn default() -> Self { 
+impl Default for IsolationWindowT {
+  fn default() -> Self {
     Self([0; 24])
   }
 }
@@ -590,8 +759,8 @@ impl<'a> IsolationWindowT {
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
 pub struct ActivationT(pub [u8; 16]);
-impl Default for ActivationT { 
-  fn default() -> Self { 
+impl Default for ActivationT {
+  fn default() -> Self {
     Self([0; 16])
   }
 }
@@ -714,8 +883,8 @@ impl<'a> ActivationT {
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
 pub struct PrecursorT(pub [u8; 64]);
-impl Default for PrecursorT { 
-  fn default() -> Self { 
+impl Default for PrecursorT {
+  fn default() -> Self {
     Self([0; 64])
   }
 }
@@ -928,6 +1097,85 @@ impl<'a> PrecursorT {
 
 }
 
+pub enum InstrumentConfigurationTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct InstrumentConfigurationT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for InstrumentConfigurationT<'a> {
+  type Inner = InstrumentConfigurationT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> InstrumentConfigurationT<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    InstrumentConfigurationT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    _args: &'args InstrumentConfigurationTArgs
+  ) -> flatbuffers::WIPOffset<InstrumentConfigurationT<'bldr>> {
+    let mut builder = InstrumentConfigurationTBuilder::new(_fbb);
+    builder.finish()
+  }
+
+}
+
+impl flatbuffers::Verifiable for InstrumentConfigurationT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct InstrumentConfigurationTArgs {
+}
+impl<'a> Default for InstrumentConfigurationTArgs {
+  #[inline]
+  fn default() -> Self {
+    InstrumentConfigurationTArgs {
+    }
+  }
+}
+
+pub struct InstrumentConfigurationTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> InstrumentConfigurationTBuilder<'a, 'b> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> InstrumentConfigurationTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    InstrumentConfigurationTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<InstrumentConfigurationT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for InstrumentConfigurationT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("InstrumentConfigurationT");
+      ds.finish()
+  }
+}
 pub enum SpectrumDataOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -1063,6 +1311,8 @@ impl<'a> AcquisitionT<'a> {
   pub const VT_INJECTION_TIME: flatbuffers::VOffsetT = 8;
   pub const VT_COMPENSATION_VOLTAGE: flatbuffers::VOffsetT = 10;
   pub const VT_MASS_ANALYZER: flatbuffers::VOffsetT = 12;
+  pub const VT_SCAN_EVENT: flatbuffers::VOffsetT = 14;
+  pub const VT_IONIZATION_MODE: flatbuffers::VOffsetT = 16;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1076,8 +1326,10 @@ impl<'a> AcquisitionT<'a> {
     let mut builder = AcquisitionTBuilder::new(_fbb);
     builder.add_high_mz(args.high_mz);
     builder.add_low_mz(args.low_mz);
+    builder.add_scan_event(args.scan_event);
     if let Some(x) = args.compensation_voltage { builder.add_compensation_voltage(x); }
     builder.add_injection_time(args.injection_time);
+    builder.add_ionization_mode(args.ionization_mode);
     builder.add_mass_analyzer(args.mass_analyzer);
     builder.finish()
   }
@@ -1118,6 +1370,20 @@ impl<'a> AcquisitionT<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<MassAnalyzer>(AcquisitionT::VT_MASS_ANALYZER, Some(MassAnalyzer::FTMS)).unwrap()}
   }
+  #[inline]
+  pub fn scan_event(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(AcquisitionT::VT_SCAN_EVENT, Some(1)).unwrap()}
+  }
+  #[inline]
+  pub fn ionization_mode(&self) -> IonizationMode {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<IonizationMode>(AcquisitionT::VT_IONIZATION_MODE, Some(IonizationMode::NanoSpray)).unwrap()}
+  }
 }
 
 impl flatbuffers::Verifiable for AcquisitionT<'_> {
@@ -1132,6 +1398,8 @@ impl flatbuffers::Verifiable for AcquisitionT<'_> {
      .visit_field::<f32>("injection_time", Self::VT_INJECTION_TIME, false)?
      .visit_field::<f32>("compensation_voltage", Self::VT_COMPENSATION_VOLTAGE, false)?
      .visit_field::<MassAnalyzer>("mass_analyzer", Self::VT_MASS_ANALYZER, false)?
+     .visit_field::<i32>("scan_event", Self::VT_SCAN_EVENT, false)?
+     .visit_field::<IonizationMode>("ionization_mode", Self::VT_IONIZATION_MODE, false)?
      .finish();
     Ok(())
   }
@@ -1142,6 +1410,8 @@ pub struct AcquisitionTArgs {
     pub injection_time: f32,
     pub compensation_voltage: Option<f32>,
     pub mass_analyzer: MassAnalyzer,
+    pub scan_event: i32,
+    pub ionization_mode: IonizationMode,
 }
 impl<'a> Default for AcquisitionTArgs {
   #[inline]
@@ -1152,6 +1422,8 @@ impl<'a> Default for AcquisitionTArgs {
       injection_time: 0.0,
       compensation_voltage: None,
       mass_analyzer: MassAnalyzer::FTMS,
+      scan_event: 1,
+      ionization_mode: IonizationMode::NanoSpray,
     }
   }
 }
@@ -1182,6 +1454,14 @@ impl<'a: 'b, 'b> AcquisitionTBuilder<'a, 'b> {
     self.fbb_.push_slot::<MassAnalyzer>(AcquisitionT::VT_MASS_ANALYZER, mass_analyzer, MassAnalyzer::FTMS);
   }
   #[inline]
+  pub fn add_scan_event(&mut self, scan_event: i32) {
+    self.fbb_.push_slot::<i32>(AcquisitionT::VT_SCAN_EVENT, scan_event, 1);
+  }
+  #[inline]
+  pub fn add_ionization_mode(&mut self, ionization_mode: IonizationMode) {
+    self.fbb_.push_slot::<IonizationMode>(AcquisitionT::VT_IONIZATION_MODE, ionization_mode, IonizationMode::NanoSpray);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> AcquisitionTBuilder<'a, 'b> {
     let start = _fbb.start_table();
     AcquisitionTBuilder {
@@ -1204,6 +1484,8 @@ impl core::fmt::Debug for AcquisitionT<'_> {
       ds.field("injection_time", &self.injection_time());
       ds.field("compensation_voltage", &self.compensation_voltage());
       ds.field("mass_analyzer", &self.mass_analyzer());
+      ds.field("scan_event", &self.scan_event());
+      ds.field("ionization_mode", &self.ionization_mode());
       ds.finish()
   }
 }

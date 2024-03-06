@@ -14,6 +14,9 @@ use crate::schema::{
     root_as_spectrum_description_unchecked, Polarity, PrecursorT, SpectrumDescription, SpectrumMode,
 };
 
+#[allow(unused)]
+use flatbuffers::root;
+
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RawFileReaderError {
@@ -244,7 +247,7 @@ impl RawFileReaderHandle {
             );
             println!("Filter: {}", descr.filter_string().unwrap());
             let acq = descr.acquisition().unwrap();
-            println!("{:?} {}-{}", acq.mass_analyzer(), acq.low_mz(), acq.high_mz());
+            println!("{:?} {:?} {}-{}", acq.mass_analyzer(), acq.ionization_mode(), acq.low_mz(), acq.high_mz());
             descr.data().map(|dat| {
                 let intens_opt = dat.intensity();
                 let intens = intens_opt.as_ref().unwrap();

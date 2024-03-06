@@ -49,10 +49,12 @@ namespace librawfilereader
         public double InjectionTime;
         public double? CompensationVoltage = null;
         public MassAnalyzer Analyzer;
+        public IonizationMode Ionization;
         public double LowMZ;
         public double HighMZ;
+        public int ScanEventNumber;
 
-        public MassAnalyzer CastMassAnalyzer(MassAnalyzerType analyzer)
+        public static MassAnalyzer CastMassAnalyzer(MassAnalyzerType analyzer)
         {
             switch (analyzer)
             {
@@ -90,14 +92,19 @@ namespace librawfilereader
                     }
             };
         }
+        public static IonizationMode CastIonizationMode(IonizationModeType ionizationModeType) {
+            int value = (int)ionizationModeType;
+            return (IonizationMode)value;
+        }
 
-        public AcquisitionProperties(double injectionTime, double? compensationVoltage, MassAnalyzerType analyzer, double lowMZ = 0, double highMZ = 0)
+        public AcquisitionProperties(double injectionTime, double? compensationVoltage, MassAnalyzerType analyzer, double lowMZ, double highMZ, int scanEventNumber)
         {
             InjectionTime = injectionTime;
             CompensationVoltage = compensationVoltage;
             Analyzer = CastMassAnalyzer(analyzer);
             LowMZ = lowMZ;
             HighMZ = highMZ;
+            ScanEventNumber = scanEventNumber;
         }
     }
 
@@ -123,6 +130,7 @@ namespace librawfilereader
         // public IRawFileThreadManager Manager;
         public IRawDataPlus Handle;
         public RawFileReaderError Status;
+        public Dictionary<MassAnalyzer, int> InstrumentConfigByMassAnalyzer;
 
         public RawFileReader(string path)
         {
@@ -131,6 +139,7 @@ namespace librawfilereader
             Handle = RawFileReaderAdapter.FileFactory(Path);
             // Handle = (IRawDataPlus)RawFileReaderAdapter.ThreadedFileFactory(Path);
             Status = RawFileReaderError.Ok;
+            InstrumentConfigByMassAnalyzer = new Dictionary<MassAnalyzer, int>();
             Status = Configure();
         }
 
@@ -272,8 +281,9 @@ namespace librawfilereader
             double monoisotopicMZ = 0.0;
             int precursorCharge = 0;
             double isolationWidth = 0.0;
-            AcquisitionProperties acquisitionProperties = new AcquisitionProperties(0.0, null, filter.MassAnalyzer, stats.LowMass, stats.HighMass);
+            double injectionTime = 0.0;
             int masterScanNumber = -1;
+            int scanEventNum = 1;
 
             for (int i = 0; i < n; i++)
             {
@@ -299,9 +309,14 @@ namespace librawfilereader
                 }
                 else if (label == "Ion Injection Time (ms)")
                 {
-                    acquisitionProperties.InjectionTime = double.Parse(trailers.Values[i]);
+                    injectionTime = double.Parse(trailers.Values[i]);
+                }
+                else if (label.EndsWith("Scan Event")) {
+                    scanEventNum = int.Parse(trailers.Values[i]);
                 }
             }
+
+            AcquisitionProperties acquisitionProperties = new AcquisitionProperties(injectionTime, null, filter.MassAnalyzer, stats.LowMass, stats.HighMass, scanEventNum);
 
             if (filter.CompensationVoltage == TriState.On)
             {
@@ -358,6 +373,23 @@ namespace librawfilereader
             return offset;
         }
 
+        Dictionary<MassAnalyzer, int> FindAllMassAnalyzers() {
+            var analyzers = new Dictionary<MassAnalyzer, int>();
+            var accessor = GetHandle();
+            var filters = accessor.GetFilters();
+            int counter = 0;
+            foreach(var filter in filters) {
+                var a = AcquisitionProperties.CastMassAnalyzer(filter.MassAnalyzer);
+                if(analyzers.ContainsKey(a)) {
+                    continue;
+                }
+                AcquisitionProperties.CastIonizationMode(filter.IonizationMode);
+                analyzers.Add(a, counter);
+                counter += 1;
+            }
+            return analyzers;
+        }
+
         Polarity GetPolarity(IScanFilter filter)
         {
             Polarity polarity = Polarity.Positive;
@@ -403,6 +435,8 @@ namespace librawfilereader
             AcquisitionT.AddLowMz(builder, acquisitionProperties.LowMZ);
             AcquisitionT.AddHighMz(builder, acquisitionProperties.HighMZ);
             AcquisitionT.AddMassAnalyzer(builder, acquisitionProperties.Analyzer);
+            AcquisitionT.AddScanEvent(builder, acquisitionProperties.ScanEventNumber);
+            AcquisitionT.AddIonizationMode(builder, AcquisitionProperties.CastIonizationMode(filter.IonizationMode));
             var acquisitionOffset = AcquisitionT.EndAcquisitionT(builder);
 
             SpectrumDescription.StartSpectrumDescription(builder);
@@ -452,6 +486,7 @@ namespace librawfilereader
             {
                 accessor.SelectInstrument(Device.MS, 1);
             }
+            InstrumentConfigByMassAnalyzer = FindAllMassAnalyzers();
             return RawFileReaderError.Ok;
         }
     }

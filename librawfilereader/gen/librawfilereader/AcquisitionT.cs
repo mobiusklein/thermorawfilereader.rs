@@ -24,28 +24,36 @@ public struct AcquisitionT : IFlatbufferObject
   public float InjectionTime { get { int o = __p.__offset(8); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   public float? CompensationVoltage { get { int o = __p.__offset(10); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float?)null; } }
   public librawfilereader.MassAnalyzer MassAnalyzer { get { int o = __p.__offset(12); return o != 0 ? (librawfilereader.MassAnalyzer)__p.bb.Get(o + __p.bb_pos) : librawfilereader.MassAnalyzer.FTMS; } }
+  public int ScanEvent { get { int o = __p.__offset(14); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)1; } }
+  public librawfilereader.IonizationMode IonizationMode { get { int o = __p.__offset(16); return o != 0 ? (librawfilereader.IonizationMode)__p.bb.Get(o + __p.bb_pos) : librawfilereader.IonizationMode.NanoSpray; } }
 
   public static Offset<librawfilereader.AcquisitionT> CreateAcquisitionT(FlatBufferBuilder builder,
       double low_mz = 0.0,
       double high_mz = 0.0,
       float injection_time = 0.0f,
       float? compensation_voltage = null,
-      librawfilereader.MassAnalyzer mass_analyzer = librawfilereader.MassAnalyzer.FTMS) {
-    builder.StartTable(5);
+      librawfilereader.MassAnalyzer mass_analyzer = librawfilereader.MassAnalyzer.FTMS,
+      int scan_event = 1,
+      librawfilereader.IonizationMode ionization_mode = librawfilereader.IonizationMode.NanoSpray) {
+    builder.StartTable(7);
     AcquisitionT.AddHighMz(builder, high_mz);
     AcquisitionT.AddLowMz(builder, low_mz);
+    AcquisitionT.AddScanEvent(builder, scan_event);
     AcquisitionT.AddCompensationVoltage(builder, compensation_voltage);
     AcquisitionT.AddInjectionTime(builder, injection_time);
+    AcquisitionT.AddIonizationMode(builder, ionization_mode);
     AcquisitionT.AddMassAnalyzer(builder, mass_analyzer);
     return AcquisitionT.EndAcquisitionT(builder);
   }
 
-  public static void StartAcquisitionT(FlatBufferBuilder builder) { builder.StartTable(5); }
+  public static void StartAcquisitionT(FlatBufferBuilder builder) { builder.StartTable(7); }
   public static void AddLowMz(FlatBufferBuilder builder, double lowMz) { builder.AddDouble(0, lowMz, 0.0); }
   public static void AddHighMz(FlatBufferBuilder builder, double highMz) { builder.AddDouble(1, highMz, 0.0); }
   public static void AddInjectionTime(FlatBufferBuilder builder, float injectionTime) { builder.AddFloat(2, injectionTime, 0.0f); }
   public static void AddCompensationVoltage(FlatBufferBuilder builder, float? compensationVoltage) { builder.AddFloat(3, compensationVoltage); }
   public static void AddMassAnalyzer(FlatBufferBuilder builder, librawfilereader.MassAnalyzer massAnalyzer) { builder.AddByte(4, (byte)massAnalyzer, 5); }
+  public static void AddScanEvent(FlatBufferBuilder builder, int scanEvent) { builder.AddInt(5, scanEvent, 1); }
+  public static void AddIonizationMode(FlatBufferBuilder builder, librawfilereader.IonizationMode ionizationMode) { builder.AddByte(6, (byte)ionizationMode, 5); }
   public static Offset<librawfilereader.AcquisitionT> EndAcquisitionT(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<librawfilereader.AcquisitionT>(o);
@@ -63,6 +71,8 @@ static public class AcquisitionTVerify
       && verifier.VerifyField(tablePos, 8 /*InjectionTime*/, 4 /*float*/, 4, false)
       && verifier.VerifyField(tablePos, 10 /*CompensationVoltage*/, 4 /*float*/, 4, false)
       && verifier.VerifyField(tablePos, 12 /*MassAnalyzer*/, 1 /*librawfilereader.MassAnalyzer*/, 1, false)
+      && verifier.VerifyField(tablePos, 14 /*ScanEvent*/, 4 /*int*/, 4, false)
+      && verifier.VerifyField(tablePos, 16 /*IonizationMode*/, 1 /*librawfilereader.IonizationMode*/, 1, false)
       && verifier.VerifyTableEnd(tablePos);
   }
 }
