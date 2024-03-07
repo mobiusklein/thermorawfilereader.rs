@@ -12,12 +12,17 @@ pub fn main() -> io::Result<()> {
 
     let start = time::Instant::now();
     if target < 0 {
-        println!("Counting MSn spectra");
         handle.set_signal_loading(false);
-        let ms2_scans = handle.iter().filter(|buf| {
-            buf.view().ms_level() == 2
-        }).count();
-        println!("Found {ms2_scans} MSn spectra");
+        println!("Counting MSn spectra");
+        let ms2_count = handle.iter().filter(|b| b.ms_level() > 1).count();
+        println!("Found {ms2_count} MSn spectra");
+        handle.set_signal_loading(true);
+        let data_points: usize = handle.iter().map(|b| {
+            let view = b.view();
+            let data_view = view.data().unwrap();
+            data_view.mz().unwrap().len()
+        }).sum();
+        println!("Found {data_points} points");
     } else {
         handle.describe(target as usize);
     }

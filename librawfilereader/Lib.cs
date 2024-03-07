@@ -8,11 +8,8 @@ using ThermoFisher.CommonCore.RawFileReader;
 
 using Google.FlatBuffers;
 using ThermoFisher.CommonCore.Data.FilterEnums;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using ThermoFisher.CommonCore.Data;
 
 namespace librawfilereader
 {
@@ -125,8 +122,7 @@ namespace librawfilereader
         InvalidFormat,
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct RawFileReader : IDisposable
+    public class RawFileReader : IDisposable
     {
         public string Path;
         Dictionary<int, List<int?>> PreviousMSLevels;
@@ -661,7 +657,11 @@ namespace librawfilereader
         [UnmanagedCallersOnly]
         public static unsafe void SetSignalLoading(IntPtr handleToken, uint value) {
             RawFileReader reader = GetHandleForToken(handleToken);
-            reader.IncludeSignal = value != 0;
+            if (value == 0) {
+                reader.IncludeSignal = false;
+            } else {
+                reader.IncludeSignal = true;
+            }
         }
 
         [UnmanagedCallersOnly]
