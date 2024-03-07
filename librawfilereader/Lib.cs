@@ -11,6 +11,8 @@ using ThermoFisher.CommonCore.Data.FilterEnums;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using ThermoFisher.CommonCore.Data;
 
 namespace librawfilereader
 {
@@ -127,19 +129,25 @@ namespace librawfilereader
     public struct RawFileReader : IDisposable
     {
         public string Path;
+        Dictionary<int, List<int?>> PreviousMSLevels;
+        Dictionary<String, int> TrailerMap;
         // public IRawFileThreadManager Manager;
         public IRawDataPlus Handle;
         public RawFileReaderError Status;
         public Dictionary<MassAnalyzer, int> InstrumentConfigByMassAnalyzer;
 
+        public bool IncludeSignal = true;
+
         public RawFileReader(string path)
         {
             Path = path;
             // Manager = RawFileReaderFactory.CreateThreadManager(Path);
-            Handle = RawFileReaderAdapter.FileFactory(Path);
             // Handle = (IRawDataPlus)RawFileReaderAdapter.ThreadedFileFactory(Path);
+            Handle = RawFileReaderAdapter.FileFactory(Path);
             Status = RawFileReaderError.Ok;
             InstrumentConfigByMassAnalyzer = new Dictionary<MassAnalyzer, int>();
+            PreviousMSLevels = new();
+            TrailerMap = new();
             Status = Configure();
         }
 
@@ -172,49 +180,34 @@ namespace librawfilereader
             Handle.Dispose();
         }
 
+        private static Dictionary<MSOrderType, short> MSLevelMap = new Dictionary<MSOrderType, short>() {
+            {MSOrderType.Ms, 1},
+            {MSOrderType.Ms2, 2},
+            {MSOrderType.Ms3, 3},
+            {MSOrderType.Ms4, 4},
+            {MSOrderType.Ms5, 5},
+            {MSOrderType.Ms6, 6},
+            {MSOrderType.Ms7, 7},
+            {MSOrderType.Ms8, 8},
+            {MSOrderType.Ms9, 9},
+            {MSOrderType.Ms10, 10},
+        };
+
         short MSLevelFromFilter(IScanFilter filter)
         {
-            short msLevel = 1;
-            {
-                var level = filter.MSOrder;
-                if (MSOrderType.Ms == level)
-                {
-                    msLevel = 1;
-                }
-                else if (MSOrderType.Ms2 == level)
-                {
-                    msLevel = 2;
-                }
-                else if (MSOrderType.Ms3 == level)
-                {
-                    msLevel = 3;
-                }
-                else if (MSOrderType.Ms4 == level)
-                {
-                    msLevel = 4;
-                }
-                else if (MSOrderType.Ms5 == level)
-                {
-                    msLevel = 5;
-                }
-                else if (MSOrderType.Ms6 == level)
-                {
-                    msLevel = 6;
-                }
-                else if (MSOrderType.Ms7 == level)
-                {
-                    msLevel = 7;
-                }
-                else if (MSOrderType.Ms8 == level)
-                {
-                    msLevel = 8;
-                }
+            short msLevel;
+            if (MSLevelMap.TryGetValue(filter.MSOrder, out msLevel)) {
+                return msLevel;
             }
-            return msLevel;
+            return 1;
         }
 
         int FindPreviousPrecursor(int scanNumber, short msLevel, IRawDataPlus accessor)
         {
+            var cacheLookUp = PreviousMSLevels[scanNumber][msLevel - 1];
+            if (cacheLookUp != null) {
+                return cacheLookUp.Value;
+            }
             int i = scanNumber - 1;
             while (i > 0)
             {
@@ -233,6 +226,16 @@ namespace librawfilereader
             return i;
         }
 
+        private static Dictionary<ActivationType, DissociationMethod> DissociationMethodMap = new Dictionary<ActivationType, DissociationMethod>() {
+            {ActivationType.CollisionInducedDissociation, DissociationMethod.CID},
+            {ActivationType.ElectronCaptureDissociation, DissociationMethod.ECD},
+            {ActivationType.ElectronTransferDissociation, DissociationMethod.ETD},
+            {ActivationType.HigherEnergyCollisionalDissociation, DissociationMethod.HCD},
+            {ActivationType.NegativeElectronTransferDissociation, DissociationMethod.NETD},
+            {ActivationType.MultiPhotonDissociation, DissociationMethod.MPD},
+            {ActivationType.ProtonTransferReaction, DissociationMethod.PTD},
+        };
+
         ActivationProperties ExtractActivation(int scanNumber, short msLevel, IScanFilter filter)
         {
             ActivationProperties activation = new ActivationProperties
@@ -242,34 +245,7 @@ namespace librawfilereader
             };
 
             var activationType = filter.GetActivation(msLevel - 2);
-            if (ActivationType.CollisionInducedDissociation == activationType)
-            {
-                activation.Dissociation = DissociationMethod.CID;
-            }
-            else if (ActivationType.ElectronCaptureDissociation == activationType)
-            {
-                activation.Dissociation = DissociationMethod.ECD;
-            }
-            else if (ActivationType.HigherEnergyCollisionalDissociation == activationType)
-            {
-                activation.Dissociation = DissociationMethod.HCD;
-            }
-            else if (ActivationType.ElectronTransferDissociation == activationType)
-            {
-                activation.Dissociation = DissociationMethod.ETD;
-            }
-            else if (ActivationType.NegativeElectronTransferDissociation == activationType)
-            {
-                activation.Dissociation = DissociationMethod.NETD;
-            }
-            else if (ActivationType.MultiPhotonDissociation == activationType)
-            {
-                activation.Dissociation = DissociationMethod.MPD;
-            }
-            else if (ActivationType.ProtonTransferReaction == activationType)
-            {
-                activation.Dissociation = DissociationMethod.PTD;
-            }
+            DissociationMethodMap.TryGetValue(activationType, out activation.Dissociation);
             return activation;
         }
 
@@ -279,40 +255,65 @@ namespace librawfilereader
 
             var n = trailers.Length;
             double monoisotopicMZ = 0.0;
-            int precursorCharge = 0;
+            short precursorCharge = 0;
             double isolationWidth = 0.0;
             double injectionTime = 0.0;
             int masterScanNumber = -1;
-            int scanEventNum = 1;
+            short scanEventNum = 1;
+            Object tmp;
 
-            for (int i = 0; i < n; i++)
+            var v = "Ion Injection Time (ms)";
+            if (TrailerMap.ContainsKey(v))
             {
-                var label = trailers.Labels[i].Trim(':');
-                if (label == "Monoisotopic M/Z")
+                tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap[v]);
+                if (tmp != null)
                 {
-                    monoisotopicMZ = double.Parse(trailers.Values[i]);
+                    injectionTime = Convert.ToDouble(tmp);
                 }
-                else if (label == "Charge State")
+            }
+
+            v = "Scan Event";
+            if (TrailerMap.ContainsKey(v)) {
+                tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap[v]);
+                if (tmp != null)
                 {
-                    precursorCharge = int.Parse(trailers.Values[i]);
+                    scanEventNum = Convert.ToInt16(tmp);
                 }
-                else if (label.EndsWith("Isolation Width"))
-                {
-                    if (label.StartsWith("MS" + msLevel.ToString()))
+            }
+
+            if (msLevel > 1) {
+                if(TrailerMap.ContainsKey("Master Scan Number")) {
+                    tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap["Master Scan Number"]);
+                    if (tmp != null)
                     {
-                        isolationWidth = double.Parse(trailers.Values[i]) / 2.0;
+                        masterScanNumber = Convert.ToInt32(tmp);
                     }
                 }
-                else if (label == "Master Scan Number")
+
+                if (TrailerMap.ContainsKey("Monoisotopic M/Z"))
                 {
-                    masterScanNumber = int.Parse(trailers.Values[i]);
+                    tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap["Monoisotopic M/Z"]);
+                    if (tmp != null)
+                    {
+                        monoisotopicMZ = Convert.ToDouble(tmp);
+                    }
                 }
-                else if (label == "Ion Injection Time (ms)")
+
+                if (TrailerMap.ContainsKey("Charge State")) {
+                    tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap["Charge State"]);
+                    if (tmp != null) {
+                        precursorCharge = Convert.ToInt16(tmp);
+                    }
+                }
+
+                v = String.Format("MS{0} Isolation Width", msLevel);
+                if (TrailerMap.ContainsKey(v))
                 {
-                    injectionTime = double.Parse(trailers.Values[i]);
-                }
-                else if (label.EndsWith("Scan Event")) {
-                    scanEventNum = int.Parse(trailers.Values[i]);
+                    tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap[v]);
+                    if (tmp != null)
+                    {
+                        isolationWidth = Convert.ToDouble(tmp);
+                    }
                 }
             }
 
@@ -358,7 +359,7 @@ namespace librawfilereader
             }
         }
 
-        Offset<SpectrumData> LoadSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder, IRawDataPlus accessor)
+        Offset<SpectrumData> StoreSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder, IRawDataPlus accessor)
         {
             var segScan = accessor.GetSegmentedScanFromScanNumber(scanNumber, stats);
 
@@ -407,25 +408,8 @@ namespace librawfilereader
             }
             return polarity;
         }
-        public ByteBuffer SpectrumDescriptionFor(int scanNumber)
-        {
-            var accessor = GetHandle();
-            var stats = accessor.GetScanStatsForScanNumber(scanNumber);
-            SpectrumMode mode = stats.IsCentroidScan ? SpectrumMode.Centroid : SpectrumMode.Profile;
 
-            var filter = accessor.GetFilterForScanNumber(scanNumber);
-            short level = MSLevelFromFilter(filter);
-            Polarity polarity = GetPolarity(filter);
-
-
-            var builder = new FlatBufferBuilder(1024);
-
-            var dataOffset = LoadSpectrumData(scanNumber, stats, builder, accessor);
-            var filterString = filter.ToString();
-            var filterStringOffset = builder.CreateString(filterString);
-
-            var (precursorPropsOf, acquisitionProperties) = ExtractPrecursorAndTrailerMetadata(scanNumber, level, filter, accessor, stats);
-
+        Offset<AcquisitionT> StoreAcquisition(FlatBufferBuilder builder, AcquisitionProperties acquisitionProperties, IScanFilter filter) {
             AcquisitionT.StartAcquisitionT(builder);
             AcquisitionT.AddInjectionTime(builder, (float)acquisitionProperties.InjectionTime);
             if (acquisitionProperties.CompensationVoltage.HasValue)
@@ -438,19 +422,11 @@ namespace librawfilereader
             AcquisitionT.AddScanEvent(builder, acquisitionProperties.ScanEventNumber);
             AcquisitionT.AddIonizationMode(builder, AcquisitionProperties.CastIonizationMode(filter.IonizationMode));
             var acquisitionOffset = AcquisitionT.EndAcquisitionT(builder);
+            return acquisitionOffset;
+        }
 
-            SpectrumDescription.StartSpectrumDescription(builder);
-            SpectrumDescription.AddData(builder, dataOffset);
-            SpectrumDescription.AddIndex(builder, stats.ScanNumber - 1);
-            SpectrumDescription.AddMsLevel(builder, (byte)level);
-            SpectrumDescription.AddPolarity(builder, polarity);
-            SpectrumDescription.AddMode(builder, mode);
-            SpectrumDescription.AddFilterString(builder, filterStringOffset);
-            SpectrumDescription.AddAcquisition(builder, acquisitionOffset);
-            if (level > 1)
-            {
-                PrecursorProperties precursorProps = (PrecursorProperties)precursorPropsOf;
-                var precursor = PrecursorT.CreatePrecursorT(
+        Offset<PrecursorT> StorePrecursor(FlatBufferBuilder builder, PrecursorProperties precursorProps) {
+            var precursor = PrecursorT.CreatePrecursorT(
                     builder,
                     precursorProps.MonoisotopicMZ,
                     (float)0.0,
@@ -462,11 +438,85 @@ namespace librawfilereader
                     precursorProps.Activation.Dissociation,
                     precursorProps.Activation.Energy
                 );
+            return precursor;
+        }
+
+        public ByteBuffer SpectrumDescriptionFor(int scanNumber)
+        {
+            var accessor = GetHandle();
+            var stats = accessor.GetScanStatsForScanNumber(scanNumber);
+            SpectrumMode mode = stats.IsCentroidScan ? SpectrumMode.Centroid : SpectrumMode.Profile;
+
+            var filter = accessor.GetFilterForScanNumber(scanNumber);
+            short level = MSLevelFromFilter(filter);
+            Polarity polarity = GetPolarity(filter);
+
+
+            var builder = new FlatBufferBuilder(1024);
+            Offset<SpectrumData> dataOffset = new();
+
+            if (IncludeSignal) {
+                dataOffset = StoreSpectrumData(scanNumber, stats, builder, accessor);
+            }
+            var filterString = filter.ToString();
+            var filterStringOffset = builder.CreateString(filterString);
+
+            var (precursorPropsOf, acquisitionProperties) = ExtractPrecursorAndTrailerMetadata(scanNumber, level, filter, accessor, stats);
+
+            var acquisitionOffset = StoreAcquisition(builder, acquisitionProperties, filter);
+
+            SpectrumDescription.StartSpectrumDescription(builder);
+            if (IncludeSignal) {
+                SpectrumDescription.AddData(builder, dataOffset);
+            }
+            SpectrumDescription.AddIndex(builder, stats.ScanNumber - 1);
+            SpectrumDescription.AddMsLevel(builder, (byte)level);
+            SpectrumDescription.AddPolarity(builder, polarity);
+            SpectrumDescription.AddMode(builder, mode);
+            SpectrumDescription.AddFilterString(builder, filterStringOffset);
+            SpectrumDescription.AddAcquisition(builder, acquisitionOffset);
+            if (level > 1)
+            {
+                var precursor = StorePrecursor(builder, (PrecursorProperties)precursorPropsOf);
                 SpectrumDescription.AddPrecursor(builder, precursor);
             }
             var description = SpectrumDescription.EndSpectrumDescription(builder);
             builder.Finish(description.Value);
             return builder.DataBuffer;
+        }
+
+        private Dictionary<int, List<int?>> BuildScanTypeMap() {
+            var accessor = GetHandle();
+            Dictionary<int, List<int?>> previousMSLevels = new();
+            Dictionary<short, int?> lastMSLevels = new() {
+                {1, null},
+                {2, null},
+                {3, null},
+                {4, null},
+                {5, null},
+                {6, null},
+                {7, null},
+                {8, null},
+                {9, null},
+                {10, null},
+            };
+
+            var last = LastSpectrum();
+            for(var i = FirstSpectrum(); i <= last; i++) {
+                var filter = accessor.GetFilterForScanNumber(i);
+                var msLevel = MSLevelFromFilter(filter);
+
+                List<int?> backwards = new();
+                for(short j = 1; j < msLevel + 1; j++) {
+                    var o = lastMSLevels[j];
+                    backwards.Add(o);
+                }
+                previousMSLevels[i] = backwards;
+
+                lastMSLevels[msLevel] = i;
+            }
+
+            return previousMSLevels;
         }
 
         private RawFileReaderError Configure()
@@ -487,6 +537,14 @@ namespace librawfilereader
                 accessor.SelectInstrument(Device.MS, 1);
             }
             InstrumentConfigByMassAnalyzer = FindAllMassAnalyzers();
+            PreviousMSLevels = BuildScanTypeMap();
+
+            var headers = accessor.GetTrailerExtraHeaderInformation();
+            for(var i = 0; i < headers.Length; i++) {
+                var header =  headers[i];
+                var label = header.Label.TrimEnd(':');
+                TrailerMap[label] = i;
+            }
             return RawFileReaderError.Ok;
         }
     }
@@ -514,9 +572,10 @@ namespace librawfilereader
             fixed (byte* buf = buffer)
             {
                 vec.Len = size;
-                Buffer.MemoryCopy(
-                    buf, vec.Data, vec.Capacity, vec.Len
-                );
+                Unsafe.CopyBlock(vec.Data, buf, (uint)size);
+                // Buffer.MemoryCopy(
+                //     buf, vec.Data, vec.Capacity, vec.Len
+                // );
 
             }
             return vec;
@@ -559,13 +618,11 @@ namespace librawfilereader
             }
         }
 
+        [UnmanagedCallersOnly]
         public static unsafe void CloseAll()
         {
             OpenHandles.Clear();
         }
-
-
-        public delegate int SpectrumIndexFn(IntPtr handleToken);
 
         [UnmanagedCallersOnly]
         public static unsafe int FirstSpectrum(IntPtr handleToken)
@@ -588,15 +645,24 @@ namespace librawfilereader
             return reader.SpectrumCount();
         }
 
-        public delegate RawFileReaderError StatusFn(IntPtr handleToken);
-
+        [UnmanagedCallersOnly]
         public static unsafe uint Status(IntPtr handleToken)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             return (uint)reader.Status;
         }
 
-        public delegate RawVec BufferFn(IntPtr handleToken, int scanNumber);
+        [UnmanagedCallersOnly]
+        public static unsafe uint GetSignalLoading(IntPtr handleToken) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            return (uint)(reader.IncludeSignal ? 1 : 0);
+        }
+
+        [UnmanagedCallersOnly]
+        public static unsafe void SetSignalLoading(IntPtr handleToken, uint value) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            reader.IncludeSignal = value != 0;
+        }
 
         [UnmanagedCallersOnly]
         public static unsafe RawVec SpectrumDescriptionFor(IntPtr handleToken, int scanNumber)

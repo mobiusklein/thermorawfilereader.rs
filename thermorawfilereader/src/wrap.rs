@@ -4,11 +4,11 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::{io, ptr};
 
+use netcorehost::hostfxr::ManagedFunction;
 use netcorehost::{hostfxr::AssemblyDelegateLoader, pdcstr};
 
 use dotnetrawfilereader_sys::RawVec;
 
-use crate::gen::schema_generated::librawfilereader::root_as_spectrum_description;
 use crate::get_runtime;
 use crate::schema::{
     root_as_spectrum_description_unchecked, Polarity, PrecursorT, SpectrumDescription, SpectrumMode,
@@ -51,7 +51,6 @@ pub struct RawSpectrumWrapper {
 #[allow(unused)]
 impl RawSpectrumWrapper {
     pub fn new(data: RawVec<u8>) -> Self {
-        root_as_spectrum_description(&data).unwrap();
         Self { data }
     }
 
@@ -84,11 +83,11 @@ impl RawSpectrumWrapper {
     }
 }
 
-#[derive(Clone)]
 pub struct RawFileReaderHandle {
     raw_file_reader: *mut c_void,
     context: Arc<AssemblyDelegateLoader>,
     size: usize,
+    vget: ManagedFunction<extern "system" fn(*mut c_void, i32) -> RawVec<u8>>
 }
 
 unsafe impl Send for RawFileReaderHandle {}
@@ -110,6 +109,18 @@ impl Debug for RawFileReaderHandle {
     }
 }
 
+impl Clone for RawFileReaderHandle {
+    fn clone(&self) -> Self {
+        let buffer_fn = self.context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("SpectrumDescriptionFor"),
+            )
+            .unwrap();
+        Self { raw_file_reader: self.raw_file_reader.clone(), context: self.context.clone(), size: self.size.clone(), vget: buffer_fn }
+    }
+}
+
 impl RawFileReaderHandle {
     pub fn open<P: Into<PathBuf>>(path: P) -> io::Result<Self> {
         let context = get_runtime();
@@ -121,10 +132,18 @@ impl RawFileReaderHandle {
         let path = path.to_string_lossy().to_string();
         let raw_file_reader = open_fn(path.as_ptr(), path.len() as i32);
 
+        let buffer_fn = context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("SpectrumDescriptionFor"),
+            )
+            .unwrap();
+
         let mut handle = Self {
             raw_file_reader,
             context,
             size: 0,
+            vget: buffer_fn
         };
 
         match &handle.status() {
@@ -174,6 +193,30 @@ impl RawFileReaderHandle {
         index_fn(self.raw_file_reader)
     }
 
+    pub fn get_signal_loading(&self) -> bool {
+        self.validate_impl();
+        let index_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> u32>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("GetSignalLoading"),
+            )
+            .unwrap();
+        index_fn(self.raw_file_reader) > 0
+    }
+
+    pub fn set_signal_loading(&mut self, value: bool) {
+        self.validate_impl();
+        let index_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, u32)>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("SetSignalLoading"),
+            )
+            .unwrap();
+        index_fn(self.raw_file_reader, value as u32)
+    }
+
     #[inline]
     fn validate_impl(&self) {
         if self.raw_file_reader.is_null() {
@@ -193,6 +236,7 @@ impl RawFileReaderHandle {
         index_fn(self.raw_file_reader) as usize
     }
 
+    #[inline]
     fn len(&self) -> usize {
         if self.size != 0 {
             self.size
@@ -224,13 +268,7 @@ impl RawFileReaderHandle {
             return None
         }
         self.validate_impl();
-        let buffer_fn = self
-            .context
-            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32) -> RawVec<u8>>(
-                pdcstr!("librawfilereader.Exports, librawfilereader"),
-                pdcstr!("SpectrumDescriptionFor"),
-            )
-            .unwrap();
+        let buffer_fn = &self.vget;
         let buffer = buffer_fn(self.raw_file_reader, (index as i32) + 1);
         Some(RawSpectrumWrapper::new(buffer))
     }
@@ -272,10 +310,9 @@ impl RawFileReaderHandle {
         self.validate_impl();
         let status_fn = self
             .context
-            .get_function::<fn(*mut c_void) -> u32>(
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> u32>(
                 pdcstr!("librawfilereader.Exports, librawfilereader"),
                 pdcstr!("Status"),
-                pdcstr!("librawfilereader.Exports+StatusFn, librawfilereader"),
             )
             .unwrap();
         let code = status_fn(self.raw_file_reader);
