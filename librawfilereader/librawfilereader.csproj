@@ -7,6 +7,18 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <InvariantGlobalization>true</InvariantGlobalization>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <DefineConstants>$(DefineConstants);UNSAFE_BYTEBUFFER</DefineConstants>
+    <DefineConstants>$(DefineConstants);ENABLE_SPAN_T</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(UnsafeByteBuffer)' == 'true'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);UNSAFE_BYTEBUFFER</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EnableSpanT)' == 'true'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);ENABLE_SPAN_T</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,7 +43,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.FlatBuffers" Version="23.5.26" />
+    <!-- <PackageReference Include="Google.FlatBuffers" Version="23.5.26" /> -->
+
   </ItemGroup>
 
 </Project>

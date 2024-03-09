@@ -11,7 +11,7 @@ use dotnetrawfilereader_sys::RawVec;
 
 use crate::get_runtime;
 use crate::schema::{
-    root_as_spectrum_description_unchecked, Polarity, PrecursorT, SpectrumDescription, SpectrumMode,
+    root_as_spectrum_description_unchecked, Polarity, PrecursorT, SpectrumDescription, SpectrumMode, InstrumentConfigurationT, InstrumentModelT,
 };
 
 #[allow(unused)]
@@ -48,7 +48,6 @@ pub struct RawSpectrumWrapper {
     data: RawVec<u8>,
 }
 
-#[allow(unused)]
 impl RawSpectrumWrapper {
     pub fn new(data: RawVec<u8>) -> Self {
         Self { data }
@@ -82,6 +81,46 @@ impl RawSpectrumWrapper {
         self.view().precursor()
     }
 }
+
+pub struct InstrumentModel {
+    data: RawVec<u8>
+}
+
+impl InstrumentModel {
+    pub fn new(data: RawVec<u8>) -> Self {
+        Self { data }
+    }
+
+    pub fn view(&self) -> InstrumentModelT {
+        root::<InstrumentModelT>(&self.data).unwrap()
+    }
+
+    pub fn model(&self) -> Option<&str> {
+        self.view().model()
+    }
+
+    pub fn name(&self) -> Option<&str> {
+        self.view().name()
+    }
+
+    pub fn serial_number(&self) -> Option<&str> {
+        self.view().serial_number()
+    }
+
+    pub fn hardware_version(&self) -> Option<&str> {
+        self.view().hardware_version()
+    }
+
+    pub fn software_version(&self) -> Option<&str> {
+        self.view().software_version()
+    }
+
+    pub fn configurations(&self) -> Option<flatbuffers::Vector<'_, InstrumentConfigurationT>> {
+        self.view().configurations()
+    }
+}
+
+
 
 pub struct RawFileReaderHandle {
     raw_file_reader: *mut c_void,
@@ -215,6 +254,20 @@ impl RawFileReaderHandle {
             )
             .unwrap();
         index_fn(self.raw_file_reader, value as u32)
+    }
+
+    pub fn instrument_model(&self) -> InstrumentModel {
+        self.validate_impl();
+        let instrument_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("InstrumentModel"),
+            )
+            .unwrap();
+        let buf = instrument_fn(self.raw_file_reader);
+        root::<InstrumentModelT>(&buf).unwrap();
+        InstrumentModel::new(buf)
     }
 
     #[inline]
@@ -455,6 +508,16 @@ mod test {
         assert_eq!(m1 + mn, 48);
         assert_eq!(m1, 14);
         assert_eq!(mn, 34);
+        Ok(())
+    }
+
+    #[test]
+    fn test_instrument_model() -> io::Result<()> {
+        let handle = RawFileReaderHandle::open("../tests/data/small.RAW")?;
+        let model = handle.instrument_model();
+
+        assert_eq!(model.model(), Some("LTQ FT"));
+
         Ok(())
     }
 }

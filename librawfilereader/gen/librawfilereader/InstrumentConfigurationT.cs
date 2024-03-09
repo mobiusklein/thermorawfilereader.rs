@@ -11,30 +11,21 @@ using global::Google.FlatBuffers;
 
 public struct InstrumentConfigurationT : IFlatbufferObject
 {
-  private Table __p;
+  private Struct __p;
   public ByteBuffer ByteBuffer { get { return __p.bb; } }
-  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_23_5_26(); }
-  public static InstrumentConfigurationT GetRootAsInstrumentConfigurationT(ByteBuffer _bb) { return GetRootAsInstrumentConfigurationT(_bb, new InstrumentConfigurationT()); }
-  public static InstrumentConfigurationT GetRootAsInstrumentConfigurationT(ByteBuffer _bb, InstrumentConfigurationT obj) { return (obj.__assign(_bb.GetInt(_bb.Position) + _bb.Position, _bb)); }
-  public void __init(int _i, ByteBuffer _bb) { __p = new Table(_i, _bb); }
+  public void __init(int _i, ByteBuffer _bb) { __p = new Struct(_i, _bb); }
   public InstrumentConfigurationT __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
+  public librawfilereader.MassAnalyzer MassAnalyzer { get { return (librawfilereader.MassAnalyzer)__p.bb.Get(__p.bb_pos + 0); } }
+  public librawfilereader.IonizationMode IonizationMode { get { return (librawfilereader.IonizationMode)__p.bb.Get(__p.bb_pos + 1); } }
 
-  public static void StartInstrumentConfigurationT(FlatBufferBuilder builder) { builder.StartTable(0); }
-  public static Offset<librawfilereader.InstrumentConfigurationT> EndInstrumentConfigurationT(FlatBufferBuilder builder) {
-    int o = builder.EndTable();
-    return new Offset<librawfilereader.InstrumentConfigurationT>(o);
+  public static Offset<librawfilereader.InstrumentConfigurationT> CreateInstrumentConfigurationT(FlatBufferBuilder builder, librawfilereader.MassAnalyzer MassAnalyzer, librawfilereader.IonizationMode IonizationMode) {
+    builder.Prep(1, 2);
+    builder.PutByte((byte)IonizationMode);
+    builder.PutByte((byte)MassAnalyzer);
+    return new Offset<librawfilereader.InstrumentConfigurationT>(builder.Offset);
   }
 }
 
-
-static public class InstrumentConfigurationTVerify
-{
-  static public bool Verify(Google.FlatBuffers.Verifier verifier, uint tablePos)
-  {
-    return verifier.VerifyTableStart(tablePos)
-      && verifier.VerifyTableEnd(tablePos);
-  }
-}
 
 }

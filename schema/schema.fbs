@@ -69,8 +69,18 @@ enum IonizationMode : uint8
     IonModeBeyondKnown
 }
 
-table InstrumentConfigurationT {
+table InstrumentModelT {
+    configurations: [InstrumentConfigurationT];
+    name: string;
+    model: string;
+    serial_number: string;
+    hardware_version: string;
+    software_version: string;
+}
 
+struct InstrumentConfigurationT {
+    mass_analyzer: MassAnalyzer;
+    ionization_mode: IonizationMode;
 }
 
 struct IsolationWindowT {

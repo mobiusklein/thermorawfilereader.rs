@@ -599,6 +599,130 @@ impl<'a> flatbuffers::Verifiable for IonizationMode {
 }
 
 impl flatbuffers::SimpleToVerifyInSlice for IonizationMode {}
+// struct InstrumentConfigurationT, aligned to 1
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq)]
+pub struct InstrumentConfigurationT(pub [u8; 2]);
+impl Default for InstrumentConfigurationT {
+  fn default() -> Self {
+    Self([0; 2])
+  }
+}
+impl core::fmt::Debug for InstrumentConfigurationT {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    f.debug_struct("InstrumentConfigurationT")
+      .field("mass_analyzer", &self.mass_analyzer())
+      .field("ionization_mode", &self.ionization_mode())
+      .finish()
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for InstrumentConfigurationT {}
+impl<'a> flatbuffers::Follow<'a> for InstrumentConfigurationT {
+  type Inner = &'a InstrumentConfigurationT;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    <&'a InstrumentConfigurationT>::follow(buf, loc)
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for &'a InstrumentConfigurationT {
+  type Inner = &'a InstrumentConfigurationT;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    flatbuffers::follow_cast_ref::<InstrumentConfigurationT>(buf, loc)
+  }
+}
+impl<'b> flatbuffers::Push for InstrumentConfigurationT {
+    type Output = InstrumentConfigurationT;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        let src = ::core::slice::from_raw_parts(self as *const InstrumentConfigurationT as *const u8, Self::size());
+        dst.copy_from_slice(src);
+    }
+}
+
+impl<'a> flatbuffers::Verifiable for InstrumentConfigurationT {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.in_buffer::<Self>(pos)
+  }
+}
+
+impl<'a> InstrumentConfigurationT {
+  #[allow(clippy::too_many_arguments)]
+  pub fn new(
+    mass_analyzer: MassAnalyzer,
+    ionization_mode: IonizationMode,
+  ) -> Self {
+    let mut s = Self([0; 2]);
+    s.set_mass_analyzer(mass_analyzer);
+    s.set_ionization_mode(ionization_mode);
+    s
+  }
+
+  pub fn mass_analyzer(&self) -> MassAnalyzer {
+    let mut mem = core::mem::MaybeUninit::<<MassAnalyzer as EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    EndianScalar::from_little_endian(unsafe {
+      core::ptr::copy_nonoverlapping(
+        self.0[0..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        core::mem::size_of::<<MassAnalyzer as EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_mass_analyzer(&mut self, x: MassAnalyzer) {
+    let x_le = x.to_little_endian();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[0..].as_mut_ptr(),
+        core::mem::size_of::<<MassAnalyzer as EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn ionization_mode(&self) -> IonizationMode {
+    let mut mem = core::mem::MaybeUninit::<<IonizationMode as EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    EndianScalar::from_little_endian(unsafe {
+      core::ptr::copy_nonoverlapping(
+        self.0[1..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        core::mem::size_of::<<IonizationMode as EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_ionization_mode(&mut self, x: IonizationMode) {
+    let x_le = x.to_little_endian();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[1..].as_mut_ptr(),
+        core::mem::size_of::<<IonizationMode as EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+}
+
 // struct IsolationWindowT, aligned to 8
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
@@ -1097,82 +1221,185 @@ impl<'a> PrecursorT {
 
 }
 
-pub enum InstrumentConfigurationTOffset {}
+pub enum InstrumentModelTOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct InstrumentConfigurationT<'a> {
+pub struct InstrumentModelT<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for InstrumentConfigurationT<'a> {
-  type Inner = InstrumentConfigurationT<'a>;
+impl<'a> flatbuffers::Follow<'a> for InstrumentModelT<'a> {
+  type Inner = InstrumentModelT<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: flatbuffers::Table::new(buf, loc) }
   }
 }
 
-impl<'a> InstrumentConfigurationT<'a> {
+impl<'a> InstrumentModelT<'a> {
+  pub const VT_CONFIGURATIONS: flatbuffers::VOffsetT = 4;
+  pub const VT_NAME: flatbuffers::VOffsetT = 6;
+  pub const VT_MODEL: flatbuffers::VOffsetT = 8;
+  pub const VT_SERIAL_NUMBER: flatbuffers::VOffsetT = 10;
+  pub const VT_HARDWARE_VERSION: flatbuffers::VOffsetT = 12;
+  pub const VT_SOFTWARE_VERSION: flatbuffers::VOffsetT = 14;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    InstrumentConfigurationT { _tab: table }
+    InstrumentModelT { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
-    _args: &'args InstrumentConfigurationTArgs
-  ) -> flatbuffers::WIPOffset<InstrumentConfigurationT<'bldr>> {
-    let mut builder = InstrumentConfigurationTBuilder::new(_fbb);
+    args: &'args InstrumentModelTArgs<'args>
+  ) -> flatbuffers::WIPOffset<InstrumentModelT<'bldr>> {
+    let mut builder = InstrumentModelTBuilder::new(_fbb);
+    if let Some(x) = args.software_version { builder.add_software_version(x); }
+    if let Some(x) = args.hardware_version { builder.add_hardware_version(x); }
+    if let Some(x) = args.serial_number { builder.add_serial_number(x); }
+    if let Some(x) = args.model { builder.add_model(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    if let Some(x) = args.configurations { builder.add_configurations(x); }
     builder.finish()
   }
 
+
+  #[inline]
+  pub fn configurations(&self) -> Option<flatbuffers::Vector<'a, InstrumentConfigurationT>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, InstrumentConfigurationT>>>(InstrumentModelT::VT_CONFIGURATIONS, None)}
+  }
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(InstrumentModelT::VT_NAME, None)}
+  }
+  #[inline]
+  pub fn model(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(InstrumentModelT::VT_MODEL, None)}
+  }
+  #[inline]
+  pub fn serial_number(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(InstrumentModelT::VT_SERIAL_NUMBER, None)}
+  }
+  #[inline]
+  pub fn hardware_version(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(InstrumentModelT::VT_HARDWARE_VERSION, None)}
+  }
+  #[inline]
+  pub fn software_version(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(InstrumentModelT::VT_SOFTWARE_VERSION, None)}
+  }
 }
 
-impl flatbuffers::Verifiable for InstrumentConfigurationT<'_> {
+impl flatbuffers::Verifiable for InstrumentModelT<'_> {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, InstrumentConfigurationT>>>("configurations", Self::VT_CONFIGURATIONS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("model", Self::VT_MODEL, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("serial_number", Self::VT_SERIAL_NUMBER, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("hardware_version", Self::VT_HARDWARE_VERSION, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("software_version", Self::VT_SOFTWARE_VERSION, false)?
      .finish();
     Ok(())
   }
 }
-pub struct InstrumentConfigurationTArgs {
+pub struct InstrumentModelTArgs<'a> {
+    pub configurations: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, InstrumentConfigurationT>>>,
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub model: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub serial_number: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub hardware_version: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub software_version: Option<flatbuffers::WIPOffset<&'a str>>,
 }
-impl<'a> Default for InstrumentConfigurationTArgs {
+impl<'a> Default for InstrumentModelTArgs<'a> {
   #[inline]
   fn default() -> Self {
-    InstrumentConfigurationTArgs {
+    InstrumentModelTArgs {
+      configurations: None,
+      name: None,
+      model: None,
+      serial_number: None,
+      hardware_version: None,
+      software_version: None,
     }
   }
 }
 
-pub struct InstrumentConfigurationTBuilder<'a: 'b, 'b> {
+pub struct InstrumentModelTBuilder<'a: 'b, 'b> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b> InstrumentConfigurationTBuilder<'a, 'b> {
+impl<'a: 'b, 'b> InstrumentModelTBuilder<'a, 'b> {
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> InstrumentConfigurationTBuilder<'a, 'b> {
+  pub fn add_configurations(&mut self, configurations: flatbuffers::WIPOffset<flatbuffers::Vector<'b , InstrumentConfigurationT>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(InstrumentModelT::VT_CONFIGURATIONS, configurations);
+  }
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(InstrumentModelT::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_model(&mut self, model: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(InstrumentModelT::VT_MODEL, model);
+  }
+  #[inline]
+  pub fn add_serial_number(&mut self, serial_number: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(InstrumentModelT::VT_SERIAL_NUMBER, serial_number);
+  }
+  #[inline]
+  pub fn add_hardware_version(&mut self, hardware_version: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(InstrumentModelT::VT_HARDWARE_VERSION, hardware_version);
+  }
+  #[inline]
+  pub fn add_software_version(&mut self, software_version: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(InstrumentModelT::VT_SOFTWARE_VERSION, software_version);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> InstrumentModelTBuilder<'a, 'b> {
     let start = _fbb.start_table();
-    InstrumentConfigurationTBuilder {
+    InstrumentModelTBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<InstrumentConfigurationT<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<InstrumentModelT<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl core::fmt::Debug for InstrumentConfigurationT<'_> {
+impl core::fmt::Debug for InstrumentModelT<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("InstrumentConfigurationT");
+    let mut ds = f.debug_struct("InstrumentModelT");
+      ds.field("configurations", &self.configurations());
+      ds.field("name", &self.name());
+      ds.field("model", &self.model());
+      ds.field("serial_number", &self.serial_number());
+      ds.field("hardware_version", &self.hardware_version());
+      ds.field("software_version", &self.software_version());
       ds.finish()
   }
 }

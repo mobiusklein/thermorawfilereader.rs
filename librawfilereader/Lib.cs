@@ -130,7 +130,7 @@ namespace librawfilereader
         // public IRawFileThreadManager Manager;
         public IRawDataPlus Handle;
         public RawFileReaderError Status;
-        public Dictionary<MassAnalyzer, int> InstrumentConfigByMassAnalyzer;
+        public Dictionary<(MassAnalyzer, IonizationMode), long> InstrumentConfigsByComponents;
 
         public bool IncludeSignal = true;
 
@@ -138,10 +138,9 @@ namespace librawfilereader
         {
             Path = path;
             // Manager = RawFileReaderFactory.CreateThreadManager(Path);
-            // Handle = (IRawDataPlus)RawFileReaderAdapter.ThreadedFileFactory(Path);
             Handle = RawFileReaderAdapter.FileFactory(Path);
             Status = RawFileReaderError.Ok;
-            InstrumentConfigByMassAnalyzer = new Dictionary<MassAnalyzer, int>();
+            InstrumentConfigsByComponents = new();
             PreviousMSLevels = new();
             TrailerMap = new();
             Status = Configure();
@@ -256,7 +255,7 @@ namespace librawfilereader
             double injectionTime = 0.0;
             int masterScanNumber = -1;
             short scanEventNum = 1;
-            Object tmp;
+            object tmp;
 
             var v = "Ion Injection Time (ms)";
             if (TrailerMap.ContainsKey(v))
@@ -370,21 +369,51 @@ namespace librawfilereader
             return offset;
         }
 
-        Dictionary<MassAnalyzer, int> FindAllMassAnalyzers() {
-            var analyzers = new Dictionary<MassAnalyzer, int>();
+        Dictionary<(MassAnalyzer, IonizationMode), long> FindAllMassAnalyzers() {
+            var analyzers = new Dictionary<(MassAnalyzer, IonizationMode), long>();
             var accessor = GetHandle();
             var filters = accessor.GetFilters();
             int counter = 0;
             foreach(var filter in filters) {
                 var a = AcquisitionProperties.CastMassAnalyzer(filter.MassAnalyzer);
-                if(analyzers.ContainsKey(a)) {
+                var i = AcquisitionProperties.CastIonizationMode(filter.IonizationMode);
+                if(analyzers.ContainsKey((a, i))) {
                     continue;
                 }
-                AcquisitionProperties.CastIonizationMode(filter.IonizationMode);
-                analyzers.Add(a, counter);
+                analyzers.Add((a, i), counter);
                 counter += 1;
             }
             return analyzers;
+        }
+
+        public ByteBuffer GetInstrumentInfo() {
+            var accessor = GetHandle();
+            var instrument = accessor.GetInstrumentData();
+
+            FlatBufferBuilder builder = new FlatBufferBuilder(128);
+            var name = builder.CreateString(instrument.Name);
+            var version = builder.CreateString(instrument.HardwareVersion);
+            var model = builder.CreateString(instrument.Model);
+            var serialNumber = builder.CreateString(instrument.SerialNumber);
+            var softwareVersion = builder.CreateString(instrument.SoftwareVersion);
+
+            var n = InstrumentConfigsByComponents.Count;
+            InstrumentModelT.StartConfigurationsVector(builder, n);
+            foreach(var ((analyzer, ionizer), i) in InstrumentConfigsByComponents) {
+                var conf = InstrumentConfigurationT.CreateInstrumentConfigurationT(builder, analyzer, ionizer);
+
+            }
+            var confOffsets = builder.EndVector();
+            InstrumentModelT.StartInstrumentModelT(builder);
+            InstrumentModelT.AddConfigurations(builder, confOffsets);
+            InstrumentModelT.AddHardwareVersion(builder, version);
+            InstrumentModelT.AddName(builder, name);
+            InstrumentModelT.AddModel(builder, model);
+            InstrumentModelT.AddSerialNumber(builder, serialNumber);
+            InstrumentModelT.AddSoftwareVersion(builder, softwareVersion);
+            var off = InstrumentModelT.EndInstrumentModelT(builder);
+            builder.Finish(off.Value);
+            return builder.DataBuffer;
         }
 
         Polarity GetPolarity(IScanFilter filter)
@@ -532,7 +561,7 @@ namespace librawfilereader
             {
                 accessor.SelectInstrument(Device.MS, 1);
             }
-            InstrumentConfigByMassAnalyzer = FindAllMassAnalyzers();
+            InstrumentConfigsByComponents = FindAllMassAnalyzers();
             PreviousMSLevels = BuildScanTypeMap();
 
             var headers = accessor.GetTrailerExtraHeaderInformation();
@@ -554,6 +583,26 @@ namespace librawfilereader
 
         [UnmanagedCallersOnly]
         public static unsafe void SetRustAllocateMemory(delegate*<nuint, RawVec*, void> rustAllocateMemory) => RustAllocateMemory = rustAllocateMemory;
+
+        private unsafe static RawVec MemoryToRustVec(Span<byte> buffer, nuint size) {
+            var vec = new RawVec();
+            RustAllocateMemory(size, &vec);
+
+            if ((IntPtr)vec.Data == IntPtr.Zero)
+            {
+                return vec;
+            }
+            fixed (byte* buf = buffer)
+            {
+                vec.Len = size;
+                Unsafe.CopyBlock(vec.Data, buf, (uint)size);
+                // Buffer.MemoryCopy(
+                //     buf, vec.Data, vec.Capacity, vec.Len
+                // );
+
+            }
+            return vec;
+        }
 
         private unsafe static RawVec BufferToRustVec(byte[] buffer, nuint size)
         {
@@ -669,9 +718,18 @@ namespace librawfilereader
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             var buffer = reader.SpectrumDescriptionFor(scanNumber);
-            var bytes = buffer.ToSizedArray();
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return BufferToRustVec(bytes, (nuint)size);
+            return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly]
+        public static unsafe RawVec InstrumentModel(IntPtr handleToken) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var buffer = reader.GetInstrumentInfo();
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
+            var size = bytes.Length;
+            return MemoryToRustVec(bytes, (nuint)size);
         }
     }
 }

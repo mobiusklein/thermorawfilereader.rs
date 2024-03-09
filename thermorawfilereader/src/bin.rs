@@ -10,6 +10,12 @@ pub fn main() -> io::Result<()> {
         path
     )?;
 
+    let instrument = handle.instrument_model();
+    instrument.model().and_then(|s| {
+        println!("Instrument Model: {}", s);
+        Some(())
+    });
+
     let start = time::Instant::now();
     if target < 0 {
         handle.set_signal_loading(false);
