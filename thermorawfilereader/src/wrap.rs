@@ -23,7 +23,7 @@ pub enum RawFileReaderError {
     Ok = 0,
     FileNotFound,
     InvalidFormat,
-
+    HandleNotFound,
     Error = 999,
 }
 
@@ -121,7 +121,6 @@ impl InstrumentModel {
 }
 
 
-
 pub struct RawFileReaderHandle {
     raw_file_reader: *mut c_void,
     context: Arc<AssemblyDelegateLoader>,
@@ -148,17 +147,6 @@ impl Debug for RawFileReaderHandle {
     }
 }
 
-impl Clone for RawFileReaderHandle {
-    fn clone(&self) -> Self {
-        let buffer_fn = self.context
-            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32) -> RawVec<u8>>(
-                pdcstr!("librawfilereader.Exports, librawfilereader"),
-                pdcstr!("SpectrumDescriptionFor"),
-            )
-            .unwrap();
-        Self { raw_file_reader: self.raw_file_reader.clone(), context: self.context.clone(), size: self.size.clone(), vget: buffer_fn }
-    }
-}
 
 impl RawFileReaderHandle {
     pub fn open<P: Into<PathBuf>>(path: P) -> io::Result<Self> {
@@ -196,7 +184,7 @@ impl RawFileReaderHandle {
                     "File does not appear to be a valid RAW file",
                 ))
             }
-            RawFileReaderError::Error => {
+            RawFileReaderError::Error | RawFileReaderError::HandleNotFound => {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
                     "An unknown error occured",
@@ -251,6 +239,30 @@ impl RawFileReaderHandle {
             .get_function_with_unmanaged_callers_only::<fn(*mut c_void, u32)>(
                 pdcstr!("librawfilereader.Exports, librawfilereader"),
                 pdcstr!("SetSignalLoading"),
+            )
+            .unwrap();
+        index_fn(self.raw_file_reader, value as u32)
+    }
+
+    pub fn get_centroid_spectra(&self) -> bool {
+        self.validate_impl();
+        let index_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> u32>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("GetCentroidSpectra"),
+            )
+            .unwrap();
+        index_fn(self.raw_file_reader) > 0
+    }
+
+    pub fn set_centroid_spectra(&mut self, value: bool) {
+        self.validate_impl();
+        let index_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, u32)>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("SetCentroidSpectra"),
             )
             .unwrap();
         index_fn(self.raw_file_reader, value as u32)

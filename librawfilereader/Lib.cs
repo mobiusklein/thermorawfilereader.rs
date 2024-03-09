@@ -115,24 +115,69 @@ namespace librawfilereader
         public nuint Capacity;
     }
 
+    /// <summary>
+    /// A set of error codes to describe how creating a `RawFileReader` might fail (or not).
+    ///
+    /// This is FFI safe and mirrored by an equivalent enum on the other side.
+    /// </summary>
     public enum RawFileReaderError : uint
     {
-        Ok,
+        Ok = 0,
         FileNotFound,
         InvalidFormat,
+        HandleNotFound,
+
+        Error = 999
     }
 
+    /// <summary>
+    /// Represent a reader for a Thermo RAW file that packages spectra and metadata
+    /// into FlatBuffers for ease of exchange.
+    /// </summary>
     public class RawFileReader : IDisposable
     {
+        /// <summary>
+        /// The path to read the RAW file from.
+        /// </summary>
         public string Path;
+        /// <summary>
+        /// A mapping to look up the nearest previous spectrum of a given
+        /// MS level
+        /// </summary>
         Dictionary<int, List<int?>> PreviousMSLevels;
-        Dictionary<String, int> TrailerMap;
+
+        /// <summary>
+        /// An index look up mapping trailer keys by index that lets us avoid
+        /// looping over all trailer entries
+        /// </summary>
+        Dictionary<string, int> TrailerMap;
+
         // public IRawFileThreadManager Manager;
+
+        /// <summary>
+        /// The actual Thermo-provided reader implementation
+        /// </summary>
         public IRawDataPlus Handle;
+        /// <summary>
+        /// The status of the reader, determined when the file is first opened
+        /// </summary>
         public RawFileReaderError Status;
+        /// <summary>
+        /// A static look up of instrument configurations to a unique identifier
+        /// </summary>
         public Dictionary<(MassAnalyzer, IonizationMode), long> InstrumentConfigsByComponents;
 
+        /// <summary>
+        /// Whether or not to include the actual mass spectrum data in the message buffers.
+        /// This is useful to disable if you just want to scoop up metadata.
+        /// </summary>
         public bool IncludeSignal = true;
+
+        /// <summary>
+        /// Whether or not to pick peaks, simplifying profile spectra if they are not already stored
+        /// as centroid peaks. Defaults to `false`.
+        /// </summary>
+        public bool CentroidSpectra = false;
 
         public RawFileReader(string path)
         {
@@ -175,6 +220,9 @@ namespace librawfilereader
             Handle.Dispose();
         }
 
+        /// <summary>
+        /// A static lookup to convert Thermo's MSOrderType enum to an MS level integer
+        /// </summary>
         private static Dictionary<MSOrderType, short> MSLevelMap = new Dictionary<MSOrderType, short>() {
             {MSOrderType.Ms, 1},
             {MSOrderType.Ms2, 2},
@@ -188,6 +236,11 @@ namespace librawfilereader
             {MSOrderType.Ms10, 10},
         };
 
+        /// <summary>
+        /// Get the MS level of the scan as an integer
+        /// </summary>
+        /// <param name="filter">The scan filter for a given scan which holds much of the metadata</param>
+        /// <returns>The MS level of the scan</returns>
         short MSLevelFromFilter(IScanFilter filter)
         {
             short msLevel;
@@ -197,6 +250,15 @@ namespace librawfilereader
             return 1;
         }
 
+        /// <summary>
+        /// Find the scan number of the precursor, which is assumed to be the most recent spectrum of a lower
+        /// MS level, if it was not indicated some other way. This method is used when the Master Scan Number was
+        /// not set in a trailer value.
+        /// </summary>
+        /// <param name="scanNumber">The scan number to search back from</param>
+        /// <param name="msLevel">The MS level to search for lesser values from</param>
+        /// <param name="accessor">The current RAW file accessor</param>
+        /// <returns>The scan number of the most recent lower MS level spectrum</returns>
         int FindPreviousPrecursor(int scanNumber, short msLevel, IRawDataPlus accessor)
         {
             var cacheLookUp = PreviousMSLevels[scanNumber][msLevel - 1];
@@ -356,16 +418,30 @@ namespace librawfilereader
 
         Offset<SpectrumData> StoreSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder, IRawDataPlus accessor)
         {
-            var segScan = accessor.GetSegmentedScanFromScanNumber(scanNumber, stats);
-
-            var mzOffset = SpectrumData.CreateMzVector(bufferBuilder, segScan.Positions);
-            SpectrumData.StartIntensityVector(bufferBuilder, segScan.PositionCount);
-            foreach (var val in segScan.Intensities)
-            {
-                bufferBuilder.AddFloat((float)val);
+            Offset<SpectrumData> offset;
+            if (CentroidSpectra) {
+                var centroids = accessor.GetCentroidStream(scanNumber, true);
+                var mzOffset = SpectrumData.CreateMzVector(bufferBuilder, centroids.Masses);
+                SpectrumData.StartIntensityVector(bufferBuilder, centroids.Length);
+                foreach (var val in centroids.Intensities)
+                {
+                    bufferBuilder.AddFloat((float)val);
+                }
+                var intensityOffset = bufferBuilder.EndVector();
+                offset = SpectrumData.CreateSpectrumData(bufferBuilder, mzOffset, intensityOffset);
             }
-            var intensityOffset = bufferBuilder.EndVector();
-            var offset = SpectrumData.CreateSpectrumData(bufferBuilder, mzOffset, intensityOffset);
+            else {
+                var segScan = accessor.GetSegmentedScanFromScanNumber(scanNumber, stats);
+
+                var mzOffset = SpectrumData.CreateMzVector(bufferBuilder, segScan.Positions);
+                SpectrumData.StartIntensityVector(bufferBuilder, segScan.PositionCount);
+                foreach (var val in segScan.Intensities)
+                {
+                    bufferBuilder.AddFloat((float)val);
+                }
+                var intensityOffset = bufferBuilder.EndVector();
+                offset = SpectrumData.CreateSpectrumData(bufferBuilder, mzOffset, intensityOffset);
+            }
             return offset;
         }
 
@@ -470,7 +546,12 @@ namespace librawfilereader
         {
             var accessor = GetHandle();
             var stats = accessor.GetScanStatsForScanNumber(scanNumber);
-            SpectrumMode mode = stats.IsCentroidScan ? SpectrumMode.Centroid : SpectrumMode.Profile;
+            SpectrumMode mode;
+            if (CentroidSpectra) {
+                mode = SpectrumMode.Centroid;
+            } else {
+                mode = stats.IsCentroidScan ? SpectrumMode.Centroid : SpectrumMode.Profile;
+            }
 
             var filter = accessor.GetFilterForScanNumber(scanNumber);
             short level = MSLevelFromFilter(filter);
@@ -651,6 +732,10 @@ namespace librawfilereader
             return handle;
         }
 
+        /// <summary>
+        /// Close the underlying handle, removing it from the map.
+        /// </summary>
+        /// <param name="handleToken"></param>
         [UnmanagedCallersOnly]
         public static unsafe void Close(IntPtr handleToken)
         {
@@ -693,8 +778,12 @@ namespace librawfilereader
         [UnmanagedCallersOnly]
         public static unsafe uint Status(IntPtr handleToken)
         {
-            RawFileReader reader = GetHandleForToken(handleToken);
-            return (uint)reader.Status;
+            try {
+                RawFileReader reader = GetHandleForToken(handleToken);
+                return (uint)reader.Status;
+            } catch {
+                return (uint) RawFileReaderError.HandleNotFound;
+            }
         }
 
         [UnmanagedCallersOnly]
@@ -714,6 +803,33 @@ namespace librawfilereader
         }
 
         [UnmanagedCallersOnly]
+        public static unsafe uint GetCentroidSpectra(IntPtr handleToken)
+        {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            return (uint)(reader.CentroidSpectra ? 1 : 0);
+        }
+
+        [UnmanagedCallersOnly]
+        public static unsafe void SetCentroidSpectra(IntPtr handleToken, uint value)
+        {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            if (value == 0)
+            {
+                reader.CentroidSpectra = false;
+            }
+            else
+            {
+                reader.CentroidSpectra = true;
+            }
+        }
+
+        /// <summary>
+        /// Get a `SpectrumDescription` FlatBuffer message for a specific spectrum from a RAW file
+        /// </summary>
+        /// <param name="handleToken">The token corresponding to the `RawFileReader` handle</param>
+        /// <param name="scanNumber">The scan number of the spectrum to retrieve</param>
+        /// <returns>A `RawVec` representing Rust-allocated memory that holds the FlatBuffer message</returns>
+        [UnmanagedCallersOnly]
         public static unsafe RawVec SpectrumDescriptionFor(IntPtr handleToken, int scanNumber)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
@@ -723,6 +839,11 @@ namespace librawfilereader
             return MemoryToRustVec(bytes, (nuint)size);
         }
 
+        /// <summary>
+        /// Get an `InstrumentModel` FlatBuffer message describing the instrument used to acquire a RAW file
+        /// </summary>
+        /// <param name="handleToken">The token corresponding to the `RawFileReader` handle</param>
+        /// <returns>A `RawVec` representing Rust-allocated memory that holds the FlatBuffer message</returns>
         [UnmanagedCallersOnly]
         public static unsafe RawVec InstrumentModel(IntPtr handleToken) {
             RawFileReader reader = GetHandleForToken(handleToken);
