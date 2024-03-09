@@ -7,23 +7,30 @@ use std::{io, ptr};
 use netcorehost::hostfxr::ManagedFunction;
 use netcorehost::{hostfxr::AssemblyDelegateLoader, pdcstr};
 
+use flatbuffers::root;
+
 use dotnetrawfilereader_sys::RawVec;
 
 use crate::get_runtime;
 use crate::schema::{
-    root_as_spectrum_description_unchecked, Polarity, PrecursorT, SpectrumDescription, SpectrumMode, InstrumentConfigurationT, InstrumentModelT,
+    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT, InstrumentConfigurationT, InstrumentModelT, Polarity, PrecursorT, SpectrumData, SpectrumDescription, SpectrumMode
 };
 
-#[allow(unused)]
-use flatbuffers::root;
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// A set of error codes to describe how creating and using a `RawFileReader` might fail (or not).
 pub enum RawFileReaderError {
+    /// No problem, move along
     Ok = 0,
+    /// The file path given doesn't exist
     FileNotFound,
+    /// The file path given does exist, but it's not a Thermo RAW file
     InvalidFormat,
+    /// The handle provided doesn't exist, someone is doing something odd like making a new [`RawFileReaderHandle`]
+    /// somehow other than [`RawFileReaderHandle::open`]
     HandleNotFound,
+    /// Some other error occurred
     Error = 999,
 }
 
@@ -32,6 +39,8 @@ impl Display for RawFileReaderError {
         write!(f, "{:?}", self)
     }
 }
+
+impl std::error::Error for RawFileReaderError {}
 
 impl From<u32> for RawFileReaderError {
     fn from(value: u32) -> Self {
@@ -44,15 +53,33 @@ impl From<u32> for RawFileReaderError {
     }
 }
 
-pub struct RawSpectrumWrapper {
+#[derive()]
+/// A wrapper around the `SpectrumDescription` FlatBuffer schema. It mirrors the data
+/// stored there-in.
+pub struct RawSpectrum {
     data: RawVec<u8>,
 }
 
-impl RawSpectrumWrapper {
+impl Debug for RawSpectrum {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RawSpectrum")
+            .field("data-size", &self.data.len())
+            .finish()
+    }
+}
+
+impl RawSpectrum {
+    /// Create a new [`RawSpectrum`] by wrapping an owning memory buffer
     pub fn new(data: RawVec<u8>) -> Self {
         Self { data }
     }
 
+    /// Check that the buffer is a valid `SpectrumDescription`
+    pub fn check(&self) -> bool {
+        root_as_spectrum_description(&self.data).is_ok()
+    }
+
+    /// View the underlying buffer as a `SpectrumDescription`
     pub fn view(&self) -> SpectrumDescription {
         unsafe { root_as_spectrum_description_unchecked(&self.data) }
     }
@@ -80,17 +107,39 @@ impl RawSpectrumWrapper {
     pub fn precursor(&self) -> Option<&PrecursorT> {
         self.view().precursor()
     }
+
+    pub fn data(&self) -> Option<SpectrumData<'_>> {
+        self.view().data()
+    }
+
+    pub fn filter_string(&self) -> Option<&str> {
+        self.view().filter_string()
+    }
+
+    pub fn acquisition(&self) -> Option<AcquisitionT> {
+        self.view().acquisition()
+    }
 }
 
+
+/// A wrapper around the `InstrumentModel` FlatBuffer schema. It mirrors the data
+/// stored there-in.
 pub struct InstrumentModel {
-    data: RawVec<u8>
+    data: RawVec<u8>,
 }
 
 impl InstrumentModel {
+    /// Create a new [`InstrumentModel`] by wrapping an owning memory buffer
     pub fn new(data: RawVec<u8>) -> Self {
         Self { data }
     }
 
+    /// Check that the buffer is a valid `InstrumentModelT`
+    pub fn check(&self) -> bool {
+        root::<InstrumentModelT>(&self.data).is_ok()
+    }
+
+    /// View the underlying buffer as a `InstrumentModelT`
     pub fn view(&self) -> InstrumentModelT {
         root::<InstrumentModelT>(&self.data).unwrap()
     }
@@ -120,24 +169,32 @@ impl InstrumentModel {
     }
 }
 
-
-pub struct RawFileReaderHandle {
+/// A wrapper around a `dotnet` `RawFileReader` instance. It carries a reference to a
+/// `dotnet` runtime and a FFI pointer to access data through. The dotnet runtime is
+/// controlled via locks and is expected to be thread-safe.
+///
+/// This object's lifetime controls a shared resource in the `dotnet` runtime.
+pub struct RawFileReader {
+    /// The token controlling the `RawFileReader` this object references
     raw_file_reader: *mut c_void,
+    /// A reference to the `dotnet` runtime
     context: Arc<AssemblyDelegateLoader>,
+    /// A cache for the number of spectra in the RAW file
     size: usize,
-    vget: ManagedFunction<extern "system" fn(*mut c_void, i32) -> RawVec<u8>>
+    /// A FFI function pointer to get spectra through.
+    vget: ManagedFunction<extern "system" fn(*mut c_void, i32) -> RawVec<u8>>,
 }
 
-unsafe impl Send for RawFileReaderHandle {}
-unsafe impl Sync for RawFileReaderHandle {}
+unsafe impl Send for RawFileReader {}
+unsafe impl Sync for RawFileReader {}
 
-impl Drop for RawFileReaderHandle {
+impl Drop for RawFileReader {
     fn drop(&mut self) {
         self.close()
     }
 }
 
-impl Debug for RawFileReaderHandle {
+impl Debug for RawFileReader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RawFileReaderHandle")
             .field("raw_file_reader", &self.raw_file_reader)
@@ -147,8 +204,17 @@ impl Debug for RawFileReaderHandle {
     }
 }
 
+/// Open a ThermoFisher RAW file from a path. This may also create the `dotnet` runtime
+/// if this is the first time it was called.
+///
+/// This is a wrapper around [`RawFileReader::open`]
+pub fn open<P: Into<PathBuf>>(path: P) -> io::Result<RawFileReader> {
+    RawFileReader::open(path)
+}
 
-impl RawFileReaderHandle {
+impl RawFileReader {
+    /// Open a ThermoFisher RAW file from a path. This may also create the `dotnet` runtime
+    /// if this is the first time it was called.
     pub fn open<P: Into<PathBuf>>(path: P) -> io::Result<Self> {
         let context = get_runtime();
         let open_fn = context.get_function_with_unmanaged_callers_only::<fn(text_ptr: *const u8, text_length: i32) -> *mut c_void>(
@@ -170,7 +236,7 @@ impl RawFileReaderHandle {
             raw_file_reader,
             context,
             size: 0,
-            vget: buffer_fn
+            vget: buffer_fn,
         };
 
         match &handle.status() {
@@ -197,6 +263,7 @@ impl RawFileReaderHandle {
         Ok(handle)
     }
 
+    /// Get the scan number of the first spectrum
     pub fn first_spectrum(&self) -> i32 {
         self.validate_impl();
         let index_fn = self
@@ -209,6 +276,7 @@ impl RawFileReaderHandle {
         index_fn(self.raw_file_reader)
     }
 
+    /// Get the scan number of the last spectrum
     pub fn last_spectrum(&self) -> i32 {
         let index_fn = self
             .context
@@ -220,6 +288,7 @@ impl RawFileReaderHandle {
         index_fn(self.raw_file_reader)
     }
 
+    /// Get whether or not to retrieve the spectrum signal data when retrieving spectra
     pub fn get_signal_loading(&self) -> bool {
         self.validate_impl();
         let index_fn = self
@@ -232,6 +301,7 @@ impl RawFileReaderHandle {
         index_fn(self.raw_file_reader) > 0
     }
 
+    /// Set whether or not to retrieve the spectrum signal data when retrieving spectra
     pub fn set_signal_loading(&mut self, value: bool) {
         self.validate_impl();
         let index_fn = self
@@ -244,6 +314,7 @@ impl RawFileReaderHandle {
         index_fn(self.raw_file_reader, value as u32)
     }
 
+    /// Get whether or not to centroid spectra if they were stored in profile mode
     pub fn get_centroid_spectra(&self) -> bool {
         self.validate_impl();
         let index_fn = self
@@ -256,6 +327,7 @@ impl RawFileReaderHandle {
         index_fn(self.raw_file_reader) > 0
     }
 
+    /// Set whether or not to centroid spectra if they were stored in profile mode
     pub fn set_centroid_spectra(&mut self, value: bool) {
         self.validate_impl();
         let index_fn = self
@@ -268,6 +340,8 @@ impl RawFileReaderHandle {
         index_fn(self.raw_file_reader, value as u32)
     }
 
+    /// Get a [`InstrumentModel`] message describing the instrument configuration used
+    /// to acquire the RAW file.
     pub fn instrument_model(&self) -> InstrumentModel {
         self.validate_impl();
         let instrument_fn = self
@@ -302,7 +376,8 @@ impl RawFileReaderHandle {
     }
 
     #[inline]
-    fn len(&self) -> usize {
+    /// Get the number of spectra in the RAW file
+    pub fn len(&self) -> usize {
         if self.size != 0 {
             self.size
         } else {
@@ -314,6 +389,10 @@ impl RawFileReaderHandle {
         self.len() == 0
     }
 
+    /// Close the RAW file, releasing resources held by the `dotnet`
+    /// runtime. This places the object in an unusable state.
+    ///
+    /// This method is called on `drop`.
     pub fn close(&mut self) {
         if !self.raw_file_reader.is_null() {
             let close_fn = self
@@ -328,16 +407,21 @@ impl RawFileReaderHandle {
         }
     }
 
-    pub fn get(&self, index: usize) -> Option<RawSpectrumWrapper> {
+    /// Get the spectrum at index `index`
+    ///
+    /// **Note**: The index of a spectrum is one less than its scan number
+    pub fn get(&self, index: usize) -> Option<RawSpectrum> {
         if index >= self.len() {
-            return None
+            return None;
         }
         self.validate_impl();
         let buffer_fn = &self.vget;
         let buffer = buffer_fn(self.raw_file_reader, (index as i32) + 1);
-        Some(RawSpectrumWrapper::new(buffer))
+        Some(RawSpectrum::new(buffer))
     }
 
+    /// A utility for debugging, get a spectrum and access some of its fields, printing them
+    /// to `STDOUT`
     pub fn describe(&self, index: usize) {
         if let Some(buf) = self.get(index) {
             let descr = buf.view();
@@ -350,7 +434,13 @@ impl RawFileReaderHandle {
             );
             println!("Filter: {}", descr.filter_string().unwrap());
             let acq = descr.acquisition().unwrap();
-            println!("{:?} {:?} {}-{}", acq.mass_analyzer(), acq.ionization_mode(), acq.low_mz(), acq.high_mz());
+            println!(
+                "{:?} {:?} {}-{}",
+                acq.mass_analyzer(),
+                acq.ionization_mode(),
+                acq.low_mz(),
+                acq.high_mz()
+            );
             descr.data().map(|dat| {
                 let intens_opt = dat.intensity();
                 let intens = intens_opt.as_ref().unwrap();
@@ -367,10 +457,12 @@ impl RawFileReaderHandle {
         }
     }
 
+    /// Create an iterator over the RAW file, reading successive spectra
     pub fn iter(&self) -> RawFileReaderIter<'_> {
         RawFileReaderIter::new(self)
     }
 
+    /// Retrieve the status of the `dotnet` `RawFileReader`
     pub fn status(&self) -> RawFileReaderError {
         self.validate_impl();
         let status_fn = self
@@ -387,7 +479,7 @@ impl RawFileReaderHandle {
 
 #[derive(Debug)]
 pub struct RawFileReaderIter<'a> {
-    handle: &'a RawFileReaderHandle,
+    handle: &'a RawFileReader,
     index: usize,
     size: usize,
 }
@@ -395,7 +487,7 @@ pub struct RawFileReaderIter<'a> {
 unsafe impl<'a> Send for RawFileReaderIter<'a> {}
 
 impl<'a> RawFileReaderIter<'a> {
-    fn new(handle: &'a RawFileReaderHandle) -> Self {
+    fn new(handle: &'a RawFileReader) -> Self {
         let size = handle.len();
         Self {
             handle,
@@ -406,7 +498,7 @@ impl<'a> RawFileReaderIter<'a> {
 }
 
 impl<'a> Iterator for RawFileReaderIter<'a> {
-    type Item = RawSpectrumWrapper;
+    type Item = RawSpectrum;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index < self.size {
@@ -421,13 +513,13 @@ impl<'a> Iterator for RawFileReaderIter<'a> {
 
 #[derive(Debug)]
 pub struct RawFileReaderIntoIter {
-    handle: RawFileReaderHandle,
+    handle: RawFileReader,
     index: usize,
     size: usize,
 }
 
 impl RawFileReaderIntoIter {
-    fn new(handle: RawFileReaderHandle) -> Self {
+    fn new(handle: RawFileReader) -> Self {
         let size = handle.len() as usize;
         Self {
             handle,
@@ -438,7 +530,7 @@ impl RawFileReaderIntoIter {
 }
 
 impl Iterator for RawFileReaderIntoIter {
-    type Item = RawSpectrumWrapper;
+    type Item = RawSpectrum;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index < self.size {
@@ -451,8 +543,8 @@ impl Iterator for RawFileReaderIntoIter {
     }
 }
 
-impl IntoIterator for RawFileReaderHandle {
-    type Item = RawSpectrumWrapper;
+impl IntoIterator for RawFileReader {
+    type Item = RawSpectrum;
 
     type IntoIter = RawFileReaderIntoIter;
 
@@ -461,8 +553,8 @@ impl IntoIterator for RawFileReaderHandle {
     }
 }
 
-impl<'a> IntoIterator for &'a RawFileReaderHandle {
-    type Item = RawSpectrumWrapper;
+impl<'a> IntoIterator for &'a RawFileReader {
+    type Item = RawSpectrum;
 
     type IntoIter = RawFileReaderIter<'a>;
 
@@ -479,7 +571,7 @@ mod test {
 
     #[test]
     fn test_read() -> io::Result<()> {
-        let handle = RawFileReaderHandle::open("../tests/data/small.RAW")?;
+        let handle = RawFileReader::open("../tests/data/small.RAW")?;
 
         assert_eq!(handle.len(), 48);
         let buf = handle.get(5).unwrap();
@@ -491,7 +583,7 @@ mod test {
 
     #[test]
     fn test_read_512kb() -> io::Result<()> {
-        let handle = RawFileReaderHandle::open("../tests/data/small.RAW")?;
+        let handle = RawFileReader::open("../tests/data/small.RAW")?;
 
         assert_eq!(handle.len(), 48);
         let buf = handle.get(1).unwrap();
@@ -503,7 +595,7 @@ mod test {
 
     #[test]
     fn test_iter() -> io::Result<()> {
-        let handle = RawFileReaderHandle::open("../tests/data/small.RAW")?;
+        let handle = RawFileReader::open("../tests/data/small.RAW")?;
 
         let (m1, mn) =
             handle
@@ -525,7 +617,7 @@ mod test {
 
     #[test]
     fn test_instrument_model() -> io::Result<()> {
-        let handle = RawFileReaderHandle::open("../tests/data/small.RAW")?;
+        let handle = RawFileReader::open("../tests/data/small.RAW")?;
         let model = handle.instrument_model();
 
         assert_eq!(model.model(), Some("LTQ FT"));

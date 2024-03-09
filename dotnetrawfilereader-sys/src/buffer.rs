@@ -5,6 +5,12 @@ use netcorehost::{
     hostfxr::AssemblyDelegateLoader,
 };
 
+/// A sized array for passing heap-allocated memory across the FFI memory boundary to receive
+/// buffers from `dotnet`. Dereferences a `&[T]` otherwise.
+///
+/// # Safety
+/// This type makes heavy use of `unsafe` operations for manual memory management. Take care
+/// when using it as more than an opaque buffer. When it is dropped the memory is freed.
 #[repr(C)]
 pub struct RawVec<T> {
     pub(crate) data: *mut T,
@@ -17,6 +23,8 @@ unsafe impl<T> Send for RawVec<T> {}
 unsafe impl<T> Sync for RawVec<T> {}
 
 impl<T> RawVec<T> {
+    /// Releases the owned memory and puts this struct into an unusable, empty
+    /// state. This method is called on `drop`, but it is safe to call repeatedly.
     pub fn free(&mut self) {
         if self.data != ptr::null_mut() {
             let owned = unsafe { Box::from_raw(self.data) };
@@ -28,6 +36,7 @@ impl<T> RawVec<T> {
     }
 }
 
+/// Pretend to by a `&[T]`, a read-only view of the memory
 impl<T> Deref for RawVec<T> {
     type Target = [T];
 
@@ -42,6 +51,9 @@ impl<T> Drop for RawVec<T> {
     }
 }
 
+/// A `dotnet` memory allocator that receives a memory address for a [`RawVec`] and
+/// heap-allocates `size` that is "owned" by Rust's memory allocator and gives
+/// it to `dotnet` via the passed pointer.
 pub extern "system" fn rust_allocate_memory(size: usize, vec: *mut RawVec<u8>) {
     let mut buf = Vec::<u8>::with_capacity(size);
     buf.resize(size, 0);
@@ -57,6 +69,9 @@ pub extern "system" fn rust_allocate_memory(size: usize, vec: *mut RawVec<u8>) {
     };
 }
 
+
+/// Pass [`rust_allocate_memory`] as a function pointer to the `dotnet` to allow it to allocate
+/// memory from Rust for specific purposes. Directly depends upon the bundled `dotnet` library.
 pub fn configure_allocator(delegate_loader: &AssemblyDelegateLoader) {
     let set_rust_allocate_memory = delegate_loader
         .get_function_with_unmanaged_callers_only::<fn(extern "system" fn(usize, *mut RawVec<u8>))>(

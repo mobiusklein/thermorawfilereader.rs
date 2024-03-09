@@ -1,4 +1,10 @@
-#![allow(unused)]
+//! Manage the creation of and access to the self-hosted `dotnet` runtime.
+//!
+//! The [`DotNetLibraryBundle`] is the main entry point.
+//!
+//! The environment variable `DOTNET_RAWFILEREADER_BUNDLE_PATH` can be used to set a default location
+//! for where DLLs will be written to that persists for recurring use.
+use std::fmt::Debug;
 use std::fs;
 use std::env;
 use std::io::{self, prelude::*};
@@ -15,28 +21,47 @@ use crate::buffer::configure_allocator;
 static DOTNET_LIB_DIR: Dir<'_> = include_dir!("dotnetrawfilereader-sys/lib/");
 
 const TMP_NAME: &'static str = concat!("rawfilereader_libs_", env!("CARGO_PKG_VERSION"));
+const DEFAULT_VAR_NAME: &'static str = "DOTNET_RAWFILEREADER_BUNDLE_PATH";
 
+
+/// Represent a directory to store bundled files within.
 #[derive(Debug)]
 pub enum BundleStore {
+    /// Use a temporary directory that will be cleaned up automatically.
     TempDir(TempDir),
+    /// Use a specific directory that will persist after the process ends.
     Path(PathBuf),
 }
 
+/// A location on the file system and an associated `dotnet` DLL bundle to host a
+/// `dotnet` runtime for.
+///
+/// Uses the `DOTNET_RAWFILEREADER_BUNDLE_PATH` environment variable when a default
+/// is required, otherwise creates a temporary directory whose lifespan is linked to this
+/// object.
 #[derive()]
 pub struct DotNetLibraryBundle {
+    /// Where to write the DLLs
     dir: BundleStore,
+    /// A reference to the actual runtime
     assembly_loader: RwLock<Option<Arc<AssemblyDelegateLoader>>>,
+}
+
+impl Debug for DotNetLibraryBundle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DotNetLibraryBundle").field("dir", &self.dir).field("assembly_loader", &"?").finish()
+    }
 }
 
 impl Default for DotNetLibraryBundle {
     fn default() -> Self {
-        match env::var("DOTNET_RAWFILEREADER_BUNDLE_PATH") {
+        match env::var(DEFAULT_VAR_NAME) {
             Ok(val) => Self::new(Some(&val)).unwrap(),
             Err(err) => {
                 match err {
                     env::VarError::NotPresent => Self::new(None).unwrap(),
                     env::VarError::NotUnicode(err) => {
-                        eprintln!("Failed to decode `DOTNET_RAWFILEREADER_BUNDLE_PATH` {}", err.to_string_lossy());
+                        eprintln!("Failed to decode `{DEFAULT_VAR_NAME}` {}", err.to_string_lossy());
                         Self::new(None).unwrap()
                     },
                 }
@@ -46,15 +71,25 @@ impl Default for DotNetLibraryBundle {
 }
 
 impl DotNetLibraryBundle {
+    /// Create a new bundle directory. If a path string is provided, that path
+    /// will be used. Otherwise a temporary directory will be created.
     pub fn new(dir: Option<&str>) -> io::Result<Self> {
         let dir = if let Some(path) = dir {
             let pathbuf = PathBuf::from(path);
             if !pathbuf.exists() {
-                fs::create_dir(&pathbuf)?;
+                fs::create_dir_all(&pathbuf)?;
             }
             BundleStore::Path(pathbuf)
         } else {
-            BundleStore::TempDir(TempDir::new(TMP_NAME)?)
+            env::var(DEFAULT_VAR_NAME).map(|path| -> io::Result<BundleStore> {
+                let pathbuf = PathBuf::from(path);
+                if !pathbuf.exists() {
+                    fs::create_dir_all(&pathbuf)?;
+                }
+                Ok(BundleStore::Path(pathbuf))
+            }).unwrap_or_else(|_| {
+                Ok(BundleStore::TempDir(TempDir::new(TMP_NAME)?))
+            })?
         };
         Ok(Self {
             dir,
@@ -62,6 +97,7 @@ impl DotNetLibraryBundle {
         })
     }
 
+    /// Get a path reference to the directory
     pub fn path(&self) -> &path::Path {
         match &self.dir {
             BundleStore::TempDir(d) => d.path(),
@@ -69,6 +105,9 @@ impl DotNetLibraryBundle {
         }
     }
 
+    /// Get a reference to the `dotnet` runtime, creating it if one has not yet been created.
+    ///
+    /// See [`DotNetLibraryBundle::create_runtime`] for specific runtime creation
     pub fn runtime(&self) -> Arc<AssemblyDelegateLoader> {
         if let Ok(mut guard) = self.assembly_loader.write() {
             if guard.is_none() {
@@ -83,10 +122,11 @@ impl DotNetLibraryBundle {
         return a;
     }
 
+    /// Write all of the bundled `dotnet` DLLs to the file system at this location
     pub fn write_bundle(&self) -> io::Result<()> {
         let path = self.path();
         let do_write = if !path.exists() {
-            fs::create_dir(path)?;
+            fs::create_dir_all(path)?;
             true
         } else {
             if path.join("checksum").exists(){
@@ -113,6 +153,7 @@ impl DotNetLibraryBundle {
         Ok(())
     }
 
+    /// Create a new `dotnet` runtime using [`netcorehost`](https://docs.rs/netcorehost/latest/netcorehost/)
     pub fn create_runtime(&self) -> Arc<AssemblyDelegateLoader> {
         let hostfxr = nethost::load_hostfxr().unwrap();
         self.write_bundle().unwrap();
@@ -140,17 +181,19 @@ impl DotNetLibraryBundle {
 
 static BUNDLE: OnceLock<DotNetLibraryBundle> = OnceLock::new();
 
+/// Set the default runtime directory to `path` that will be accessed by [`get_runtime`]
 pub fn set_runtime_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
     let path: &Path = path.as_ref();
     if !path.exists() {
-        fs::DirBuilder::new().create(path)?;
+        fs::DirBuilder::new().recursive(true).create(path)?;
     }
 
     let bundle = DotNetLibraryBundle::new(Some(path.to_str().unwrap())).unwrap();
-    BUNDLE.set(bundle);
+    BUNDLE.set(bundle).unwrap();
     Ok(())
 }
 
+/// Get a reference to a shared `dotnet` runtime and associated DLL bundle
 pub fn get_runtime() -> Arc<AssemblyDelegateLoader> {
     let bundle = BUNDLE.get_or_init(|| DotNetLibraryBundle::default());
 
@@ -164,7 +207,7 @@ mod test {
     #[test]
     fn test_bundle_writing() -> io::Result<()> {
         let handle = DotNetLibraryBundle::new(None)?;
-        let runtime = handle.runtime();
+        let _runtime = handle.runtime();
         Ok(())
     }
 }

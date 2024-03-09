@@ -1,3 +1,3 @@
 # thermorawfilereader.rs
 
-A very rough draft of reading Thermo RAW files from Rust via in-process DotNet runtime hosting.
+Read Thermo RAW files from Rust via in-process `dotnet` runtime hosting and Thermo Fisher's `RawFileReader` C# library.

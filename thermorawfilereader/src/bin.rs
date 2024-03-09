@@ -1,12 +1,12 @@
 use std::{env, io, time};
-use thermorawfilereader::RawFileReaderHandle;
+use thermorawfilereader::RawFileReader;
 
 pub fn main() -> io::Result<()> {
     let mut args = env::args().skip(1);
     let path = args.next().unwrap();
     let target = args.next().unwrap().parse::<i32>().unwrap();
 
-    let mut handle = RawFileReaderHandle::open(
+    let mut handle = RawFileReader::open(
         path
     )?;
 
@@ -23,6 +23,7 @@ pub fn main() -> io::Result<()> {
         let ms2_count = handle.iter().filter(|b| b.ms_level() > 1).count();
         println!("Found {ms2_count} MSn spectra");
         handle.set_signal_loading(true);
+        handle.set_centroid_spectra(true);
         let data_points: usize = handle.iter().map(|b| {
             let view = b.view();
             let data_view = view.data().unwrap();

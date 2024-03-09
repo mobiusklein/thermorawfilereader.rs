@@ -116,7 +116,7 @@ namespace librawfilereader
     }
 
     /// <summary>
-    /// A set of error codes to describe how creating a `RawFileReader` might fail (or not).
+    /// A set of error codes to describe how creating and using a `RawFileReader` might fail (or not).
     ///
     /// This is FFI safe and mirrored by an equivalent enum on the other side.
     /// </summary>
@@ -152,12 +152,12 @@ namespace librawfilereader
         /// </summary>
         Dictionary<string, int> TrailerMap;
 
-        // public IRawFileThreadManager Manager;
-
         /// <summary>
         /// The actual Thermo-provided reader implementation
         /// </summary>
-        public IRawDataPlus Handle;
+        // public IRawDataPlus Handle;
+        public IRawFileThreadManager Manager;
+
         /// <summary>
         /// The status of the reader, determined when the file is first opened
         /// </summary>
@@ -182,8 +182,8 @@ namespace librawfilereader
         public RawFileReader(string path)
         {
             Path = path;
-            // Manager = RawFileReaderFactory.CreateThreadManager(Path);
-            Handle = RawFileReaderAdapter.FileFactory(Path);
+            Manager = RawFileReaderAdapter.ThreadedFileFactory(Path);
+            // Handle = RawFileReaderAdapter.FileFactory(Path);
             Status = RawFileReaderError.Ok;
             InstrumentConfigsByComponents = new();
             PreviousMSLevels = new();
@@ -191,12 +191,18 @@ namespace librawfilereader
             Status = Configure();
         }
 
+        IRawDataPlus GetHandleRaw() {
+            var accessor = Manager.CreateThreadAccessor();
+            return accessor;
+            // return Handle;
+        }
+
         IRawDataPlus GetHandle()
         {
-            // var accessor = Manager.CreateThreadAccessor();
-            // accessor.SelectInstrument(Device.MS, 1);
-            // return accessor;
-            return Handle;
+            var accessor = GetHandleRaw();
+            accessor.SelectInstrument(Device.MS, 1);
+            return accessor;
+            // return Handle;
         }
 
         public int FirstSpectrum()
@@ -216,8 +222,8 @@ namespace librawfilereader
 
         public void Dispose()
         {
-            // Manager.Dispose();
-            Handle.Dispose();
+            Manager.Dispose();
+            // Handle.Dispose();
         }
 
         /// <summary>
@@ -416,18 +422,27 @@ namespace librawfilereader
             }
         }
 
-        Offset<SpectrumData> StoreSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder, IRawDataPlus accessor)
+        Offset<SpectrumData> StoreSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder, IRawDataPlus accessor, IScanFilter filter)
         {
             Offset<SpectrumData> offset;
-            if (CentroidSpectra) {
-                var centroids = accessor.GetCentroidStream(scanNumber, true);
-                var mzOffset = SpectrumData.CreateMzVector(bufferBuilder, centroids.Masses);
-                SpectrumData.StartIntensityVector(bufferBuilder, centroids.Length);
-                foreach (var val in centroids.Intensities)
+            if (CentroidSpectra && !stats.IsCentroidScan) {
+                var stream = accessor.GetCentroidStream(scanNumber, true);
+                var centroids = stream.GetCentroids();
+
+                SpectrumData.StartMzVector(bufferBuilder, centroids.Count);
+                foreach (var val in centroids)
                 {
-                    bufferBuilder.AddFloat((float)val);
+                    bufferBuilder.AddDouble(val.Mass);
+                }
+                var mzOffset = bufferBuilder.EndVector();
+
+                SpectrumData.StartIntensityVector(bufferBuilder, centroids.Count);
+                foreach (var val in centroids)
+                {
+                    bufferBuilder.AddFloat((float)val.Intensity);
                 }
                 var intensityOffset = bufferBuilder.EndVector();
+
                 offset = SpectrumData.CreateSpectrumData(bufferBuilder, mzOffset, intensityOffset);
             }
             else {
@@ -562,7 +577,7 @@ namespace librawfilereader
             Offset<SpectrumData> dataOffset = new();
 
             if (IncludeSignal) {
-                dataOffset = StoreSpectrumData(scanNumber, stats, builder, accessor);
+                dataOffset = StoreSpectrumData(scanNumber, stats, builder, accessor, filter);
             }
             var filterString = filter.ToString();
             var filterStringOffset = builder.CreateString(filterString);
@@ -579,6 +594,7 @@ namespace librawfilereader
             SpectrumDescription.AddMsLevel(builder, (byte)level);
             SpectrumDescription.AddPolarity(builder, polarity);
             SpectrumDescription.AddMode(builder, mode);
+            SpectrumDescription.AddTime(builder, stats.StartTime);
             SpectrumDescription.AddFilterString(builder, filterStringOffset);
             SpectrumDescription.AddAcquisition(builder, acquisitionOffset);
             if (level > 1)
@@ -627,9 +643,7 @@ namespace librawfilereader
 
         private RawFileReaderError Configure()
         {
-            // var accessor = Manager.CreateThreadAccessor();
-            var accessor = GetHandle();
-
+            var accessor = GetHandleRaw();
             if (!File.Exists(Path))
             {
                 return RawFileReaderError.FileNotFound;
