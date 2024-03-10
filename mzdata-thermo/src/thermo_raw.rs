@@ -1,7 +1,6 @@
-use std::{collections::HashMap, io, marker::PhantomData, mem, path::PathBuf};
+use std::{collections::HashMap, fs, io, marker::PhantomData, mem, path::PathBuf};
 
 use mzdata::{
-    impl_metadata_trait,
     io::OffsetIndex,
     meta::{
         Component, ComponentType, DataProcessing, FileDescription, InstrumentConfiguration,
@@ -17,6 +16,7 @@ use mzdata::{
     Param,
 };
 use mzpeaks::{peak_set::PeakSetVec, prelude::*, CentroidPeak, DeconvolutedPeak, MZ};
+use sha1::{self, Digest};
 
 use thermorawfilereader::schema::{
     IonizationMode, MassAnalyzer, Polarity, SpectrumData, SpectrumMode,
@@ -36,6 +36,21 @@ pub fn is_thermo_raw_prefix(buffer: &[u8]) -> bool {
     let view: &[u16] = unsafe { mem::transmute(&buffer[2..18]) };
     let prefix = String::from_utf16_lossy(view);
     prefix == "Finnigan"
+}
+
+fn checksum_file(path: &PathBuf) -> io::Result<String> {
+    let mut checksum = sha1::Sha1::new();
+    let mut reader = io::BufReader::new(fs::File::open(path)?);
+    let mut buf = Vec::new();
+    buf.resize(2usize.pow(20), 0);
+    while let Ok(i) = reader.read(&mut buf) {
+        if i == 0 {
+            break;
+        }
+        checksum.update(&buf[..i]);
+    }
+    let x = base16ct::lower::encode_string(&checksum.finalize());
+    Ok(x)
 }
 
 pub struct ThermoRaw<
@@ -85,11 +100,11 @@ fn make_native_id(index: i32) -> String {
 impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike + Default>
     ThermoRaw<C, D>
 {
-    fn make_file_description(path: &PathBuf) -> FileDescription {
+    fn make_file_description(path: &PathBuf) -> io::Result<FileDescription> {
         let mut sf = SourceFile::default();
         sf.name = path.file_name().unwrap().to_string_lossy().to_string();
         sf.location = format!("file:///{}", path.parent().unwrap().display());
-        sf.id = "SF1".to_string();
+        sf.id = "RAW1".to_string();
         sf.file_format = Some(
             ControlledVocabulary::MS
                 .const_param_ident("Thermo RAW format", 1000563)
@@ -100,9 +115,10 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
                 .const_param_ident("Thermo nativeID format", 1000768)
                 .into(),
         );
+        sf.add_param(ControlledVocabulary::MS.param_val("1000569", "SHA-1", checksum_file(path)?));
 
         let file_description = FileDescription::new(vec![], vec![sf]);
-        file_description
+        Ok(file_description)
     }
 
     fn make_instrument_configuration(
@@ -255,7 +271,7 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
             spectrum_index.insert(make_native_id(i as i32), i as u64);
         });
 
-        let file_description = Self::make_file_description(&path);
+        let file_description = Self::make_file_description(&path)?;
         let (sw, instrument_configurations, components_to_instrument_id) =
             Self::make_instrument_configuration(&handle);
 
@@ -455,7 +471,7 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
         self.handle.len()
     }
 
-    pub fn read_next_spectrum(&mut self) -> Option<MultiLayerSpectrum<C, D>> {
+    fn read_next_spectrum(&mut self) -> Option<MultiLayerSpectrum<C, D>> {
         let i = self.index;
         if i < self.len() {
             let s = self.get_spectrum(i);
@@ -568,7 +584,41 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
 impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike + Default>
     MSDataFileMetadata for ThermoRaw<C, D>
 {
-    impl_metadata_trait!();
+    fn data_processings(&self) -> &Vec<DataProcessing> {
+        &self.data_processings
+    }
+    fn instrument_configurations(&self) -> &HashMap<u32, InstrumentConfiguration> {
+        &self.instrument_configurations
+    }
+    fn file_description(&self) -> &FileDescription {
+        // let mut checksum = sha1::Sha1::new();
+        // let mut reader = io::BufReader::new(fs::File::open(path)?);
+        // let mut buf = Vec::new();
+        // buf.resize(2usize.pow(31), 0);
+        // while let Ok(i) = reader.read(&mut buf) {
+        //     if i == 0 {
+        //         break;
+        //     }
+        //     checksum.update(&buf);
+        // }
+
+        &self.file_description
+    }
+    fn softwares(&self) -> &Vec<Software> {
+        &self.softwares
+    }
+    fn data_processings_mut(&mut self) -> &mut Vec<DataProcessing> {
+        &mut self.data_processings
+    }
+    fn instrument_configurations_mut(&mut self) -> &mut HashMap<u32, InstrumentConfiguration> {
+        &mut self.instrument_configurations
+    }
+    fn file_description_mut(&mut self) -> &mut FileDescription {
+        &mut self.file_description
+    }
+    fn softwares_mut(&mut self) -> &mut Vec<Software> {
+        &mut self.softwares
+    }
 
     fn spectrum_count_hint(&self) -> Option<u64> {
         Some(self.spectrum_index.len() as u64)
