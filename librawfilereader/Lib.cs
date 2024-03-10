@@ -10,6 +10,7 @@ using Google.FlatBuffers;
 using ThermoFisher.CommonCore.Data.FilterEnums;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace librawfilereader
 {
@@ -430,14 +431,14 @@ namespace librawfilereader
                 var centroids = stream.GetCentroids();
 
                 SpectrumData.StartMzVector(bufferBuilder, centroids.Count);
-                foreach (var val in centroids)
+                foreach (var val in centroids.Reverse())
                 {
                     bufferBuilder.AddDouble(val.Mass);
                 }
                 var mzOffset = bufferBuilder.EndVector();
 
                 SpectrumData.StartIntensityVector(bufferBuilder, centroids.Count);
-                foreach (var val in centroids)
+                foreach (var val in centroids.Reverse())
                 {
                     bufferBuilder.AddFloat((float)val.Intensity);
                 }
@@ -448,9 +449,15 @@ namespace librawfilereader
             else {
                 var segScan = accessor.GetSegmentedScanFromScanNumber(scanNumber, stats);
 
-                var mzOffset = SpectrumData.CreateMzVector(bufferBuilder, segScan.Positions);
+                SpectrumData.StartMzVector(bufferBuilder, segScan.PositionCount);
+                foreach (var val in segScan.Positions.Reverse())
+                {
+                    bufferBuilder.AddDouble(val);
+                }
+                var mzOffset = bufferBuilder.EndVector();
+
                 SpectrumData.StartIntensityVector(bufferBuilder, segScan.PositionCount);
-                foreach (var val in segScan.Intensities)
+                foreach (var val in segScan.Intensities.Reverse())
                 {
                     bufferBuilder.AddFloat((float)val);
                 }

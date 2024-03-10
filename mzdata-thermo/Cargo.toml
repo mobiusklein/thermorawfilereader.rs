@@ -1,0 +1,17 @@
+[package]
+name = "mzdata-thermo"
+version = "0.1.0"
+edition = "2021"
+
+
+[features]
+
+default = ["nethost-download"]
+
+nethost-download = ["thermorawfilereader/nethost-download"]
+
+[dependencies]
+
+mzdata = { path = "../../mzdata" , default-features = false }
+mzpeaks = { version = "*", default-features = false }
+thermorawfilereader = { path = "../thermorawfilereader", version = "0.1.0", default-features = false }
