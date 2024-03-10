@@ -434,6 +434,9 @@ namespace librawfilereader
 
         Offset<SpectrumData> StoreSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder, IRawDataPlus accessor, IScanFilter filter)
         {
+            // We have to write arrays in reverse order because FlatBuffers writes entries back-to-front.
+            // By writing them in reverse here, we can read them out in the expected order on the other side
+            // in Rust.
             Offset<SpectrumData> offset;
             if (CentroidSpectra && !stats.IsCentroidScan)
             {

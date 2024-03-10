@@ -32,6 +32,10 @@ macro_rules! param {
     };
 }
 
+/// Check to see if a buffer contains the header of a Thermo RAW file
+///
+/// Thermo RAW files start with a UTF-16 header with "Finnigan" at
+/// codepoints 1-9.
 pub fn is_thermo_raw_prefix(buffer: &[u8]) -> bool {
     let view: &[u16] = unsafe { mem::transmute(&buffer[2..18]) };
     let prefix = String::from_utf16_lossy(view);
@@ -53,7 +57,10 @@ fn checksum_file(path: &PathBuf) -> io::Result<String> {
     Ok(x)
 }
 
-pub struct ThermoRaw<
+/**
+A Thermo Fisher RAW file reader that supports iteration and random access.
+*/
+pub struct ThermoRawType<
     C: CentroidLike + Default + From<CentroidPeak> = CentroidPeak,
     D: DeconvolutedCentroidLike + Default = DeconvolutedPeak,
 > {
@@ -71,7 +78,7 @@ pub struct ThermoRaw<
 }
 
 impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike + Default>
-    MZFileReader<C, D, MultiLayerSpectrum<C, D>> for ThermoRaw<C, D>
+    MZFileReader<C, D, MultiLayerSpectrum<C, D>> for ThermoRawType<C, D>
 {
     fn construct_index_from_stream(&mut self) -> u64 {
         self.len() as u64
@@ -98,7 +105,7 @@ fn make_native_id(index: i32) -> String {
 }
 
 impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike + Default>
-    ThermoRaw<C, D>
+    ThermoRawType<C, D>
 {
     fn make_file_description(path: &PathBuf) -> io::Result<FileDescription> {
         let mut sf = SourceFile::default();
@@ -484,7 +491,7 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
 }
 
 impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike + Default> Iterator
-    for ThermoRaw<C, D>
+    for ThermoRawType<C, D>
 {
     type Item = MultiLayerSpectrum<C, D>;
 
@@ -494,7 +501,7 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
 }
 
 impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike + Default>
-    ScanSource<C, D, MultiLayerSpectrum<C, D>> for ThermoRaw<C, D>
+    ScanSource<C, D, MultiLayerSpectrum<C, D>> for ThermoRawType<C, D>
 {
     fn reset(&mut self) {
         self.index = 0;
@@ -539,7 +546,7 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
 }
 
 impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike + Default>
-    RandomAccessSpectrumIterator<C, D, MultiLayerSpectrum<C, D>> for ThermoRaw<C, D>
+    RandomAccessSpectrumIterator<C, D, MultiLayerSpectrum<C, D>> for ThermoRawType<C, D>
 {
     fn start_from_id(&mut self, id: &str) -> Result<&mut Self, SpectrumAccessError> {
         if let Some(i) = self.spectrum_index.get(id) {
@@ -582,7 +589,7 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
 }
 
 impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike + Default>
-    MSDataFileMetadata for ThermoRaw<C, D>
+    MSDataFileMetadata for ThermoRawType<C, D>
 {
     fn data_processings(&self) -> &Vec<DataProcessing> {
         &self.data_processings
@@ -591,17 +598,6 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
         &self.instrument_configurations
     }
     fn file_description(&self) -> &FileDescription {
-        // let mut checksum = sha1::Sha1::new();
-        // let mut reader = io::BufReader::new(fs::File::open(path)?);
-        // let mut buf = Vec::new();
-        // buf.resize(2usize.pow(31), 0);
-        // while let Ok(i) = reader.read(&mut buf) {
-        //     if i == 0 {
-        //         break;
-        //     }
-        //     checksum.update(&buf);
-        // }
-
         &self.file_description
     }
     fn softwares(&self) -> &Vec<Software> {
@@ -625,6 +621,9 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
     }
 }
 
+/// A convenience alias for [`ThermoRawType`] with peak types specified.
+pub type ThermoRaw = ThermoRawType::<CentroidPeak, DeconvolutedPeak>;
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -632,7 +631,7 @@ mod test {
     #[test]
     fn test_read() -> io::Result<()> {
         let mut reader =
-            ThermoRaw::<CentroidPeak, DeconvolutedPeak>::open_path("../tests/data/small.RAW")?;
+            ThermoRaw::open_path("../tests/data/small.RAW")?;
         assert_eq!(reader.len(), 48);
 
         let groups: Vec<_> = reader.groups().collect();
