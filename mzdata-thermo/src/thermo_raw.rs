@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io, marker::PhantomData, path::PathBuf};
+use std::{collections::HashMap, io, marker::PhantomData, mem, path::PathBuf};
 
 use mzdata::{
     impl_metadata_trait,
@@ -30,6 +30,12 @@ macro_rules! param {
     ($name:expr, $acc:expr) => {
         ControlledVocabulary::MS.const_param_ident($name, $acc)
     };
+}
+
+pub fn is_thermo_raw_prefix(buffer: &[u8]) -> bool {
+    let view: &[u16] = unsafe { mem::transmute(&buffer[2..18]) };
+    let prefix = String::from_utf16_lossy(view);
+    prefix == "Finnigan"
 }
 
 pub struct ThermoRaw<
@@ -232,8 +238,8 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
                 .insert((vconf.ionization_mode(), vconf.mass_analyzer()), i as u32);
             // TODO: map model name terms
             config.add_param(Param::new_key_value(
-                "instrument model",
-                descr.model().unwrap_or_default(),
+                "instrument model".to_string(),
+                descr.model().unwrap_or_default().to_string(),
             ));
 
             configs.insert(i as u32, config);
@@ -276,7 +282,7 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
             0 => None,
             z => Some(z),
         };
-        precursor.add_ion(ion);
+        *precursor.ion_mut() = ion;
 
         let activation = &mut precursor.activation;
         let vact = vprec.activation();

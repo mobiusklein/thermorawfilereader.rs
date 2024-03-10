@@ -92,7 +92,8 @@ namespace librawfilereader
                     }
             };
         }
-        public static IonizationMode CastIonizationMode(IonizationModeType ionizationModeType) {
+        public static IonizationMode CastIonizationMode(IonizationModeType ionizationModeType)
+        {
             int value = (int)ionizationModeType;
             return (IonizationMode)value;
         }
@@ -192,7 +193,8 @@ namespace librawfilereader
             Status = Configure();
         }
 
-        IRawDataPlus GetHandleRaw() {
+        IRawDataPlus GetHandleRaw()
+        {
             var accessor = Manager.CreateThreadAccessor();
             return accessor;
             // return Handle;
@@ -251,7 +253,8 @@ namespace librawfilereader
         short MSLevelFromFilter(IScanFilter filter)
         {
             short msLevel;
-            if (MSLevelMap.TryGetValue(filter.MSOrder, out msLevel)) {
+            if (MSLevelMap.TryGetValue(filter.MSOrder, out msLevel))
+            {
                 return msLevel;
             }
             return 1;
@@ -269,7 +272,8 @@ namespace librawfilereader
         int FindPreviousPrecursor(int scanNumber, short msLevel, IRawDataPlus accessor)
         {
             var cacheLookUp = PreviousMSLevels[scanNumber][msLevel - 1];
-            if (cacheLookUp != null) {
+            if (cacheLookUp != null)
+            {
                 return cacheLookUp.Value;
             }
             int i = scanNumber - 1;
@@ -337,7 +341,8 @@ namespace librawfilereader
             }
 
             v = "Scan Event";
-            if (TrailerMap.ContainsKey(v)) {
+            if (TrailerMap.ContainsKey(v))
+            {
                 tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap[v]);
                 if (tmp != null)
                 {
@@ -345,8 +350,10 @@ namespace librawfilereader
                 }
             }
 
-            if (msLevel > 1) {
-                if(TrailerMap.ContainsKey("Master Scan Number")) {
+            if (msLevel > 1)
+            {
+                if (TrailerMap.ContainsKey("Master Scan Number"))
+                {
                     tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap["Master Scan Number"]);
                     if (tmp != null)
                     {
@@ -363,9 +370,11 @@ namespace librawfilereader
                     }
                 }
 
-                if (TrailerMap.ContainsKey("Charge State")) {
+                if (TrailerMap.ContainsKey("Charge State"))
+                {
                     tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap["Charge State"]);
-                    if (tmp != null) {
+                    if (tmp != null)
+                    {
                         precursorCharge = Convert.ToInt16(tmp);
                     }
                 }
@@ -426,7 +435,8 @@ namespace librawfilereader
         Offset<SpectrumData> StoreSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder, IRawDataPlus accessor, IScanFilter filter)
         {
             Offset<SpectrumData> offset;
-            if (CentroidSpectra && !stats.IsCentroidScan) {
+            if (CentroidSpectra && !stats.IsCentroidScan)
+            {
                 var stream = accessor.GetCentroidStream(scanNumber, true);
                 var centroids = stream.GetCentroids();
 
@@ -446,7 +456,8 @@ namespace librawfilereader
 
                 offset = SpectrumData.CreateSpectrumData(bufferBuilder, mzOffset, intensityOffset);
             }
-            else {
+            else
+            {
                 var segScan = accessor.GetSegmentedScanFromScanNumber(scanNumber, stats);
 
                 SpectrumData.StartMzVector(bufferBuilder, segScan.PositionCount);
@@ -467,15 +478,18 @@ namespace librawfilereader
             return offset;
         }
 
-        Dictionary<(MassAnalyzer, IonizationMode), long> FindAllMassAnalyzers() {
+        Dictionary<(MassAnalyzer, IonizationMode), long> FindAllMassAnalyzers()
+        {
             var analyzers = new Dictionary<(MassAnalyzer, IonizationMode), long>();
             var accessor = GetHandle();
             var filters = accessor.GetFilters();
             int counter = 0;
-            foreach(var filter in filters) {
+            foreach (var filter in filters)
+            {
                 var a = AcquisitionProperties.CastMassAnalyzer(filter.MassAnalyzer);
                 var i = AcquisitionProperties.CastIonizationMode(filter.IonizationMode);
-                if(analyzers.ContainsKey((a, i))) {
+                if (analyzers.ContainsKey((a, i)))
+                {
                     continue;
                 }
                 analyzers.Add((a, i), counter);
@@ -484,7 +498,8 @@ namespace librawfilereader
             return analyzers;
         }
 
-        public ByteBuffer GetInstrumentInfo() {
+        public ByteBuffer GetInstrumentInfo()
+        {
             var accessor = GetHandle();
             var instrument = accessor.GetInstrumentData();
 
@@ -497,7 +512,8 @@ namespace librawfilereader
 
             var n = InstrumentConfigsByComponents.Count;
             InstrumentModelT.StartConfigurationsVector(builder, n);
-            foreach(var ((analyzer, ionizer), i) in InstrumentConfigsByComponents) {
+            foreach (var ((analyzer, ionizer), i) in InstrumentConfigsByComponents)
+            {
                 var conf = InstrumentConfigurationT.CreateInstrumentConfigurationT(builder, analyzer, ionizer);
 
             }
@@ -532,7 +548,8 @@ namespace librawfilereader
             return polarity;
         }
 
-        Offset<AcquisitionT> StoreAcquisition(FlatBufferBuilder builder, AcquisitionProperties acquisitionProperties, IScanFilter filter) {
+        Offset<AcquisitionT> StoreAcquisition(FlatBufferBuilder builder, AcquisitionProperties acquisitionProperties, IScanFilter filter)
+        {
             AcquisitionT.StartAcquisitionT(builder);
             AcquisitionT.AddInjectionTime(builder, (float)acquisitionProperties.InjectionTime);
             if (acquisitionProperties.CompensationVoltage.HasValue)
@@ -548,7 +565,8 @@ namespace librawfilereader
             return acquisitionOffset;
         }
 
-        Offset<PrecursorT> StorePrecursor(FlatBufferBuilder builder, PrecursorProperties precursorProps) {
+        Offset<PrecursorT> StorePrecursor(FlatBufferBuilder builder, PrecursorProperties precursorProps)
+        {
             var precursor = PrecursorT.CreatePrecursorT(
                     builder,
                     precursorProps.MonoisotopicMZ,
@@ -569,9 +587,12 @@ namespace librawfilereader
             var accessor = GetHandle();
             var stats = accessor.GetScanStatsForScanNumber(scanNumber);
             SpectrumMode mode;
-            if (CentroidSpectra) {
+            if (CentroidSpectra)
+            {
                 mode = SpectrumMode.Centroid;
-            } else {
+            }
+            else
+            {
                 mode = stats.IsCentroidScan ? SpectrumMode.Centroid : SpectrumMode.Profile;
             }
 
@@ -583,7 +604,8 @@ namespace librawfilereader
             var builder = new FlatBufferBuilder(1024);
             Offset<SpectrumData> dataOffset = new();
 
-            if (IncludeSignal) {
+            if (IncludeSignal)
+            {
                 dataOffset = StoreSpectrumData(scanNumber, stats, builder, accessor, filter);
             }
             var filterString = filter.ToString();
@@ -594,7 +616,8 @@ namespace librawfilereader
             var acquisitionOffset = StoreAcquisition(builder, acquisitionProperties, filter);
 
             SpectrumDescription.StartSpectrumDescription(builder);
-            if (IncludeSignal) {
+            if (IncludeSignal)
+            {
                 SpectrumDescription.AddData(builder, dataOffset);
             }
             SpectrumDescription.AddIndex(builder, stats.ScanNumber - 1);
@@ -614,7 +637,8 @@ namespace librawfilereader
             return builder.DataBuffer;
         }
 
-        private Dictionary<int, List<int?>> BuildScanTypeMap() {
+        private Dictionary<int, List<int?>> BuildScanTypeMap()
+        {
             var accessor = GetHandle();
             Dictionary<int, List<int?>> previousMSLevels = new();
             Dictionary<short, int?> lastMSLevels = new() {
@@ -631,12 +655,14 @@ namespace librawfilereader
             };
 
             var last = LastSpectrum();
-            for(var i = FirstSpectrum(); i <= last; i++) {
+            for (var i = FirstSpectrum(); i <= last; i++)
+            {
                 var filter = accessor.GetFilterForScanNumber(i);
                 var msLevel = MSLevelFromFilter(filter);
 
                 List<int?> backwards = new();
-                for(short j = 1; j < msLevel + 1; j++) {
+                for (short j = 1; j < msLevel + 1; j++)
+                {
                     var o = lastMSLevels[j];
                     backwards.Add(o);
                 }
@@ -667,8 +693,9 @@ namespace librawfilereader
             PreviousMSLevels = BuildScanTypeMap();
 
             var headers = accessor.GetTrailerExtraHeaderInformation();
-            for(var i = 0; i < headers.Length; i++) {
-                var header =  headers[i];
+            for (var i = 0; i < headers.Length; i++)
+            {
+                var header = headers[i];
                 var label = header.Label.TrimEnd(':');
                 TrailerMap[label] = i;
             }
@@ -686,7 +713,8 @@ namespace librawfilereader
         [UnmanagedCallersOnly]
         public static unsafe void SetRustAllocateMemory(delegate*<nuint, RawVec*, void> rustAllocateMemory) => RustAllocateMemory = rustAllocateMemory;
 
-        private unsafe static RawVec MemoryToRustVec(Span<byte> buffer, nuint size) {
+        private unsafe static RawVec MemoryToRustVec(Span<byte> buffer, nuint size)
+        {
             var vec = new RawVec();
             RustAllocateMemory(size, &vec);
 
@@ -799,26 +827,34 @@ namespace librawfilereader
         [UnmanagedCallersOnly]
         public static unsafe uint Status(IntPtr handleToken)
         {
-            try {
+            try
+            {
                 RawFileReader reader = GetHandleForToken(handleToken);
                 return (uint)reader.Status;
-            } catch {
-                return (uint) RawFileReaderError.HandleNotFound;
+            }
+            catch
+            {
+                return (uint)RawFileReaderError.HandleNotFound;
             }
         }
 
         [UnmanagedCallersOnly]
-        public static unsafe uint GetSignalLoading(IntPtr handleToken) {
+        public static unsafe uint GetSignalLoading(IntPtr handleToken)
+        {
             RawFileReader reader = GetHandleForToken(handleToken);
             return (uint)(reader.IncludeSignal ? 1 : 0);
         }
 
         [UnmanagedCallersOnly]
-        public static unsafe void SetSignalLoading(IntPtr handleToken, uint value) {
+        public static unsafe void SetSignalLoading(IntPtr handleToken, uint value)
+        {
             RawFileReader reader = GetHandleForToken(handleToken);
-            if (value == 0) {
+            if (value == 0)
+            {
                 reader.IncludeSignal = false;
-            } else {
+            }
+            else
+            {
                 reader.IncludeSignal = true;
             }
         }
@@ -866,7 +902,8 @@ namespace librawfilereader
         /// <param name="handleToken">The token corresponding to the `RawFileReader` handle</param>
         /// <returns>A `RawVec` representing Rust-allocated memory that holds the FlatBuffer message</returns>
         [UnmanagedCallersOnly]
-        public static unsafe RawVec InstrumentModel(IntPtr handleToken) {
+        public static unsafe RawVec InstrumentModel(IntPtr handleToken)
+        {
             RawFileReader reader = GetHandleForToken(handleToken);
             var buffer = reader.GetInstrumentInfo();
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
