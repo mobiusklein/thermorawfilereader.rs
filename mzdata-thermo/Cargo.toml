@@ -12,8 +12,8 @@ nethost-download = ["thermorawfilereader/nethost-download"]
 
 [dependencies]
 
-mzdata = { default-features = false, version = ">=0.12.0" }
-mzpeaks = { version = ">=0.9.0", default-features = false }
+mzdata = { default-features = false, version = "0.12.0" }
+mzpeaks = { version = "0.9.0", default-features = false }
 thermorawfilereader = { path = "../thermorawfilereader", version = "0.1.0", default-features = false }
 sha1 = "0.10.6"
 base16ct = { version = "0.2.0", features = ["alloc"] }
