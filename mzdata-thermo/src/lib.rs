@@ -3,6 +3,7 @@
 //! Depends upon the [`thermorawfilereader`] crate which manages the self-hosted `dotnet`
 //! runtime.
 mod thermo_raw;
+mod instruments;
 
 pub use thermo_raw::{ThermoRawType, ThermoRaw, is_thermo_raw_prefix};
 

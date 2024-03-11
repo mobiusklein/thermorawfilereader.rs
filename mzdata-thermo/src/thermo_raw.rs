@@ -26,6 +26,8 @@ use thermorawfilereader::{
     RawFileReader,
 };
 
+use crate::instruments::{parse_instrument_model, InstrumentModelType};
+
 macro_rules! param {
     ($name:expr, $acc:expr) => {
         ControlledVocabulary::MS.const_param_ident($name, $acc)
@@ -107,11 +109,17 @@ fn make_native_id(index: i32) -> String {
 impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike + Default>
     ThermoRawType<C, D>
 {
-    fn make_file_description(path: &PathBuf, handle: &RawFileReader) -> io::Result<FileDescription> {
+    fn make_file_description(
+        path: &PathBuf,
+        handle: &RawFileReader,
+    ) -> io::Result<FileDescription> {
         let mut sf = SourceFile::default();
         let description = handle.file_description();
         sf.name = path.file_name().unwrap().to_string_lossy().to_string();
-        sf.location = format!("file:///{}", path.canonicalize()?.parent().unwrap().display());
+        sf.location = format!(
+            "file:///{}",
+            path.canonicalize()?.parent().unwrap().display()
+        );
         sf.id = "RAW1".to_string();
         sf.file_format = Some(
             ControlledVocabulary::MS
@@ -125,7 +133,11 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
         );
         sf.add_param(ControlledVocabulary::MS.param_val("1000569", "SHA-1", checksum_file(path)?));
 
-        let levels: Vec<_> = description.spectra_per_ms_level().into_iter().flatten().collect();
+        let levels: Vec<_> = description
+            .spectra_per_ms_level()
+            .into_iter()
+            .flatten()
+            .collect();
 
         let mut contents = Vec::new();
         if levels.get(0).copied().unwrap_or_default() > 0 {
@@ -156,6 +168,12 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
                 .const_param_ident("Xcalibur", 1000532)
                 .into(),
         );
+
+        let model_type = if let Some(model_name) = descr.model() {
+            parse_instrument_model(model_name)
+        } else {
+            InstrumentModelType::Unknown
+        };
 
         let mut configs = HashMap::new();
         let mut components_to_instrument_id = HashMap::new();
@@ -263,14 +281,18 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
             config.components.push(detector);
 
             if let Some(serial) = descr.serial_number() {
-                config.add_param(ControlledVocabulary::MS.param_val("1000529", "name", serial));
+                config.add_param(ControlledVocabulary::MS.param_val(
+                    "1000529",
+                    "instrument serial number",
+                    serial,
+                ));
             }
             config.software_reference = sw.id.clone();
             config.id = i as u32;
 
             components_to_instrument_id
                 .insert((vconf.ionization_mode(), vconf.mass_analyzer()), i as u32);
-            // TODO: map model name terms
+            config.add_param(model_type.to_param());
             config.add_param(Param::new_key_value(
                 "instrument model".to_string(),
                 descr.model().unwrap_or_default().to_string(),
@@ -642,7 +664,7 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
 }
 
 /// A convenience alias for [`ThermoRawType`] with peak types specified.
-pub type ThermoRaw = ThermoRawType::<CentroidPeak, DeconvolutedPeak>;
+pub type ThermoRaw = ThermoRawType<CentroidPeak, DeconvolutedPeak>;
 
 #[cfg(test)]
 mod test {
@@ -654,7 +676,10 @@ mod test {
         let sf = &reader.file_description().source_files[0];
         assert_eq!(sf.id, "RAW1");
         assert_eq!(sf.name, "small.RAW");
-        assert_eq!(sf.get_param_by_name("SHA-1").unwrap().value, "b43e9286b40e8b5dbc0dfa2e428495769ca96a96");
+        assert_eq!(
+            sf.get_param_by_name("SHA-1").unwrap().value,
+            "b43e9286b40e8b5dbc0dfa2e428495769ca96a96"
+        );
 
         let confs = reader.instrument_configurations();
         assert_eq!(confs.len(), 2);
@@ -668,8 +693,7 @@ mod test {
 
     #[test]
     fn test_read_spectra() -> io::Result<()> {
-        let mut reader =
-            ThermoRaw::open_path("../tests/data/small.RAW")?;
+        let mut reader = ThermoRaw::open_path("../tests/data/small.RAW")?;
         assert_eq!(reader.len(), 48);
 
         let groups: Vec<_> = reader.groups().collect();
