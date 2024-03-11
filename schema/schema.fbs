@@ -69,6 +69,13 @@ enum IonizationMode : uint8
     IonModeBeyondKnown
 }
 
+table FileDescriptionT {
+    creation_date: string;
+    sample_id: string;
+    source_file: string;
+    spectra_per_ms_level: [uint32];
+}
+
 table InstrumentModelT {
     configurations: [InstrumentConfigurationT];
     name: string;

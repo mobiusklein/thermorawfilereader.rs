@@ -13,7 +13,7 @@ use dotnetrawfilereader_sys::RawVec;
 
 use crate::get_runtime;
 use crate::schema::{
-    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT, InstrumentConfigurationT, InstrumentModelT, Polarity, PrecursorT, SpectrumData, SpectrumDescription, SpectrumMode
+    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT, FileDescriptionT, InstrumentConfigurationT, InstrumentModelT, Polarity, PrecursorT, SpectrumData, SpectrumDescription, SpectrumMode
 };
 
 
@@ -27,8 +27,8 @@ pub enum RawFileReaderError {
     FileNotFound,
     /// The file path given does exist, but it's not a Thermo RAW file
     InvalidFormat,
-    /// The handle provided doesn't exist, someone is doing something odd like making a new [`RawFileReaderHandle`]
-    /// somehow other than [`RawFileReaderHandle::open`]
+    /// The handle provided doesn't exist, someone is doing something odd like making a new [`RawFileReader`]
+    /// somehow other than [`RawFileReader::open`]
     HandleNotFound,
     /// Some other error occurred
     Error = 999,
@@ -169,6 +169,42 @@ impl InstrumentModel {
     }
 }
 
+pub struct FileDescription {
+    data: RawVec<u8>
+}
+
+impl FileDescription {
+    pub fn new(data: RawVec<u8>) -> Self {
+        Self { data }
+    }
+
+    /// Check that the buffer is a valid `FileDescriptionT`
+    pub fn check(&self) -> bool {
+        root::<FileDescriptionT>(&self.data).is_ok()
+    }
+
+    /// View the underlying buffer as a `FileDescriptionT`
+    pub fn view(&self) -> FileDescriptionT {
+        root::<FileDescriptionT>(&self.data).unwrap()
+    }
+
+    pub fn sample_id(&self) -> Option<&str> {
+        self.view().sample_id()
+    }
+
+    pub fn source_file(&self) -> Option<&str> {
+        self.view().source_file()
+    }
+
+    pub fn creation_date(&self) -> Option<&str> {
+        self.view().creation_date()
+    }
+
+    pub fn spectra_per_ms_level(&self) -> Option<flatbuffers::Vector<'_, u32>> {
+        self.view().spectra_per_ms_level()
+    }
+}
+
 /// A wrapper around a `dotnet` `RawFileReader` instance. It carries a reference to a
 /// `dotnet` runtime and a FFI pointer to access data through. The dotnet runtime is
 /// controlled via locks and is expected to be thread-safe.
@@ -196,7 +232,7 @@ impl Drop for RawFileReader {
 
 impl Debug for RawFileReader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("RawFileReaderHandle")
+        f.debug_struct("RawFileReader")
             .field("raw_file_reader", &self.raw_file_reader)
             .field("context", &"?")
             .field("size", &self.size)
@@ -354,6 +390,20 @@ impl RawFileReader {
         let buf = instrument_fn(self.raw_file_reader);
         root::<InstrumentModelT>(&buf).unwrap();
         InstrumentModel::new(buf)
+    }
+
+    pub fn file_description(&self) -> FileDescription {
+        self.validate_impl();
+        let descr_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("FileDescription"),
+            )
+            .unwrap();
+        let buf = descr_fn(self.raw_file_reader);
+        root::<FileDescriptionT>(&buf).unwrap();
+        FileDescription::new(buf)
     }
 
     #[inline]
@@ -622,6 +672,18 @@ mod test {
 
         assert_eq!(model.model(), Some("LTQ FT"));
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_file_description() -> io::Result<()> {
+        let handle = RawFileReader::open("../tests/data/small.RAW")?;
+        let fd = handle.file_description();
+        assert_eq!(fd.sample_id(), Some("1"));
+        assert_eq!(fd.source_file(), Some("../tests/data/small.RAW"));
+        let counts = fd.spectra_per_ms_level().unwrap();
+        assert_eq!(counts.get(0), 14);
+        assert_eq!(counts.get(1), 34);
         Ok(())
     }
 }

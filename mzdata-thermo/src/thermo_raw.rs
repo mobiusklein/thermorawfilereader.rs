@@ -107,10 +107,11 @@ fn make_native_id(index: i32) -> String {
 impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike + Default>
     ThermoRawType<C, D>
 {
-    fn make_file_description(path: &PathBuf) -> io::Result<FileDescription> {
+    fn make_file_description(path: &PathBuf, handle: &RawFileReader) -> io::Result<FileDescription> {
         let mut sf = SourceFile::default();
+        let description = handle.file_description();
         sf.name = path.file_name().unwrap().to_string_lossy().to_string();
-        sf.location = format!("file:///{}", path.parent().unwrap().display());
+        sf.location = format!("file:///{}", path.canonicalize()?.parent().unwrap().display());
         sf.id = "RAW1".to_string();
         sf.file_format = Some(
             ControlledVocabulary::MS
@@ -124,7 +125,17 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
         );
         sf.add_param(ControlledVocabulary::MS.param_val("1000569", "SHA-1", checksum_file(path)?));
 
-        let file_description = FileDescription::new(vec![], vec![sf]);
+        let levels: Vec<_> = description.spectra_per_ms_level().into_iter().flatten().collect();
+
+        let mut contents = Vec::new();
+        if levels.get(0).copied().unwrap_or_default() > 0 {
+            contents.push(param!("MS1 spectrum", 1000579).into())
+        }
+        if levels[1..].iter().copied().sum::<u32>() > 0 {
+            contents.push(param!("MSn spectrum", 1000580).into())
+        }
+
+        let file_description = FileDescription::new(contents, vec![sf]);
         Ok(file_description)
     }
 
@@ -270,15 +281,24 @@ impl<C: CentroidLike + Default + From<CentroidPeak>, D: DeconvolutedCentroidLike
         (sw, configs, components_to_instrument_id)
     }
 
-    pub fn new<P: Into<PathBuf>>(path: P) -> io::Result<Self> {
-        let path: PathBuf = path.into();
-        let handle = RawFileReader::open(&path)?;
+    fn build_index(handle: &RawFileReader) -> OffsetIndex {
         let mut spectrum_index: OffsetIndex = OffsetIndex::new("spectrum".to_string());
         (0..handle.len()).for_each(|i| {
             spectrum_index.insert(make_native_id(i as i32), i as u64);
         });
+        spectrum_index
+    }
 
-        let file_description = Self::make_file_description(&path)?;
+    /// Create a new [`ThermoRawType`] from a path.
+    /// This may trigger an expensive I/O operation to checksum the file
+    pub fn new<P: Into<PathBuf>>(path: P) -> io::Result<Self> {
+        let path: PathBuf = path.into();
+        let handle = RawFileReader::open(&path)?;
+
+        let spectrum_index = Self::build_index(&handle);
+
+        let file_description = Self::make_file_description(&path, &handle)?;
+
         let (sw, instrument_configurations, components_to_instrument_id) =
             Self::make_instrument_configuration(&handle);
 
@@ -629,7 +649,25 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_read() -> io::Result<()> {
+    fn test_read_metadata() -> io::Result<()> {
+        let reader = ThermoRaw::open_path("../tests/data/small.RAW")?;
+        let sf = &reader.file_description().source_files[0];
+        assert_eq!(sf.id, "RAW1");
+        assert_eq!(sf.name, "small.RAW");
+        assert_eq!(sf.get_param_by_name("SHA-1").unwrap().value, "b43e9286b40e8b5dbc0dfa2e428495769ca96a96");
+
+        let confs = reader.instrument_configurations();
+        assert_eq!(confs.len(), 2);
+
+        let conf = confs.get(&0).unwrap();
+        assert_eq!(conf.id, 0);
+        assert_eq!(conf.components.len(), 3);
+        assert_eq!(conf.software_reference, "thermo_xcalibur");
+        Ok(())
+    }
+
+    #[test]
+    fn test_read_spectra() -> io::Result<()> {
         let mut reader =
             ThermoRaw::open_path("../tests/data/small.RAW")?;
         assert_eq!(reader.len(), 48);

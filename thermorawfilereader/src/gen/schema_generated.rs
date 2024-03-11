@@ -603,8 +603,8 @@ impl flatbuffers::SimpleToVerifyInSlice for IonizationMode {}
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
 pub struct InstrumentConfigurationT(pub [u8; 2]);
-impl Default for InstrumentConfigurationT {
-  fn default() -> Self {
+impl Default for InstrumentConfigurationT { 
+  fn default() -> Self { 
     Self([0; 2])
   }
 }
@@ -727,8 +727,8 @@ impl<'a> InstrumentConfigurationT {
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
 pub struct IsolationWindowT(pub [u8; 24]);
-impl Default for IsolationWindowT {
-  fn default() -> Self {
+impl Default for IsolationWindowT { 
+  fn default() -> Self { 
     Self([0; 24])
   }
 }
@@ -883,8 +883,8 @@ impl<'a> IsolationWindowT {
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
 pub struct ActivationT(pub [u8; 16]);
-impl Default for ActivationT {
-  fn default() -> Self {
+impl Default for ActivationT { 
+  fn default() -> Self { 
     Self([0; 16])
   }
 }
@@ -1007,8 +1007,8 @@ impl<'a> ActivationT {
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
 pub struct PrecursorT(pub [u8; 64]);
-impl Default for PrecursorT {
-  fn default() -> Self {
+impl Default for PrecursorT { 
+  fn default() -> Self { 
     Self([0; 64])
   }
 }
@@ -1221,6 +1221,154 @@ impl<'a> PrecursorT {
 
 }
 
+pub enum FileDescriptionTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct FileDescriptionT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for FileDescriptionT<'a> {
+  type Inner = FileDescriptionT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> FileDescriptionT<'a> {
+  pub const VT_CREATION_DATE: flatbuffers::VOffsetT = 4;
+  pub const VT_SAMPLE_ID: flatbuffers::VOffsetT = 6;
+  pub const VT_SOURCE_FILE: flatbuffers::VOffsetT = 8;
+  pub const VT_SPECTRA_PER_MS_LEVEL: flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    FileDescriptionT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args FileDescriptionTArgs<'args>
+  ) -> flatbuffers::WIPOffset<FileDescriptionT<'bldr>> {
+    let mut builder = FileDescriptionTBuilder::new(_fbb);
+    if let Some(x) = args.spectra_per_ms_level { builder.add_spectra_per_ms_level(x); }
+    if let Some(x) = args.source_file { builder.add_source_file(x); }
+    if let Some(x) = args.sample_id { builder.add_sample_id(x); }
+    if let Some(x) = args.creation_date { builder.add_creation_date(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn creation_date(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(FileDescriptionT::VT_CREATION_DATE, None)}
+  }
+  #[inline]
+  pub fn sample_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(FileDescriptionT::VT_SAMPLE_ID, None)}
+  }
+  #[inline]
+  pub fn source_file(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(FileDescriptionT::VT_SOURCE_FILE, None)}
+  }
+  #[inline]
+  pub fn spectra_per_ms_level(&self) -> Option<flatbuffers::Vector<'a, u32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u32>>>(FileDescriptionT::VT_SPECTRA_PER_MS_LEVEL, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for FileDescriptionT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("creation_date", Self::VT_CREATION_DATE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("sample_id", Self::VT_SAMPLE_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("source_file", Self::VT_SOURCE_FILE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u32>>>("spectra_per_ms_level", Self::VT_SPECTRA_PER_MS_LEVEL, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct FileDescriptionTArgs<'a> {
+    pub creation_date: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub sample_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub source_file: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub spectra_per_ms_level: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u32>>>,
+}
+impl<'a> Default for FileDescriptionTArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    FileDescriptionTArgs {
+      creation_date: None,
+      sample_id: None,
+      source_file: None,
+      spectra_per_ms_level: None,
+    }
+  }
+}
+
+pub struct FileDescriptionTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> FileDescriptionTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_creation_date(&mut self, creation_date: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FileDescriptionT::VT_CREATION_DATE, creation_date);
+  }
+  #[inline]
+  pub fn add_sample_id(&mut self, sample_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FileDescriptionT::VT_SAMPLE_ID, sample_id);
+  }
+  #[inline]
+  pub fn add_source_file(&mut self, source_file: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FileDescriptionT::VT_SOURCE_FILE, source_file);
+  }
+  #[inline]
+  pub fn add_spectra_per_ms_level(&mut self, spectra_per_ms_level: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FileDescriptionT::VT_SPECTRA_PER_MS_LEVEL, spectra_per_ms_level);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> FileDescriptionTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    FileDescriptionTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<FileDescriptionT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for FileDescriptionT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("FileDescriptionT");
+      ds.field("creation_date", &self.creation_date());
+      ds.field("sample_id", &self.sample_id());
+      ds.field("source_file", &self.source_file());
+      ds.field("spectra_per_ms_level", &self.spectra_per_ms_level());
+      ds.finish()
+  }
+}
 pub enum InstrumentModelTOffset {}
 #[derive(Copy, Clone, PartialEq)]
 

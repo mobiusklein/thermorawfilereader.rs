@@ -147,6 +147,7 @@ namespace librawfilereader
         /// MS level
         /// </summary>
         Dictionary<int, List<int?>> PreviousMSLevels;
+        Dictionary<short, uint> MSLevelCounts;
 
         /// <summary>
         /// An index look up mapping trailer keys by index that lets us avoid
@@ -190,6 +191,7 @@ namespace librawfilereader
             InstrumentConfigsByComponents = new();
             PreviousMSLevels = new();
             TrailerMap = new();
+            MSLevelCounts = new();
             Status = Configure();
         }
 
@@ -585,6 +587,36 @@ namespace librawfilereader
             return precursor;
         }
 
+        public ByteBuffer GetFileMetadata() {
+            var accessor = GetHandle();
+            var builder = new FlatBufferBuilder(1024);
+            var description = accessor.FileHeader.FileDescription;
+            var date = accessor.FileHeader.CreationDate.ToString("o");
+
+            SampleInformation sampleInfo = accessor.SampleInformation;
+            var sampleID = sampleInfo.SampleId;
+
+            var counts = new uint[10];
+            foreach(var (k, v) in MSLevelCounts) {
+                counts[k - 1] = v;
+            }
+
+            var dateOffset = builder.CreateString(date);
+            var sampleIDOffset = builder.CreateString(sampleID);
+            var pathOffset = builder.CreateString(Path);
+            var countsOffset = FileDescriptionT.CreateSpectraPerMsLevelVector(builder, counts);
+
+            FileDescriptionT.StartFileDescriptionT(builder);
+            FileDescriptionT.AddCreationDate(builder, dateOffset);
+            FileDescriptionT.AddSampleId(builder, sampleIDOffset);
+            FileDescriptionT.AddSourceFile(builder, pathOffset);
+            FileDescriptionT.AddSpectraPerMsLevel(builder, countsOffset);
+            var fileDescOffset = FileDescriptionT.EndFileDescriptionT(builder);
+
+            builder.Finish(fileDescOffset.Value);
+            return builder.DataBuffer;
+        }
+
         public ByteBuffer SpectrumDescriptionFor(int scanNumber)
         {
             var accessor = GetHandle();
@@ -603,8 +635,7 @@ namespace librawfilereader
             short level = MSLevelFromFilter(filter);
             Polarity polarity = GetPolarity(filter);
 
-
-            var builder = new FlatBufferBuilder(1024);
+            var builder = new FlatBufferBuilder(4096);
             Offset<SpectrumData> dataOffset = new();
 
             if (IncludeSignal)
@@ -640,9 +671,21 @@ namespace librawfilereader
             return builder.DataBuffer;
         }
 
-        private Dictionary<int, List<int?>> BuildScanTypeMap()
+        private void BuildScanTypeMap()
         {
             var accessor = GetHandle();
+            Dictionary<short, uint> msLevelCounts = new() {
+                {1, 0},
+                {2, 0},
+                {3, 0},
+                {4, 0},
+                {5, 0},
+                {6, 0},
+                {7, 0},
+                {8, 0},
+                {9, 0},
+                {10, 0},
+            };
             Dictionary<int, List<int?>> previousMSLevels = new();
             Dictionary<short, int?> lastMSLevels = new() {
                 {1, null},
@@ -663,6 +706,8 @@ namespace librawfilereader
                 var filter = accessor.GetFilterForScanNumber(i);
                 var msLevel = MSLevelFromFilter(filter);
 
+                msLevelCounts[msLevel] += 1;
+
                 List<int?> backwards = new();
                 for (short j = 1; j < msLevel + 1; j++)
                 {
@@ -674,7 +719,8 @@ namespace librawfilereader
                 lastMSLevels[msLevel] = i;
             }
 
-            return previousMSLevels;
+            PreviousMSLevels = previousMSLevels;
+            MSLevelCounts = msLevelCounts;
         }
 
         private RawFileReaderError Configure()
@@ -693,7 +739,7 @@ namespace librawfilereader
                 accessor.SelectInstrument(Device.MS, 1);
             }
             InstrumentConfigsByComponents = FindAllMassAnalyzers();
-            PreviousMSLevels = BuildScanTypeMap();
+            BuildScanTypeMap();
 
             var headers = accessor.GetTrailerExtraHeaderInformation();
             for (var i = 0; i < headers.Length; i++)
@@ -909,6 +955,15 @@ namespace librawfilereader
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             var buffer = reader.GetInstrumentInfo();
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
+            var size = bytes.Length;
+            return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly]
+        public static unsafe RawVec FileDescription(IntPtr handleToken) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var buffer = reader.GetFileMetadata();
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
             return MemoryToRustVec(bytes, (nuint)size);
