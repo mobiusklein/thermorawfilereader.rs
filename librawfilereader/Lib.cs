@@ -206,6 +206,7 @@ namespace librawfilereader
         {
             var accessor = GetHandleRaw();
             accessor.SelectInstrument(Device.MS, 1);
+            accessor.IncludeReferenceAndExceptionData = true;
             return accessor;
             // return Handle;
         }
@@ -463,7 +464,7 @@ namespace librawfilereader
             }
             else
             {
-                var segScan = accessor.GetSegmentedScanFromScanNumber(scanNumber, stats);
+                var segScan = accessor.GetSegmentedScanFromScanNumber(scanNumber, null);
 
                 SpectrumData.StartMzVector(bufferBuilder, segScan.PositionCount);
                 foreach (var val in segScan.Positions.Reverse())

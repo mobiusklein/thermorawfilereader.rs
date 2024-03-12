@@ -669,6 +669,7 @@ pub type ThermoRaw = ThermoRawType<CentroidPeak, DeconvolutedPeak>;
 #[cfg(test)]
 mod test {
     use super::*;
+    use mzdata::MzMLReader;
 
     #[test]
     fn test_read_metadata() -> io::Result<()> {
@@ -692,6 +693,57 @@ mod test {
     }
 
     #[test]
+    fn test_vs_mzml() -> io::Result<()> {
+        let reader = ThermoRaw::open_path("../tests/data/small.RAW")?;
+        let ref_reader = MzMLReader::open_path("../tests/data/small.mzML")?;
+
+        let spectra: Vec<_> = reader.collect();
+        let ref_spectra: Vec<_> = ref_reader.collect();
+
+        assert_eq!(spectra.len(), ref_spectra.len());
+
+        spectra.iter().zip(ref_spectra.iter()).for_each(|(s, r)| {
+            assert_eq!(s.id(), r.id());
+            assert_eq!(s.index(), r.index());
+            assert_eq!(s.ms_level(), r.ms_level());
+            assert!(
+                (s.start_time() - r.start_time()).abs() < 1e-3,
+                "{} - {} = {}",
+                s.start_time(),
+                r.start_time(),
+                s.start_time() - r.start_time()
+            );
+            if s.ms_level() == 2 {
+                let ps = s.precursor().unwrap();
+                let pr = r.precursor().unwrap();
+                assert!(
+                    (ps.ion().mz() - pr.ion().mz()).abs() < 1e-3,
+                    "{} - {} = {}",
+                    ps.ion().mz(),
+                    pr.ion().mz(),
+                    ps.ion().mz() - pr.ion().mz()
+                );
+            }
+        });
+
+        let s1 = &spectra[0];
+        let r1 = &ref_spectra[0];
+
+        let as1 = s1.raw_arrays().unwrap();
+        let ar1 = r1.raw_arrays().unwrap();
+
+        assert_eq!(as1.mzs().unwrap().len(), ar1.mzs().unwrap().len());
+        as1.mzs().unwrap().iter().enumerate().zip(ar1.mzs().unwrap().iter()).for_each(|((i, s), r)|{
+            assert!((s - r).abs() < 1e-3, "[{i}]{s} - {r} = {}", s - r);
+        });
+        assert_eq!(as1.intensities().unwrap().len(), as1.mzs().unwrap().len());
+        as1.intensities().unwrap().iter().enumerate().zip(ar1.intensities().unwrap().iter()).for_each(|((i, s), r)|{
+            assert!((s - r).abs() < 1e-3, "[{i}]{s} - {r} = {}", s - r);
+        });
+        Ok(())
+    }
+
+    #[test]
     fn test_read_spectra() -> io::Result<()> {
         let mut reader = ThermoRaw::open_path("../tests/data/small.RAW")?;
         assert_eq!(reader.len(), 48);
@@ -702,10 +754,10 @@ mod test {
         let spec = reader.get_spectrum_by_index(0).unwrap();
         assert_eq!(spec.peaks().len(), 19913);
         assert!(
-            (spec.peaks().tic() - 69381984.0).abs() < 1.0,
+            (spec.peaks().tic() - 71263170.0).abs() < 1.0,
             "TIC = {}, diff {}",
             spec.peaks().tic(),
-            spec.peaks().tic() - 69381984.0
+            spec.peaks().tic() - 71263170.0
         );
 
         let bp = spec.peaks().base_peak();
