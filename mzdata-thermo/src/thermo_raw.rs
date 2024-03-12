@@ -682,6 +682,9 @@ mod test {
             "b43e9286b40e8b5dbc0dfa2e428495769ca96a96"
         );
 
+        assert!(reader.file_description().get_param_by_accession("MS:1000579").is_some());
+        assert!(reader.file_description().get_param_by_accession("MS:1000580").is_some());
+
         let confs = reader.instrument_configurations();
         assert_eq!(confs.len(), 2);
 
@@ -689,6 +692,7 @@ mod test {
         assert_eq!(conf.id, 0);
         assert_eq!(conf.components.len(), 3);
         assert_eq!(conf.software_reference, "thermo_xcalibur");
+        assert_eq!(conf.get_param_by_accession("MS:1000448").unwrap().name(), "LTQ FT");
         Ok(())
     }
 
@@ -722,6 +726,10 @@ mod test {
                     ps.ion().mz(),
                     pr.ion().mz(),
                     ps.ion().mz() - pr.ion().mz()
+                );
+                assert_eq!(
+                    ps.ion().charge,
+                    pr.ion().charge
                 );
             }
         });
