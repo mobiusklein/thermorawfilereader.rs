@@ -20,8 +20,8 @@ use crate::buffer::configure_allocator;
 
 static DOTNET_LIB_DIR: Dir<'_> = include_dir!("dotnetrawfilereader-sys/lib/");
 
-const TMP_NAME: &'static str = concat!("rawfilereader_libs_", env!("CARGO_PKG_VERSION"));
-const DEFAULT_VAR_NAME: &'static str = "DOTNET_RAWFILEREADER_BUNDLE_PATH";
+const TMP_NAME: &str = concat!("rawfilereader_libs_", env!("CARGO_PKG_VERSION"));
+const DEFAULT_VAR_NAME: &str = "DOTNET_RAWFILEREADER_BUNDLE_PATH";
 
 
 /// Represent a directory to store bundled files within.
@@ -119,7 +119,7 @@ impl DotNetLibraryBundle {
             .read()
             .map(|a| a.clone().unwrap())
             .unwrap();
-        return a;
+        a
     }
 
     /// Write all of the bundled `dotnet` DLLs to the file system at this location
@@ -128,14 +128,12 @@ impl DotNetLibraryBundle {
         let do_write = if !path.exists() {
             fs::create_dir_all(path)?;
             true
+        } else if path.join("checksum").exists(){
+            let checksum = fs::read(path.join("checksum"))?;
+            let lib_checksum = DOTNET_LIB_DIR.get_file("checksum").unwrap().contents();
+            checksum != lib_checksum
         } else {
-            if path.join("checksum").exists(){
-                let checksum = fs::read(path.join("checksum"))?;
-                let lib_checksum = DOTNET_LIB_DIR.get_file("checksum").unwrap().contents();
-                checksum != lib_checksum
-            } else {
-                true
-            }
+            true
         };
 
         if !do_write {
@@ -195,7 +193,7 @@ pub fn set_runtime_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
 
 /// Get a reference to a shared `dotnet` runtime and associated DLL bundle
 pub fn get_runtime() -> Arc<AssemblyDelegateLoader> {
-    let bundle = BUNDLE.get_or_init(|| DotNetLibraryBundle::default());
+    let bundle = BUNDLE.get_or_init(DotNetLibraryBundle::default);
 
     bundle.runtime()
 }

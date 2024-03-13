@@ -491,7 +491,7 @@ impl RawFileReader {
                 acq.low_mz(),
                 acq.high_mz()
             );
-            descr.data().map(|dat| {
+            if let Some(dat) = descr.data() {
                 let intens_opt = dat.intensity();
                 let intens = intens_opt.as_ref().unwrap();
                 let val = intens.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
@@ -500,8 +500,7 @@ impl RawFileReader {
                     intens.len(),
                     val
                 );
-                ()
-            });
+            }
         } else {
             println!("Spectrum at {index}/{} not found", self.len())
         }
@@ -570,7 +569,7 @@ pub struct RawFileReaderIntoIter {
 
 impl RawFileReaderIntoIter {
     fn new(handle: RawFileReader) -> Self {
-        let size = handle.len() as usize;
+        let size = handle.len();
         Self {
             handle,
             index: 0,

@@ -26,7 +26,7 @@ impl<T> RawVec<T> {
     /// Releases the owned memory and puts this struct into an unusable, empty
     /// state. This method is called on `drop`, but it is safe to call repeatedly.
     pub fn free(&mut self) {
-        if self.data != ptr::null_mut() {
+        if !self.data.is_null() {
             let owned = unsafe { Box::from_raw(self.data) };
             drop(owned);
             self.capacity = 0;
@@ -54,9 +54,8 @@ impl<T> Drop for RawVec<T> {
 /// A `dotnet` memory allocator that receives a memory address for a [`RawVec`] and
 /// heap-allocates `size` that is "owned" by Rust's memory allocator and gives
 /// it to `dotnet` via the passed pointer.
-pub extern "system" fn rust_allocate_memory(size: usize, vec: *mut RawVec<u8>) {
-    let mut buf = Vec::<u8>::with_capacity(size);
-    buf.resize(size, 0);
+pub(crate) extern "system" fn rust_allocate_memory(size: usize, vec: *mut RawVec<u8>) {
+    let buf = vec![0; size];
     let capacity = buf.capacity();
     let len = buf.len();
     let data = buf.leak();
