@@ -3,6 +3,9 @@ name = "dotnetrawfilereader-sys"
 version = "0.1.0"
 edition = "2021"
 
+description = "A low-level interface to a in-process dotnet runtime for Thermo Fisher's RawFileReader library"
+license = "Apache-2.0"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
