@@ -18,7 +18,7 @@ use netcorehost::{hostfxr::AssemblyDelegateLoader, nethost, pdcstring::PdCString
 
 use crate::buffer::configure_allocator;
 
-static DOTNET_LIB_DIR: Dir<'_> = include_dir!("dotnetrawfilereader-sys/lib/");
+static DOTNET_LIB_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/lib/");
 
 const TMP_NAME: &str = concat!("rawfilereader_libs_", env!("CARGO_PKG_VERSION"));
 const DEFAULT_VAR_NAME: &str = "DOTNET_RAWFILEREADER_BUNDLE_PATH";
