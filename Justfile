@@ -25,3 +25,5 @@ check i=index:
 
 test:
     cargo t
+
+alias t := test

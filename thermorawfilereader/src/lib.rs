@@ -3,7 +3,7 @@
 //! The main access point is [`RawFileReader`], via the [`RawFileReader::open`].
 //!
 //! # Licensing
-//! By using this library, you agree to the [RawFileReader License](https://github.com/mobiusklein/thermorawfilereader.rs/raw/main/librawfilereader/lib/RawFileRdr_License_Agreement_RevA.doc)
+//! By using this library, you agree to the [RawFileReader License](https://github.com/thermofisherlsms/RawFileReader/blob/main/License.doc)
 pub(crate) mod gen;
 pub(crate) mod wrap;
 

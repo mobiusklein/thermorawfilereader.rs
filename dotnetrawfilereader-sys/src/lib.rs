@@ -5,6 +5,9 @@
 //! For regular use, call [`get_runtime`] to get a runtime handle, or [`set_runtime_dir`] to
 //! pre-specify the location where runtime files need to be cached. Alternatively, set the
 //! `DOTNET_RAWFILEREADER_BUNDLE_PATH` environment variable.
+//!
+//! # Licensing
+//! By using this library, you agree to the [RawFileReader License](https://github.com/thermofisherlsms/RawFileReader/blob/main/License.doc)
 mod runtime;
 mod buffer;
 
