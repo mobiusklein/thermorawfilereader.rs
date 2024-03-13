@@ -26,7 +26,8 @@ use thermorawfilereader::{
     RawFileReader,
 };
 
-use crate::instruments::{parse_instrument_model, InstrumentModelType};
+#[allow(unused)]
+use crate::instruments::{parse_instrument_model, InstrumentModelType, Detector, instrument_model_to_detector};
 
 macro_rules! param {
     ($name:expr, $acc:expr) => {

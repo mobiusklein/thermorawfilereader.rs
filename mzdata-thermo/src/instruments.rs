@@ -1,3 +1,5 @@
+#![allow(unused)]
+//! Thank you ProteoWizard for building all of these look up tables.
 use std::fmt::Display;
 
 use mzdata::{params::ControlledVocabulary, Param};
@@ -614,4 +616,146 @@ pub fn parse_instrument_model(instrument_model: &str) -> InstrumentModelType {
         }
     }
     InstrumentModelType::Unknown
+}
+
+
+#[derive(Debug, Clone, Copy)]
+pub enum Detector {
+    InductiveDetector,
+    ElectronMultiplier,
+    InductiveDetectorElectronMultiplier,
+}
+
+pub fn instrument_model_to_detector(model: InstrumentModelType) -> Vec<Detector> {
+    match model {
+        InstrumentModelType::Q_Exactive |
+        InstrumentModelType::Q_Exactive_Plus |
+        InstrumentModelType::Q_Exactive_HF |
+        InstrumentModelType::Q_Exactive_HF_X |
+        InstrumentModelType::Q_Exactive_UHMR |
+        InstrumentModelType::Orbitrap_Exploris_120 |
+        InstrumentModelType::Orbitrap_Exploris_240 |
+        InstrumentModelType::Orbitrap_Exploris_480 |
+        InstrumentModelType::Orbitrap_GC => {
+            vec![Detector::InductiveDetector]
+        },
+
+        InstrumentModelType::Exactive |
+        InstrumentModelType::Exactive_Plus => {
+            vec![Detector::InductiveDetector]
+        },
+
+        InstrumentModelType::Orbitrap_Astral => {
+            vec![Detector::InductiveDetector, Detector::ElectronMultiplier]
+        },
+
+        InstrumentModelType::LTQ_FT |
+        InstrumentModelType::LTQ_FT_Ultra => {
+            vec![Detector::InductiveDetector, Detector::ElectronMultiplier]
+        }
+
+        InstrumentModelType::Orbitrap_Fusion |
+        InstrumentModelType::Orbitrap_Fusion_Lumos |
+        InstrumentModelType::Orbitrap_Fusion_ETD |
+        InstrumentModelType::Orbitrap_Ascend |
+        InstrumentModelType::Orbitrap_ID_X |
+        InstrumentModelType::Orbitrap_Eclipse => {
+            vec![Detector::InductiveDetector, Detector::ElectronMultiplier]
+        }
+
+
+        InstrumentModelType::LTQ_Orbitrap |
+        InstrumentModelType::LTQ_Orbitrap_Classic |
+        InstrumentModelType::LTQ_Orbitrap_Discovery |
+        InstrumentModelType::LTQ_Orbitrap_XL |
+        InstrumentModelType::LTQ_Orbitrap_XL_ETD |
+        InstrumentModelType::MALDI_LTQ_Orbitrap |
+        InstrumentModelType::LTQ_Orbitrap_Velos |
+        InstrumentModelType::LTQ_Orbitrap_Velos_Pro |
+        InstrumentModelType::LTQ_Orbitrap_Elite => {
+            vec![Detector::InductiveDetector, Detector::ElectronMultiplier]
+        }
+
+        InstrumentModelType::LCQ_Advantage |
+        InstrumentModelType::LCQ_Classic |
+        InstrumentModelType::LCQ_Deca |
+        InstrumentModelType::LCQ_Deca_XP_Plus |
+        InstrumentModelType::LCQ_Fleet |
+        InstrumentModelType::PolarisQ |
+        InstrumentModelType::ITQ_700 |
+        InstrumentModelType::ITQ_900 => {
+            vec![Detector::ElectronMultiplier]
+        }
+
+        InstrumentModelType::LTQ |
+        InstrumentModelType::LXQ |
+        InstrumentModelType::LTQ_XL |
+        InstrumentModelType::LTQ_XL_ETD |
+        InstrumentModelType::ITQ_1100 |
+        InstrumentModelType::MALDI_LTQ_XL |
+        InstrumentModelType::LTQ_Velos |
+        InstrumentModelType::LTQ_Velos_ETD |
+        InstrumentModelType::LTQ_Velos_Plus => {
+            vec![Detector::ElectronMultiplier]
+        }
+
+        InstrumentModelType::SSQ_7000 |
+        InstrumentModelType::Surveyor_MSQ |
+        InstrumentModelType::DSQ |
+        InstrumentModelType::DSQ_II |
+        InstrumentModelType::ISQ |
+        InstrumentModelType::Trace_DSQ |
+        InstrumentModelType::GC_IsoLink => {
+            vec![Detector::ElectronMultiplier]
+        },
+
+        InstrumentModelType::TSQ_7000 |
+        InstrumentModelType::TSQ_8000_Evo |
+        InstrumentModelType::TSQ_9000 |
+        InstrumentModelType::TSQ |
+        InstrumentModelType::TSQ_Quantum |
+        InstrumentModelType::TSQ_Quantum_Access |
+        InstrumentModelType::TSQ_Quantum_Ultra |
+        InstrumentModelType::TSQ_Quantum_Ultra_AM |
+        InstrumentModelType::TSQ_Vantage |
+        // InstrumentModelType::TSQ_Vantage_EMR |
+        // InstrumentModelType::TSQ_Vantage_AM |
+        InstrumentModelType::GC_Quantum |
+        InstrumentModelType::TSQ_Quantiva |
+        InstrumentModelType::TSQ_Endura |
+        InstrumentModelType::TSQ_Altis |
+        InstrumentModelType::TSQ_Altis_Plus |
+        InstrumentModelType::TSQ_Quantis => {
+            vec![Detector::ElectronMultiplier]
+        }
+
+        InstrumentModelType::DFS |
+        InstrumentModelType::MAT253 |
+        InstrumentModelType::MAT900XP |
+        InstrumentModelType::MAT900XP_Trap |
+        InstrumentModelType::MAT95XP |
+        InstrumentModelType::MAT95XP_Trap => {
+            vec![Detector::ElectronMultiplier]
+        }
+
+        InstrumentModelType::Tempus_TOF |
+        InstrumentModelType::Element_2 |
+        InstrumentModelType::Element_XR |
+        InstrumentModelType::Element_GD |
+        InstrumentModelType::Delta_Plus_Advantage |
+        InstrumentModelType::Delta_Plus_XP |
+        InstrumentModelType::Neptune |
+        InstrumentModelType::Triton => {
+            vec![]
+        }
+
+        InstrumentModelType::Surveyor_PDA |
+        InstrumentModelType::Accela_PDA => {
+            vec![]
+        }
+
+        InstrumentModelType::Unknown => {
+            vec![]
+        },
+    }
 }
