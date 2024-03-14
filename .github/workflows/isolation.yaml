@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
     name: Test Suite
     runs-on: ${{ matrix.os }}
     container:
@@ -25,7 +25,7 @@ jobs:
         run: |
             wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
             chmod +x ./dotnet-install.sh
-            ./dotnet-install.sh --version 7.0.16 --runtime dotnet
+            ./dotnet-install.sh --version 7.0.16
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
