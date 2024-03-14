@@ -69,8 +69,8 @@ pub(crate) extern "system" fn rust_allocate_memory(size: usize, vec: *mut RawVec
 }
 
 
-/// Pass [`rust_allocate_memory`] as a function pointer to the `dotnet` to allow it to allocate
-/// memory from Rust for specific purposes. Directly depends upon the bundled `dotnet` library.
+/// Configure the `dotnet` runtime to allow it to allocate unmanaged memory from Rust for
+/// specific purposes. Directly depends upon the bundled `dotnet` library.
 pub fn configure_allocator(delegate_loader: &AssemblyDelegateLoader) {
     let set_rust_allocate_memory = delegate_loader
         .get_function_with_unmanaged_callers_only::<fn(extern "system" fn(usize, *mut RawVec<u8>))>(

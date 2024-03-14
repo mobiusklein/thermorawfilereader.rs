@@ -115,13 +115,22 @@ struct PrecursorT {
     activation: ActivationT;
 }
 
+
+// Describe *how* a spectrum was acquired
 table AcquisitionT {
+    // The lowest m/z scanned, part of a scan window
     low_mz: float64;
+    // The highest m/z scanned, part of a scan window
     high_mz: float64;
+    // The injection time in milliseconds
     injection_time: float32;
+    // The ion mobility measure recorded when a FAIMS device is present
     compensation_voltage: float32 = null;
     mass_analyzer: MassAnalyzer = FTMS;
+    // The scan event corresponding to a preset scan configuration defined in the
+    // instrument method
     scan_event: int32 = 1;
+    // The ionization mechanism used for this spectrum
     ionization_mode: IonizationMode = NanoSpray;
 }
 

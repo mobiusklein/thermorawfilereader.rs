@@ -1,6 +1,6 @@
 [package]
 name = "thermorawfilereader"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 description = "A (relatively) high level interface to Thermo Fisher's RawFileReader library"
@@ -16,14 +16,24 @@ path="src/bin.rs"
 
 [features]
 
-default = ["nethost-download"]
+default = ["nethost-download", "net7_0"]
 
-nethost-download = ["netcorehost/nethost-download"]
+nethost-download = ["netcorehost/nethost-download", "dotnetrawfilereader-sys/nethost-download"]
+doc-only = ["netcorehost/doc-cfg", "netcorehost/nightly", "netcorehost-latest", "dotnetrawfilereader-sys/doc-only"]
+net7_0 = ["netcorehost/net7_0", "dotnetrawfilereader-sys/net7_0"]
+net8_0 = ["netcorehost/net8_0", "dotnetrawfilereader-sys/net8_0"]
+netcorehost-latest = ["netcorehost/latest", "dotnetrawfilereader-sys/netcorehost-latest"]
+
 
 [dependencies]
 flatbuffers = "23.5.26"
 netcorehost = { version = "0.17.0", default-features = false, features = [
-    "net7_0",
     "nethost"
 ]}
-dotnetrawfilereader-sys = { version = "0.1.0", path = "../dotnetrawfilereader-sys/"}
+
+dotnetrawfilereader-sys = { version = "0.2.0", path = "../dotnetrawfilereader-sys/"}
+bytemuck = "1.15.0"
+
+[package.metadata.docs.rs]
+no-default-features = true
+features = ["doc-only"]

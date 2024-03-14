@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::ffi::c_void;
 use std::fmt::{Debug, Display};
 use std::path::PathBuf;
@@ -7,13 +8,13 @@ use std::{io, ptr};
 use netcorehost::hostfxr::ManagedFunction;
 use netcorehost::{hostfxr::AssemblyDelegateLoader, pdcstr};
 
-use flatbuffers::root;
+use flatbuffers::{root, Vector};
 
 use dotnetrawfilereader_sys::RawVec;
 
 use crate::get_runtime;
 use crate::schema::{
-    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT, FileDescriptionT, InstrumentConfigurationT, InstrumentModelT, Polarity, PrecursorT, SpectrumData, SpectrumDescription, SpectrumMode
+    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT, FileDescriptionT, InstrumentConfigurationT, InstrumentModelT, Polarity, PrecursorT, SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode
 };
 
 
@@ -68,6 +69,35 @@ impl Debug for RawSpectrum {
     }
 }
 
+/// A sub-set of a [`RawSpectrum`] corresponding to the m/z and intensity arrays
+/// of a mass spectrum. All data is borrowed internally from the [`RawSpectrum`]'s
+/// buffer.
+#[derive(Debug)]
+pub struct SpectrumData<'a> {
+    mz: Vector<'a, f64>,
+    intensity: Vector<'a, f32>
+}
+
+
+impl<'a> SpectrumData<'a> {
+
+    /// The m/z array of the spectrum
+    pub fn mz(&self) -> Cow<'a, [f64]> {
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.mz.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.mz.bytes()))
+    }
+
+    /// The intensity array of the spectrum
+    pub fn intensity(&self) -> Cow<'a, [f32]> {
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.intensity.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.intensity.bytes()))
+    }
+}
+
 impl RawSpectrum {
     /// Create a new [`RawSpectrum`] by wrapping an owning memory buffer
     pub fn new(data: RawVec<u8>) -> Self {
@@ -84,22 +114,37 @@ impl RawSpectrum {
         unsafe { root_as_spectrum_description_unchecked(&self.data) }
     }
 
+    /// Generate the "native ID" string format for the spectrum
+    pub fn native_id(&self) -> String {
+        format!(
+            "controllerType=0 controllerNumber=1 scan={}",
+            self.index() + 1
+        )
+    }
+
+    /// The 0-base index of the spectrum
     pub fn index(&self) -> usize {
         self.view().index() as usize
     }
 
+    /// The MS exponentiation level
     pub fn ms_level(&self) -> u8 {
         self.view().ms_level()
     }
 
+    /// The scan start time, in minutes
     pub fn time(&self) -> f64 {
         self.view().time()
     }
 
+    /// Whether the spectrum is positive or negative mode.
+    /// [`Polarity`] is a FlatBuffer enum
     pub fn polarity(&self) -> Polarity {
         self.view().polarity()
     }
 
+    /// Whether the spectrum is profile or centroid.
+    /// [`SpectrumMode`] is a FlatBuffer enum
     pub fn mode(&self) -> SpectrumMode {
         self.view().mode()
     }
@@ -108,14 +153,42 @@ impl RawSpectrum {
         self.view().precursor()
     }
 
-    pub fn data(&self) -> Option<SpectrumData<'_>> {
+    /// Retrieve a view of the spectrum array data in a raw
+    /// [`SpectrumDataT`] FlatBuffer struct, which is less expressive
+    /// than [`SpectrumData`].
+    ///
+    /// This will be absent if signal loading is disabled with [`RawFileReader::set_signal_loading`].
+    /// This returns a raw FlatBuffer struct. See the [schema](https://github.com/mobiusklein/thermorawfilereader.rs/blob/main/schema/schema.fbs) for more details
+    pub fn data_raw(&self) -> Option<SpectrumDataT<'_>> {
         self.view().data()
     }
 
+    /// Retrieve a view of the spectrum array data as a [`SpectrumData`],
+    /// which will try to decode the m/z and intensity vectors and expose
+    /// them as Rust-interpretable slices.
+    ///
+    /// This will be absent if signal loading is disabled with [`RawFileReader::set_signal_loading`].
+    pub fn data(&self) -> Option<SpectrumData<'_>> {
+        if let Some(d) = self.view().data() {
+            if let Some(m) = d.mz() {
+                if let Some(i) = d.intensity() {
+                    return Some(SpectrumData {mz: m, intensity: i})
+                }
+            }
+        }
+        return None
+    }
+
+    /// Get the spectrum's filter string as a raw string. It's format is controlled
+    /// by Thermo and some information has already been extracted into other fields.
+    /// Some usecases still require parsing it directly as a string.
     pub fn filter_string(&self) -> Option<&str> {
         self.view().filter_string()
     }
 
+    /// Get less essential information about *how* the spectrum was acquired.
+    ///
+    /// This is a raw FlatBuffer struct. See the [schema](https://github.com/mobiusklein/thermorawfilereader.rs/blob/main/schema/schema.fbs) for more details.
     pub fn acquisition(&self) -> Option<AcquisitionT> {
         self.view().acquisition()
     }
@@ -144,26 +217,39 @@ impl InstrumentModel {
         root::<InstrumentModelT>(&self.data).unwrap()
     }
 
+    /// The instrument model's name as a string.
+    ///
+    /// The majority of instrument models map onto the PSI-MS
+    /// controlled vocabulary uniquely, but not all do.
     pub fn model(&self) -> Option<&str> {
         self.view().model()
     }
 
+    /// The instrument's name as configured by the
+    /// operator.
     pub fn name(&self) -> Option<&str> {
         self.view().name()
     }
 
+    /// The instrument's serial number as specified by
+    /// the manufacturer.
     pub fn serial_number(&self) -> Option<&str> {
         self.view().serial_number()
     }
 
+    /// The hardware version string.
     pub fn hardware_version(&self) -> Option<&str> {
         self.view().hardware_version()
     }
 
+    /// The acquisition software version string.
+    ///
+    /// This corresponds to the version of Xcalibur.
     pub fn software_version(&self) -> Option<&str> {
         self.view().software_version()
     }
 
+    ///
     pub fn configurations(&self) -> Option<flatbuffers::Vector<'_, InstrumentConfigurationT>> {
         self.view().configurations()
     }
@@ -443,7 +529,7 @@ impl RawFileReader {
     /// runtime. This places the object in an unusable state.
     ///
     /// This method is called on `drop`.
-    pub fn close(&mut self) {
+    fn close(&mut self) {
         if !self.raw_file_reader.is_null() {
             let close_fn = self
                 .context
@@ -684,5 +770,10 @@ mod test {
         assert_eq!(counts.get(0), 14);
         assert_eq!(counts.get(1), 34);
         Ok(())
+    }
+
+    #[test]
+    fn test_fail_gracefully_opening_non_raw_file() {
+        assert!(RawFileReader::open("../test/data/small.mgf").is_err())
     }
 }

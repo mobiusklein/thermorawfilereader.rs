@@ -27,7 +27,7 @@ RTINSECONDS={:0.4}
 PEPMASS={prec_mz:0.4} {prec_int:0.2}{prec_z}
 "#, spectrum.index() + 1, spectrum.time() * 60.0).as_bytes())?;
 
-        if let Some(data) = spectrum.data() {
+        if let Some(data) = spectrum.data_raw() {
             for (mz, i) in data.mz().unwrap().iter().zip(data.intensity().unwrap()) {
                 writer.write_all(format!("{mz} {i}\n").as_bytes())?;
             }
