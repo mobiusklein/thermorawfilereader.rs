@@ -20,7 +20,12 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
-
+      - name: Install CLR
+        shell: bash
+        run: |
+            wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+            chmod +x ./dotnet-install.sh
+            ./dotnet-install.sh --version latest --runtime dotnet
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
