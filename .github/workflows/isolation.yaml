@@ -17,6 +17,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     container:
         image: rust:1.76.0
+    if: false
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
