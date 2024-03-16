@@ -28,8 +28,10 @@ jobs:
             ./dotnet-install.sh -c 7.0 --runtime dotnet
             export DOTNET_ROOT=$HOME/.dotnet
             export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+            echo "DOTNET_ROOT=$HOME/.dotnet" >> $GITHUB_ENV
+            echo "PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools" >> $GITHUB_ENV
             dotnet --list-runtimes
-      # - name: Run cargo test
-      #   uses: actions-rs/cargo@v1
-      #   with:
-      #     command: test
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
