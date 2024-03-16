@@ -16,7 +16,7 @@ path="src/bin.rs"
 
 [features]
 
-default = ["nethost-download", "net7_0"]
+default = ["nethost-download", "net8_0"]
 
 nethost-download = ["netcorehost/nethost-download", "dotnetrawfilereader-sys/nethost-download"]
 doc-only = ["netcorehost/doc-cfg", "netcorehost/nightly", "netcorehost-latest", "dotnetrawfilereader-sys/doc-only"]

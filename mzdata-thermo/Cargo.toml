@@ -6,7 +6,7 @@ edition = "2021"
 
 [features]
 
-default = ["nethost-download", "net7_0"]
+default = ["nethost-download", "net8_0"]
 
 nethost-download = ["thermorawfilereader/nethost-download"]
 
