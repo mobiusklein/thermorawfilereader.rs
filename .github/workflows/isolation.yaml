@@ -17,7 +17,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     container:
         image: rust:1.76.0
-    if: false
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -27,7 +26,8 @@ jobs:
             wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
             chmod +x ./dotnet-install.sh
             ./dotnet-install.sh --version 7.0.16
-      - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+            dotnet --list-runtimes
+      # - name: Run cargo test
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: test

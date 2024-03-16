@@ -1,15 +1,17 @@
-//! Read Thermo RAW files using a self-hosted `dotnet` runtime that uses Thermo Fisher's `RawFileReader` library.
+//! Read Thermo RAW files using a self-hosted .NET runtime that uses Thermo Fisher's `RawFileReader` library.
 //!
 //! The main access point is [`RawFileReader`], via [`RawFileReader::open`].
 //!
 //! # Limitations
 //!
 //! ## Platforms
-//! `RawFileReader` requires a `dotnet` runtime. This is bootstrapped automatically by the [`netcorehost`] at build
-//! time if the `nethost-download` feature is enabled. While it supports most major operating, you can check which
-//! versions which version of `dotnet` supports which OS version at <https://github.com/dotnet/core/blob/main/os-lifecycle-policy.md>.
+//! `RawFileReader` requires a .NET runtime. The linking between Rust and the host's .NET runtime is managed by [`netcorehost`].
+//! While it supports most major operating, you can check which versions which version of .NET supports which OS version at
+//! <https://github.com/dotnet/core/blob/main/os-lifecycle-policy.md>.
 //!
-//! If you wish to link with a local `nethost` library, please see [`netcorehost`]'s documentation.
+//! If you wish to link with a local `nethost` library instead of downloading the latest version at build time, please see
+//! [`netcorehost`]'s documentation. This is still distinct from actually statically linking with .NET's `coreclr` library
+//! which must be installed separately.
 //!
 //! ## Why no [`Read`](std::io::Read) support?
 //! The underlying .NET library from Thermo's public API expects a plain file path and likes to fiddle with file system
