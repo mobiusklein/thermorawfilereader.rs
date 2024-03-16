@@ -25,7 +25,7 @@ jobs:
         run: |
             wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
             chmod +x ./dotnet-install.sh
-            ./dotnet-install.sh --version 7.0 --runtime dotnet
+            ./dotnet-install.sh -c 7.0 --runtime dotnet
             dotnet --list-runtimes
       # - name: Run cargo test
       #   uses: actions-rs/cargo@v1
