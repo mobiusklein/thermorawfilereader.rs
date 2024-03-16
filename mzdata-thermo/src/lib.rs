@@ -25,7 +25,3 @@ mod thermo_raw;
 mod instruments;
 
 pub use thermo_raw::{ThermoRawType, ThermoRaw, is_thermo_raw_prefix};
-
-/// Re-exported from [`thermorawfilereader`].
-pub use thermorawfilereader::set_runtime_dir;
-

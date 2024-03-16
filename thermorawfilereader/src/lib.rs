@@ -1,7 +1,6 @@
 //! Read Thermo RAW files using a self-hosted `dotnet` runtime that uses Thermo Fisher's `RawFileReader` library.
 //!
-//! The main access point is [`RawFileReader`], via [`RawFileReader::open`], or the [`open`] function, which is
-//! a thin wrapper around it.
+//! The main access point is [`RawFileReader`], via [`RawFileReader::open`].
 //!
 //! # Limitations
 //!
@@ -22,7 +21,6 @@
 pub(crate) mod gen;
 pub(crate) mod wrap;
 
-pub use crate::wrap::{RawFileReaderError, RawFileReader, InstrumentModel, FileDescription, SpectrumData, RawSpectrum, open};
+pub use crate::wrap::{RawFileReaderError, RawFileReader, InstrumentModel, FileDescription, SpectrumData, RawSpectrum};
 #[doc = "The FlatBuffers schema used to exchange data, see [`schema.fbs`](https://github.com/mobiusklein/thermorawfilereader.rs/blob/main/schema/schema.fbs)"]
 pub use crate::gen::schema_generated::librawfilereader as schema;
-pub use dotnetrawfilereader_sys::{get_runtime, DotNetLibraryBundle, set_runtime_dir};

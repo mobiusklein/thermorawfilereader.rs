@@ -10,13 +10,13 @@ use netcorehost::{hostfxr::AssemblyDelegateLoader, pdcstr};
 
 use flatbuffers::{root, Vector};
 
-use dotnetrawfilereader_sys::RawVec;
+use dotnetrawfilereader_sys::{RawVec, get_runtime};
 
-use crate::get_runtime;
 use crate::schema::{
-    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT, FileDescriptionT, InstrumentConfigurationT, InstrumentModelT, Polarity, PrecursorT, SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode
+    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
+    FileDescriptionT, InstrumentConfigurationT, InstrumentModelT, Polarity, PrecursorT,
+    SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode,
 };
-
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -75,12 +75,10 @@ impl Debug for RawSpectrum {
 #[derive(Debug)]
 pub struct SpectrumData<'a> {
     mz: Vector<'a, f64>,
-    intensity: Vector<'a, f32>
+    intensity: Vector<'a, f32>,
 }
 
-
 impl<'a> SpectrumData<'a> {
-
     /// The m/z array of the spectrum
     pub fn mz(&self) -> Cow<'a, [f64]> {
         #[cfg(target_endian = "big")]
@@ -172,11 +170,14 @@ impl RawSpectrum {
         if let Some(d) = self.view().data() {
             if let Some(m) = d.mz() {
                 if let Some(i) = d.intensity() {
-                    return Some(SpectrumData {mz: m, intensity: i})
+                    return Some(SpectrumData {
+                        mz: m,
+                        intensity: i,
+                    });
                 }
             }
         }
-        return None
+        return None;
     }
 
     /// Get the spectrum's filter string as a raw string. It's format is controlled
@@ -194,9 +195,10 @@ impl RawSpectrum {
     }
 }
 
-
 /// A wrapper around the `InstrumentModel` FlatBuffer schema. It mirrors the data
 /// stored there-in.
+///
+/// It contains a description of the instrument hardware and control software.
 pub struct InstrumentModel {
     data: RawVec<u8>,
 }
@@ -255,8 +257,14 @@ impl InstrumentModel {
     }
 }
 
+
+/// A wrapper around the `FileDescription` FlatBuffer schema. It mirrors the data
+/// stored there-in.
+///
+/// It describes the contents of the RAW file and a small amount information about
+/// how it was created.
 pub struct FileDescription {
-    data: RawVec<u8>
+    data: RawVec<u8>,
 }
 
 impl FileDescription {
@@ -274,18 +282,26 @@ impl FileDescription {
         root::<FileDescriptionT>(&self.data).unwrap()
     }
 
+    /// Read the sample identifier provided by the user, if one is present
     pub fn sample_id(&self) -> Option<&str> {
         self.view().sample_id()
     }
 
+    /// Read the name of the RAW file being described, as it was recorded by
+    /// the control software
     pub fn source_file(&self) -> Option<&str> {
         self.view().source_file()
     }
 
+    /// The date the RAW file was created, or that the instrument run was performed
     pub fn creation_date(&self) -> Option<&str> {
         self.view().creation_date()
     }
 
+    /// Read out the number of spectra at MS levels 1-10.
+    ///
+    /// This returns a [`flatbuffers::Vector`] of counts where index `i` corresponds
+    /// to the number of MS level `i+1` spectra in the RAW file.
     pub fn spectra_per_ms_level(&self) -> Option<flatbuffers::Vector<'_, u32>> {
         self.view().spectra_per_ms_level()
     }
@@ -324,14 +340,6 @@ impl Debug for RawFileReader {
             .field("size", &self.size)
             .finish()
     }
-}
-
-/// Open a ThermoFisher RAW file from a path. This may also create the `dotnet` runtime
-/// if this is the first time it was called.
-///
-/// This is a wrapper around [`RawFileReader::open`]
-pub fn open<P: Into<PathBuf>>(path: P) -> io::Result<RawFileReader> {
-    RawFileReader::open(path)
 }
 
 impl RawFileReader {
