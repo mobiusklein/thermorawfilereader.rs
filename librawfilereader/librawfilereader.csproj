@@ -21,6 +21,8 @@
     <DefineConstants>$(DefineConstants);ENABLE_SPAN_T</DefineConstants>
   </PropertyGroup>
 
+  <!--   -->
+
   <ItemGroup>
     <Reference Include="ThermoFisher.CommonCore.BackgroundSubtraction">
       <HintPath>lib/ThermoFisher.CommonCore.BackgroundSubtraction.dll</HintPath>
@@ -43,8 +45,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- <PackageReference Include="Google.FlatBuffers" Version="23.5.26" /> -->
-
   </ItemGroup>
 
 </Project>
