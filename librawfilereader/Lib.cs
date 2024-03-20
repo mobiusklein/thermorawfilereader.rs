@@ -11,6 +11,7 @@ using ThermoFisher.CommonCore.Data.FilterEnums;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
+using System.Reflection;
 
 namespace librawfilereader
 {
@@ -435,13 +436,13 @@ namespace librawfilereader
             }
         }
 
-        Offset<SpectrumData> StoreSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder, IRawDataPlus accessor, IScanFilter filter)
+        Offset<SpectrumData> StoreSpectrumData(int scanNumber, ScanStatistics stats, FlatBufferBuilder bufferBuilder, IRawDataPlus accessor, bool centroidSpectra)
         {
             // We have to write arrays in reverse order because FlatBuffers writes entries back-to-front.
             // By writing them in reverse here, we can read them out in the expected order on the other side
             // in Rust.
             Offset<SpectrumData> offset;
-            if (CentroidSpectra && !stats.IsCentroidScan)
+            if (centroidSpectra && !stats.IsCentroidScan)
             {
                 var stream = accessor.GetCentroidStream(scanNumber, true);
                 var centroids = stream.GetCentroids();
@@ -618,12 +619,16 @@ namespace librawfilereader
             return builder.DataBuffer;
         }
 
-        public ByteBuffer SpectrumDescriptionFor(int scanNumber)
+        public ByteBuffer SpectrumDescriptionFor(int scanNumber) {
+            return SpectrumDescriptionFor(scanNumber, IncludeSignal, CentroidSpectra);
+        }
+
+        public ByteBuffer SpectrumDescriptionFor(int scanNumber, bool includeSignal, bool centroidSpectra)
         {
             var accessor = GetHandle();
             var stats = accessor.GetScanStatsForScanNumber(scanNumber);
             SpectrumMode mode;
-            if (CentroidSpectra)
+            if (centroidSpectra)
             {
                 mode = SpectrumMode.Centroid;
             }
@@ -639,9 +644,9 @@ namespace librawfilereader
             var builder = new FlatBufferBuilder(4096);
             Offset<SpectrumData> dataOffset = new();
 
-            if (IncludeSignal)
+            if (includeSignal)
             {
-                dataOffset = StoreSpectrumData(scanNumber, stats, builder, accessor, filter);
+                dataOffset = StoreSpectrumData(scanNumber, stats, builder, accessor, centroidSpectra);
             }
             var filterString = filter.ToString();
             var filterStringOffset = builder.CreateString(filterString);
@@ -651,7 +656,7 @@ namespace librawfilereader
             var acquisitionOffset = StoreAcquisition(builder, acquisitionProperties, filter);
 
             SpectrumDescription.StartSpectrumDescription(builder);
-            if (IncludeSignal)
+            if (includeSignal)
             {
                 SpectrumDescription.AddData(builder, dataOffset);
             }
@@ -760,7 +765,7 @@ namespace librawfilereader
         private static Dictionary<IntPtr, RawFileReader> OpenHandles = new Dictionary<nint, RawFileReader>();
         private static IntPtr HandleCounter = 1;
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_set_memory_allocator")]
         public static unsafe void SetRustAllocateMemory(delegate*<nuint, RawVec*, void> rustAllocateMemory) => RustAllocateMemory = rustAllocateMemory;
 
         private unsafe static RawVec MemoryToRustVec(Span<byte> buffer, nuint size)
@@ -806,7 +811,7 @@ namespace librawfilereader
             return vec;
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_open")]
         public static unsafe IntPtr Open(IntPtr textPtr, int textLength)
         {
             var text = Marshal.PtrToStringAnsi(textPtr, textLength);
@@ -835,7 +840,7 @@ namespace librawfilereader
         /// Close the underlying handle, removing it from the map.
         /// </summary>
         /// <param name="handleToken"></param>
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_close")]
         public static unsafe void Close(IntPtr handleToken)
         {
             lock (OpenHandles)
@@ -847,34 +852,34 @@ namespace librawfilereader
             }
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_close_all")]
         public static unsafe void CloseAll()
         {
             OpenHandles.Clear();
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_first_spectrum")]
         public static unsafe int FirstSpectrum(IntPtr handleToken)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             return reader.FirstSpectrum();
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_last_spectrum")]
         public static unsafe int LastSpectrum(IntPtr handleToken)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             return reader.LastSpectrum();
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_spectrum_count")]
         public static unsafe int SpectrumCount(IntPtr handleToken)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             return reader.SpectrumCount();
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_status")]
         public static unsafe uint Status(IntPtr handleToken)
         {
             try
@@ -888,14 +893,14 @@ namespace librawfilereader
             }
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_signal_loading")]
         public static unsafe uint GetSignalLoading(IntPtr handleToken)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             return (uint)(reader.IncludeSignal ? 1 : 0);
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_set_signal_loading")]
         public static unsafe void SetSignalLoading(IntPtr handleToken, uint value)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
@@ -909,14 +914,14 @@ namespace librawfilereader
             }
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_centroiding")]
         public static unsafe uint GetCentroidSpectra(IntPtr handleToken)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             return (uint)(reader.CentroidSpectra ? 1 : 0);
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_set_centroiding")]
         public static unsafe void SetCentroidSpectra(IntPtr handleToken, uint value)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
@@ -936,7 +941,7 @@ namespace librawfilereader
         /// <param name="handleToken">The token corresponding to the `RawFileReader` handle</param>
         /// <param name="scanNumber">The scan number of the spectrum to retrieve</param>
         /// <returns>A `RawVec` representing Rust-allocated memory that holds the FlatBuffer message</returns>
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_spectrum_description_for")]
         public static unsafe RawVec SpectrumDescriptionFor(IntPtr handleToken, int scanNumber)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
@@ -947,11 +952,29 @@ namespace librawfilereader
         }
 
         /// <summary>
+        /// Get a `SpectrumDescription` FlatBuffer message for a specific spectrum from a RAW file
+        /// </summary>
+        /// <param name="handleToken">The token corresponding to the `RawFileReader` handle</param>
+        /// <param name="scanNumber">The scan number of the spectrum to retrieve</param>
+        /// <param name="includeSignal">Whether or not to include the MS spectrum signal</param>
+        /// <param name="centroidSpectra">Whether or not to retrieve the centroided spectrum signal</param>
+        /// <returns>A `RawVec` representing Rust-allocated memory that holds the FlatBuffer message</returns>
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_spectrum_description_for_with_options")]
+        public static unsafe RawVec SpectrumDescriptionForWithOptions(IntPtr handleToken, int scanNumber, int includeSignal, int centroidSpectra)
+        {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var buffer = reader.SpectrumDescriptionFor(scanNumber, includeSignal != 0, centroidSpectra != 0);
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
+            var size = bytes.Length;
+            return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        /// <summary>
         /// Get an `InstrumentModel` FlatBuffer message describing the instrument used to acquire a RAW file
         /// </summary>
         /// <param name="handleToken">The token corresponding to the `RawFileReader` handle</param>
         /// <returns>A `RawVec` representing Rust-allocated memory that holds the FlatBuffer message</returns>
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_instrument_model")]
         public static unsafe RawVec InstrumentModel(IntPtr handleToken)
         {
             RawFileReader reader = GetHandleForToken(handleToken);
@@ -961,7 +984,7 @@ namespace librawfilereader
             return MemoryToRustVec(bytes, (nuint)size);
         }
 
-        [UnmanagedCallersOnly]
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_file_description")]
         public static unsafe RawVec FileDescription(IntPtr handleToken) {
             RawFileReader reader = GetHandleForToken(handleToken);
             var buffer = reader.GetFileMetadata();

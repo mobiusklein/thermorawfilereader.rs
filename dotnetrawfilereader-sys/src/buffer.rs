@@ -6,7 +6,7 @@ use netcorehost::{
 };
 
 /// A sized array for passing heap-allocated memory across the FFI memory boundary to receive
-/// buffers from `dotnet`. Dereferences a `&[T]` otherwise.
+/// buffers from .NET. Dereferences a `&[T]` otherwise.
 ///
 /// # Safety
 /// This type makes heavy use of `unsafe` operations for manual memory management. Take care
@@ -51,9 +51,9 @@ impl<T> Drop for RawVec<T> {
     }
 }
 
-/// A `dotnet` memory allocator that receives a memory address for a [`RawVec`] and
+/// A .NET memory allocator that receives a memory address for a [`RawVec`] and
 /// heap-allocates `size` that is "owned" by Rust's memory allocator and gives
-/// it to `dotnet` via the passed pointer.
+/// it to .NET via the passed pointer.
 pub(crate) extern "system" fn rust_allocate_memory(size: usize, vec: *mut RawVec<u8>) {
     let buf = vec![0; size];
     let capacity = buf.capacity();

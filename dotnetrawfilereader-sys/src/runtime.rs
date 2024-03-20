@@ -1,4 +1,4 @@
-//! Manage the creation of and access to the self-hosted `dotnet` runtime.
+//! Manage the creation of and access to the self-hosted .NET runtime.
 //!
 //! The [`DotNetLibraryBundle`] is the main entry point.
 //!
@@ -33,8 +33,8 @@ pub enum BundleStore {
     Path(PathBuf),
 }
 
-/// A location on the file system and an associated `dotnet` DLL bundle to host a
-/// `dotnet` runtime for.
+/// A location on the file system and an associated .NET DLL bundle to host a
+/// .NET runtime for.
 ///
 /// Uses the `DOTNET_RAWFILEREADER_BUNDLE_PATH` environment variable when a default
 /// is required, otherwise creates a temporary directory whose lifespan is linked to this
@@ -105,7 +105,7 @@ impl DotNetLibraryBundle {
         }
     }
 
-    /// Get a reference to the `dotnet` runtime, creating it if one has not yet been created.
+    /// Get a reference to the .NET runtime, creating it if one has not yet been created.
     ///
     /// See [`DotNetLibraryBundle::create_runtime`] for specific runtime creation
     pub fn runtime(&self) -> Arc<AssemblyDelegateLoader> {
@@ -122,7 +122,7 @@ impl DotNetLibraryBundle {
         a
     }
 
-    /// Write all of the bundled `dotnet` DLLs to the file system at this location
+    /// Write all of the bundled .NET DLLs to the file system at this location
     pub fn write_bundle(&self) -> io::Result<()> {
         let path = self.path();
         let do_write = if !path.exists() {
@@ -151,7 +151,7 @@ impl DotNetLibraryBundle {
         Ok(())
     }
 
-    /// Create a new `dotnet` runtime using [`netcorehost`](https://docs.rs/netcorehost/latest/netcorehost/)
+    /// Create a new .NET runtime using [`netcorehost`](https://docs.rs/netcorehost/latest/netcorehost/)
     pub fn create_runtime(&self) -> Arc<AssemblyDelegateLoader> {
         let hostfxr = nethost::load_hostfxr().unwrap();
         self.write_bundle().unwrap();
@@ -191,7 +191,7 @@ pub fn set_runtime_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
     Ok(())
 }
 
-/// Get a reference to a shared `dotnet` runtime and associated DLL bundle
+/// Get a reference to a shared .NET runtime and associated DLL bundle
 pub fn get_runtime() -> Arc<AssemblyDelegateLoader> {
     let bundle = BUNDLE.get_or_init(DotNetLibraryBundle::default);
 

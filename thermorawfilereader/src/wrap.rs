@@ -10,7 +10,7 @@ use netcorehost::{hostfxr::AssemblyDelegateLoader, pdcstr};
 
 use flatbuffers::{root, Vector};
 
-use dotnetrawfilereader_sys::{RawVec, get_runtime};
+use dotnetrawfilereader_sys::{get_runtime, RawVec};
 
 use crate::schema::{
     root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
@@ -257,7 +257,6 @@ impl InstrumentModel {
     }
 }
 
-
 /// A wrapper around the `FileDescription` FlatBuffer schema. It mirrors the data
 /// stored there-in.
 ///
@@ -307,20 +306,22 @@ impl FileDescription {
     }
 }
 
-/// A wrapper around a `dotnet` `RawFileReader` instance. It carries a reference to a
-/// `dotnet` runtime and a FFI pointer to access data through. The dotnet runtime is
+/// A wrapper around a .NET `RawFileReader` instance. It carries a reference to a
+/// .NET runtime and a FFI pointer to access data through. The dotnet runtime is
 /// controlled via locks and is expected to be thread-safe.
 ///
-/// This object's lifetime controls a shared resource in the `dotnet` runtime.
+/// This object's lifetime controls a shared resource in the .NET runtime.
 pub struct RawFileReader {
     /// The token controlling the `RawFileReader` this object references
     raw_file_reader: *mut c_void,
-    /// A reference to the `dotnet` runtime
+    /// A reference to the .NET runtime
     context: Arc<AssemblyDelegateLoader>,
     /// A cache for the number of spectra in the RAW file
     size: usize,
+    include_signal: bool,
+    centroid_spectra: bool,
     /// A FFI function pointer to get spectra through.
-    vget: ManagedFunction<extern "system" fn(*mut c_void, i32) -> RawVec<u8>>,
+    vget: ManagedFunction<extern "system" fn(*mut c_void, i32, i32, i32) -> RawVec<u8>>,
 }
 
 unsafe impl Send for RawFileReader {}
@@ -338,12 +339,14 @@ impl Debug for RawFileReader {
             .field("raw_file_reader", &self.raw_file_reader)
             .field("context", &"?")
             .field("size", &self.size)
+            .field("include_signal", &self.include_signal)
+            .field("centroid_spectra", &self.centroid_spectra)
             .finish()
     }
 }
 
 impl RawFileReader {
-    /// Open a ThermoFisher RAW file from a path. This may also create the `dotnet` runtime
+    /// Open a ThermoFisher RAW file from a path. This may also create the .NET runtime
     /// if this is the first time it was called.
     pub fn open<P: Into<PathBuf>>(path: P) -> io::Result<Self> {
         let context = get_runtime();
@@ -356,15 +359,17 @@ impl RawFileReader {
         let raw_file_reader = open_fn(path.as_ptr(), path.len() as i32);
 
         let buffer_fn = context
-            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32) -> RawVec<u8>>(
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32, i32, i32) -> RawVec<u8>>(
                 pdcstr!("librawfilereader.Exports, librawfilereader"),
-                pdcstr!("SpectrumDescriptionFor"),
+                pdcstr!("SpectrumDescriptionForWithOptions"),
             )
             .unwrap();
 
         let mut handle = Self {
             raw_file_reader,
             context,
+            include_signal: true,
+            centroid_spectra: false,
             size: 0,
             vget: buffer_fn,
         };
@@ -420,54 +425,22 @@ impl RawFileReader {
 
     /// Get whether or not to retrieve the spectrum signal data when retrieving spectra
     pub fn get_signal_loading(&self) -> bool {
-        self.validate_impl();
-        let index_fn = self
-            .context
-            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> u32>(
-                pdcstr!("librawfilereader.Exports, librawfilereader"),
-                pdcstr!("GetSignalLoading"),
-            )
-            .unwrap();
-        index_fn(self.raw_file_reader) > 0
+        self.include_signal
     }
 
     /// Set whether or not to retrieve the spectrum signal data when retrieving spectra
     pub fn set_signal_loading(&mut self, value: bool) {
-        self.validate_impl();
-        let index_fn = self
-            .context
-            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, u32)>(
-                pdcstr!("librawfilereader.Exports, librawfilereader"),
-                pdcstr!("SetSignalLoading"),
-            )
-            .unwrap();
-        index_fn(self.raw_file_reader, value as u32)
+        self.include_signal = value;
     }
 
     /// Get whether or not to centroid spectra if they were stored in profile mode
     pub fn get_centroid_spectra(&self) -> bool {
-        self.validate_impl();
-        let index_fn = self
-            .context
-            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> u32>(
-                pdcstr!("librawfilereader.Exports, librawfilereader"),
-                pdcstr!("GetCentroidSpectra"),
-            )
-            .unwrap();
-        index_fn(self.raw_file_reader) > 0
+        self.centroid_spectra
     }
 
     /// Set whether or not to centroid spectra if they were stored in profile mode
     pub fn set_centroid_spectra(&mut self, value: bool) {
-        self.validate_impl();
-        let index_fn = self
-            .context
-            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, u32)>(
-                pdcstr!("librawfilereader.Exports, librawfilereader"),
-                pdcstr!("SetCentroidSpectra"),
-            )
-            .unwrap();
-        index_fn(self.raw_file_reader, value as u32)
+        self.centroid_spectra = value;
     }
 
     /// Get a [`InstrumentModel`] message describing the instrument configuration used
@@ -533,7 +506,7 @@ impl RawFileReader {
         self.len() == 0
     }
 
-    /// Close the RAW file, releasing resources held by the `dotnet`
+    /// Close the RAW file, releasing resources held by the .NET
     /// runtime. This places the object in an unusable state.
     ///
     /// This method is called on `drop`.
@@ -560,7 +533,12 @@ impl RawFileReader {
         }
         self.validate_impl();
         let buffer_fn = &self.vget;
-        let buffer = buffer_fn(self.raw_file_reader, (index as i32) + 1);
+        let buffer = buffer_fn(
+            self.raw_file_reader,
+            (index as i32) + 1,
+            self.include_signal as i32,
+            self.centroid_spectra as i32,
+        );
         Some(RawSpectrum::new(buffer))
     }
 
@@ -605,7 +583,7 @@ impl RawFileReader {
         RawFileReaderIter::new(self)
     }
 
-    /// Retrieve the status of the `dotnet` `RawFileReader`
+    /// Retrieve the status of the .NET `RawFileReader`
     pub fn status(&self) -> RawFileReaderError {
         self.validate_impl();
         let status_fn = self

@@ -14,9 +14,9 @@
 //! which must be installed separately.
 //!
 //! ## Why no [`Read`](std::io::Read) support?
-//! The underlying .NET library from Thermo's public API expects a plain file path and likes to fiddle with file system
-//! locks. There is no way for it to consume .NET streams, let alone Rust analogs like [`Read`](std::io::Read), so for
-//! the moment we can only open RAW files on the file system.
+//! The underlying .NET library from Thermo's public API expects a plain file paths as strings and likes to fiddle with
+//! file system locks. There is no way for it to consume .NET streams, let alone Rust analogs like [`Read`](std::io::Read),
+//! so for the moment we can only open RAW files on the file system.
 //!
 //! # Licensing
 //! By using this library, you agree to the [RawFileReader License](https://github.com/thermofisherlsms/RawFileReader/blob/main/License.doc)
