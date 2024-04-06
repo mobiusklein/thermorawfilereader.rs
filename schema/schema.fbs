@@ -69,6 +69,55 @@ enum IonizationMode : uint8
     IonModeBeyondKnown
 }
 
+enum TraceTypeT : int16 {
+    StartMSChromatogramTraces = -1,
+    MassRange = 0,
+    TIC = 1,
+    BasePeak = 2,
+    Fragment = 3,
+    Custom = 4,
+    PrecursorMass = 5,
+    EndMSChromatogramTraces = 6,
+    StartAnalogChromatogramTraces = 10,
+    Analog1 = 11,
+    Analog2 = 12,
+    Analog3 = 13,
+    Analog4 = 14,
+    Analog5 = 15,
+    Analog6 = 16,
+    Analog7 = 17,
+    Analog8 = 18,
+    EndAnalogChromatogramTraces = 19,
+    StartPDAChromatogramTraces = 20,
+    WavelengthRange = 21,
+    TotalAbsorbance = 22,
+    SpectrumMax = 23,
+    EndPDAChromatogramTraces = 24,
+    StartUVChromatogramTraces = 30,
+    ChannelA = 31,
+    ChannelB = 32,
+    ChannelC = 33,
+    ChannelD = 34,
+    ChannelE = 35,
+    ChannelF = 36,
+    ChannelG = 37,
+    ChannelH = 38,
+    EndUVChromatogramTraces = 39,
+    StartPCA2DChromatogramTraces = 40,
+    A2DChannel1 = 41,
+    A2DChannel2 = 42,
+    A2DChannel3 = 43,
+    ChromatogramA2DChannel3 = 43,
+    A2DChannel4 = 44,
+    ChromatogramA2DChannel4 = 44,
+    A2DChannel5 = 45,
+    A2DChannel6 = 46,
+    A2DChannel7 = 47,
+    A2DChannel8 = 48,
+    EndPCA2DChromatogramTraces = 49,
+    EndAllChromatogramTraces = 50
+}
+
 table FileDescriptionT {
     creation_date: string;
     sample_id: string;
@@ -115,6 +164,12 @@ struct PrecursorT {
     activation: ActivationT;
 }
 
+table InstrumentMethodT {
+    index: uint8 = 0;
+    text: string;
+    display_name: string;
+    name: string;
+}
 
 // Describe *how* a spectrum was acquired
 table AcquisitionT {
@@ -144,6 +199,18 @@ table SpectrumDescription {
     data: SpectrumData;
     filter_string: string;
     acquisition: AcquisitionT;
+}
+
+table ChromatogramData {
+    time: [float64];
+    intensity: [float32];
+}
+
+table ChromatogramDescription {
+    trace_type: TraceTypeT;
+    data: ChromatogramData;
+    start_index: int32;
+    end_index: int32;
 }
 
 root_type SpectrumDescription;

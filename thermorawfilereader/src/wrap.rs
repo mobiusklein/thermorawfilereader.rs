@@ -14,8 +14,9 @@ use dotnetrawfilereader_sys::{get_runtime, RawVec};
 
 use crate::schema::{
     root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
-    FileDescriptionT, InstrumentConfigurationT, InstrumentModelT, Polarity, PrecursorT,
-    SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode,
+    ChromatogramDescription as ChromatogramDescriptionT, FileDescriptionT,
+    InstrumentConfigurationT, InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT,
+    SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode, TraceTypeT,
 };
 
 #[repr(u32)]
@@ -93,6 +94,75 @@ impl<'a> SpectrumData<'a> {
         return Cow::Owned(self.intensity.iter().copied().collect());
         #[cfg(target_endian = "little")]
         Cow::Borrowed(bytemuck::cast_slice(self.intensity.bytes()))
+    }
+
+    pub fn iter(&self) -> std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>> {
+        let it = self.mz.iter().zip(self.intensity.iter());
+        it
+    }
+
+    pub fn len(&self) -> usize {
+        self.mz.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.mz.is_empty()
+    }
+}
+
+impl<'a> IntoIterator for SpectrumData<'a> {
+    type Item = (f64, f32);
+
+    type IntoIter = std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+pub struct ChromatogramData<'a> {
+    time: Vector<'a, f64>,
+    intensity: Vector<'a, f32>,
+}
+
+impl<'a> ChromatogramData<'a> {
+    /// The time array of the spectrum, in minutes
+    pub fn time(&self) -> Cow<'a, [f64]> {
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.time.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.time.bytes()))
+    }
+
+    /// The intensity array of the spectrum
+    pub fn intensity(&self) -> Cow<'a, [f32]> {
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.intensity.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.intensity.bytes()))
+    }
+
+    pub fn iter(&self) -> std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>> {
+        let it = self.time.iter().zip(self.intensity.iter());
+        it
+    }
+
+    pub fn len(&self) -> usize {
+        self.time.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.time.is_empty()
+    }
+}
+
+impl<'a> IntoIterator for ChromatogramData<'a> {
+    type Item = (f64, f32);
+
+    type IntoIter = std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 
@@ -306,6 +376,92 @@ impl FileDescription {
     }
 }
 
+
+/// The text describing how the instrument was told to operate.
+///
+/// The text is rendered however the particular instrument reads or
+/// presents it, and no consistent formatting can be expected.
+///
+/// There can be multiple methods per file, such as a chromatography
+/// method and a mass spectrometry method. The chromatography method
+/// is usually the 0th method and the mass spectrometry method is the
+/// 1st method.
+pub struct InstrumentMethod {
+    data: RawVec<u8>,
+}
+
+impl InstrumentMethod {
+    pub fn new(data: RawVec<u8>) -> Self {
+        Self { data }
+    }
+
+    /// Check that the buffer is a valid `InstrumentMethodT`
+    pub fn check(&self) -> bool {
+        root::<InstrumentMethodT>(&self.data).is_ok()
+    }
+
+    /// View the underlying buffer as a `InstrumentMethodT`
+    pub fn view(&self) -> InstrumentMethodT {
+        root::<InstrumentMethodT>(&self.data).unwrap()
+    }
+
+    pub fn index(&self) -> u8 {
+        self.view().index()
+    }
+
+    pub fn text(&self) -> Option<&str> {
+        self.view().text()
+    }
+}
+
+/// Describes a chromatogram, which is a signal over time.
+///
+/// The time unit is always in *minutes*, but the signal intensity's
+/// unit depends upon the trace type, `TraceTypeT`.
+pub struct ChromatogramDescription {
+    data: RawVec<u8>,
+}
+
+impl ChromatogramDescription {
+    pub fn new(data: RawVec<u8>) -> Self {
+        Self { data }
+    }
+
+    /// Check that the buffer is a valid `ChromatogramDescriptionT`
+    pub fn check(&self) -> bool {
+        root::<ChromatogramDescriptionT>(&self.data).is_ok()
+    }
+
+    /// View the underlying buffer as a `ChromatogramDescriptionT`
+    pub fn view(&self) -> ChromatogramDescriptionT {
+        root::<ChromatogramDescriptionT>(&self.data).unwrap()
+    }
+
+    pub fn trace_type(&self) -> TraceTypeT {
+        self.view().trace_type()
+    }
+
+    pub fn start_index(&self) -> usize {
+        (self.view().start_index() as usize).saturating_sub(1)
+    }
+
+    pub fn end_index(&self) -> usize {
+        self.view().end_index() as usize
+    }
+
+    pub fn data(&self) -> Option<ChromatogramData> {
+        let view = self.view();
+        if let Some(data_view) = view.data() {
+            Some(ChromatogramData {
+                time: data_view.time().unwrap(),
+                intensity: data_view.intensity().unwrap(),
+            })
+        } else {
+            None
+        }
+    }
+}
+
 /// A wrapper around a .NET `RawFileReader` instance. It carries a reference to a
 /// .NET runtime and a FFI pointer to access data through. The dotnet runtime is
 /// controlled via locks and is expected to be thread-safe.
@@ -471,6 +627,51 @@ impl RawFileReader {
         let buf = descr_fn(self.raw_file_reader);
         root::<FileDescriptionT>(&buf).unwrap();
         FileDescription::new(buf)
+    }
+
+    pub fn instrument_method(&self, index: u8) -> Option<InstrumentMethod> {
+        self.validate_impl();
+        let descr_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("InstrumentMethod"),
+            )
+            .unwrap();
+        let buf = descr_fn(self.raw_file_reader, index as i32);
+        root::<InstrumentMethodT>(&buf).unwrap();
+        let method = InstrumentMethod::new(buf);
+        if method.text().is_none() {
+            None
+        } else {
+            Some(method)
+        }
+    }
+
+    pub fn tic(&self) -> ChromatogramDescription {
+        self.validate_impl();
+        let descr_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("GetTIC"),
+            )
+            .unwrap();
+        let buf = descr_fn(self.raw_file_reader);
+        ChromatogramDescription::new(buf)
+    }
+
+    pub fn bpc(&self) -> ChromatogramDescription {
+        self.validate_impl();
+        let descr_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("GetBPC"),
+            )
+            .unwrap();
+        let buf = descr_fn(self.raw_file_reader);
+        ChromatogramDescription::new(buf)
     }
 
     #[inline]
@@ -733,6 +934,38 @@ mod test {
         assert_eq!(m1 + mn, 48);
         assert_eq!(m1, 14);
         assert_eq!(mn, 34);
+        Ok(())
+    }
+
+    #[test]
+    fn test_tic() -> io::Result<()> {
+        let handle = RawFileReader::open("../tests/data/small.RAW")?;
+        let tic  = handle.tic();
+        assert_eq!(tic.trace_type(), TraceTypeT::TIC);
+        assert_eq!(tic.start_index(), 0);
+        assert_eq!(tic.end_index(), 48);
+        let data = tic.data().unwrap();
+        assert_eq!(data.time().len(), 48);
+        assert_eq!(data.intensity().len(), 48);
+        let expected = 196618480.0f32;
+        let total = data.intensity().iter().sum::<f32>();
+        assert!((expected - total).abs() < 1e-3, "sum = {total}, expected {expected} ({})", (expected - total).abs());
+        Ok(())
+    }
+
+    #[test]
+    fn test_bpc() -> io::Result<()> {
+        let handle = RawFileReader::open("../tests/data/small.RAW")?;
+        let bpc  = handle.bpc();
+        assert_eq!(bpc.trace_type(), TraceTypeT::BasePeak);
+        assert_eq!(bpc.start_index(), 0);
+        assert_eq!(bpc.end_index(), 48);
+        let data = bpc.data().unwrap();
+        assert_eq!(data.time().len(), 48);
+        assert_eq!(data.intensity().len(), 48);
+        let expected = 16132207.0f32;
+        let total = data.intensity().iter().sum::<f32>();
+        assert!((expected - total).abs() < 1e-3, "sum = {total}, expected {expected} ({})", (expected - total).abs());
         Ok(())
     }
 

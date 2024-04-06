@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
 using System.Reflection;
+using System.ComponentModel.DataAnnotations;
 
 namespace librawfilereader
 {
@@ -155,6 +156,7 @@ namespace librawfilereader
         /// looping over all trailer entries
         /// </summary>
         Dictionary<string, int> TrailerMap;
+        HeaderItem[] Headers;
 
         /// <summary>
         /// The actual Thermo-provided reader implementation
@@ -321,6 +323,12 @@ namespace librawfilereader
             return activation;
         }
 
+        private const string InjectionTimeKey = "Ion Injection Time (ms)";
+        private const string ScanEventKey = "Scan Evnet";
+        private const string MaserScanKey = "Master Scan";
+        private const string MonoisotopicMZKey = "Monoisotopic M/Z";
+        private const string ChargeStateKey = "Charge State";
+
         (PrecursorProperties?, AcquisitionProperties) ExtractPrecursorAndTrailerMetadata(int scanNumber, short msLevel, IScanFilter filter, IRawDataPlus accessor, ScanStatistics stats)
         {
             var trailers = accessor.GetTrailerExtraInformation(scanNumber);
@@ -333,63 +341,190 @@ namespace librawfilereader
             int masterScanNumber = -1;
             short scanEventNum = 1;
             object tmp;
+            HeaderItem header;
+            int headerIdx;
 
-            var v = "Ion Injection Time (ms)";
-            if (TrailerMap.ContainsKey(v))
-            {
-                tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap[v]);
+            if (TrailerMap.TryGetValue(InjectionTimeKey, out headerIdx)) {
+                tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
+                header = Headers[headerIdx];
                 if (tmp != null)
                 {
-                    injectionTime = Convert.ToDouble(tmp);
+                    switch (header.DataType) {
+                        case GenericDataTypes.FLOAT:
+                        {
+                            injectionTime = (float)tmp;
+                            break;
+                        }
+                        case GenericDataTypes.DOUBLE: {
+                            injectionTime = (double)tmp;
+                            break;
+                        };
+                        default: {
+                            injectionTime = Convert.ToDouble(tmp);
+                            break;
+                        }
+                    }
                 }
             }
-
-            v = "Scan Event";
-            if (TrailerMap.ContainsKey(v))
+            if (TrailerMap.TryGetValue(ScanEventKey, out headerIdx))
             {
-                tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap[v]);
+                tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
+                header = Headers[headerIdx];
                 if (tmp != null)
                 {
-                    scanEventNum = Convert.ToInt16(tmp);
+                    switch(header.DataType) {
+                        case GenericDataTypes.SHORT: {
+                            scanEventNum = (short)tmp;
+                            break;
+                        }
+                        case GenericDataTypes.LONG:
+                        {
+                            scanEventNum = (short)(long)tmp;
+                            break;
+                        }
+                        case GenericDataTypes.ULONG:
+                        {
+                            scanEventNum = (short)(ulong)tmp;
+                            break;
+                        }
+                        case GenericDataTypes.USHORT:
+                        {
+                            scanEventNum = (short)(ushort)tmp;
+                            break;
+                        }
+                        default: {
+                            scanEventNum = Convert.ToInt16(tmp);
+                            break;
+                        }
+                    }
                 }
             }
 
             if (msLevel > 1)
             {
-                if (TrailerMap.ContainsKey("Master Scan Number"))
-                {
-                    tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap["Master Scan Number"]);
+                if (TrailerMap.TryGetValue(MaserScanKey, out headerIdx)) {
+                    tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
+                    header = Headers[headerIdx];
+                    if (tmp != null) {
+                        switch (header.DataType)
+                        {
+                            case GenericDataTypes.SHORT:
+                                {
+                                    masterScanNumber = (short)tmp;
+                                    break;
+                                }
+                            case GenericDataTypes.LONG:
+                                {
+                                    masterScanNumber = (int)tmp;
+                                    break;
+                                }
+                            case GenericDataTypes.ULONG:
+                                {
+                                    masterScanNumber = (int)(ulong)tmp;
+                                    break;
+                                }
+                            case GenericDataTypes.USHORT:
+                                {
+                                    masterScanNumber = (int)(ushort)tmp;
+                                    break;
+                                }
+                            default:
+                                {
+                                    masterScanNumber = Convert.ToInt32(tmp);
+                                    break;
+                                }
+                        }
+                    }
+                };
+                if (TrailerMap.TryGetValue(MonoisotopicMZKey, out headerIdx)) {
+                    tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
+                    header = Headers[headerIdx];
                     if (tmp != null)
                     {
-                        masterScanNumber = Convert.ToInt32(tmp);
+                        switch (header.DataType)
+                        {
+                            case GenericDataTypes.FLOAT:
+                                {
+                                    monoisotopicMZ = (float)tmp;
+                                    break;
+                                }
+                            case GenericDataTypes.DOUBLE:
+                                {
+                                    monoisotopicMZ = (double)tmp;
+                                    break;
+                                };
+                            default:
+                                {
+                                    monoisotopicMZ = Convert.ToDouble(tmp);
+                                    break;
+                                }
+                        }
                     }
                 }
-
-                if (TrailerMap.ContainsKey("Monoisotopic M/Z"))
+                if (TrailerMap.TryGetValue(ChargeStateKey, out headerIdx))
                 {
-                    tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap["Monoisotopic M/Z"]);
+                    tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
                     if (tmp != null)
                     {
-                        monoisotopicMZ = Convert.ToDouble(tmp);
+                        header = Headers[headerIdx];
+                        if (tmp != null)
+                        {
+                            switch (header.DataType)
+                            {
+                                case GenericDataTypes.SHORT:
+                                    {
+                                        precursorCharge = (short)tmp;
+                                        break;
+                                    }
+                                case GenericDataTypes.LONG:
+                                    {
+                                        precursorCharge = (short)(int)tmp;
+                                        break;
+                                    }
+                                case GenericDataTypes.ULONG:
+                                    {
+                                        precursorCharge = (short)(ulong)tmp;
+                                        break;
+                                    }
+                                case GenericDataTypes.USHORT:
+                                    {
+                                        precursorCharge = (short)(ushort)tmp;
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        precursorCharge = Convert.ToInt16(tmp);
+                                        break;
+                                    }
+                            }
+                        }
                     }
                 }
-
-                if (TrailerMap.ContainsKey("Charge State"))
+                var v = string.Format("MS{0} Isolation Width", msLevel);
+                if (TrailerMap.TryGetValue(v, out headerIdx))
                 {
-                    tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap["Charge State"]);
+                    tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
+                    header = Headers[headerIdx];
                     if (tmp != null)
                     {
-                        precursorCharge = Convert.ToInt16(tmp);
-                    }
-                }
-
-                v = String.Format("MS{0} Isolation Width", msLevel);
-                if (TrailerMap.ContainsKey(v))
-                {
-                    tmp = accessor.GetTrailerExtraValue(scanNumber, TrailerMap[v]);
-                    if (tmp != null)
-                    {
-                        isolationWidth = Convert.ToDouble(tmp);
+                        switch (header.DataType)
+                        {
+                            case GenericDataTypes.FLOAT:
+                                {
+                                    isolationWidth = (float)tmp;
+                                    break;
+                                }
+                            case GenericDataTypes.DOUBLE:
+                                {
+                                    isolationWidth = (double)tmp;
+                                    break;
+                                };
+                            default:
+                                {
+                                    isolationWidth = Convert.ToDouble(tmp);
+                                    break;
+                                }
+                        }
                     }
                 }
             }
@@ -534,6 +669,75 @@ namespace librawfilereader
             InstrumentModelT.AddSoftwareVersion(builder, softwareVersion);
             var off = InstrumentModelT.EndInstrumentModelT(builder);
             builder.Finish(off.Value);
+            return builder.DataBuffer;
+        }
+
+        public ByteBuffer GetInstrumentMethodFor(int method) {
+            var accessor = GetHandle();
+            string methodText = accessor.GetInstrumentMethod(method);
+
+            string[] displayNames = accessor.GetAllInstrumentFriendlyNamesFromInstrumentMethod();
+            string[] names = accessor.GetAllInstrumentNamesFromInstrumentMethod();
+
+            var builder = new FlatBufferBuilder(4096);
+            var textOffset = builder.CreateString(methodText);
+            StringOffset nameOffset = new();
+            StringOffset displayNameOffset = new();
+            if (method < names.Length) {
+                nameOffset = builder.CreateString(names[method]);
+                displayNameOffset = builder.CreateString(displayNames[method]);
+            }
+
+            InstrumentMethodT.StartInstrumentMethodT(builder);
+            InstrumentMethodT.AddIndex(builder, (byte)method);
+            InstrumentMethodT.AddText(builder, textOffset);
+            if (method < names.Length) {
+                InstrumentMethodT.AddName(builder, nameOffset);
+                InstrumentMethodT.AddDisplayName(builder, displayNameOffset);
+            }
+
+            var description = InstrumentMethodT.EndInstrumentMethodT(builder);
+            builder.Finish(description.Value);
+            return builder.DataBuffer;
+        }
+
+        public Offset<ChromatogramData> StoreChromatogramData(ChromatogramSignal signal, FlatBufferBuilder bufferBuilder) {
+            ChromatogramData.StartTimeVector(bufferBuilder, signal.Times.Count);
+            foreach(var t in signal.Times.Reverse()) {
+                bufferBuilder.AddDouble(t);
+            }
+            var timeOffset = bufferBuilder.EndVector();
+
+            ChromatogramData.StartIntensityVector(bufferBuilder, signal.Times.Count);
+            foreach (var i in signal.Intensities.Reverse()) {
+                bufferBuilder.AddFloat((float)i);
+            }
+            var intensityOffset = bufferBuilder.EndVector();
+
+            ChromatogramData.StartChromatogramData(bufferBuilder);
+            ChromatogramData.AddTime(bufferBuilder, timeOffset);
+            ChromatogramData.AddIntensity(bufferBuilder, intensityOffset);
+            var offset = ChromatogramData.EndChromatogramData(bufferBuilder);
+            return offset;
+        }
+
+        public ByteBuffer GetSummaryTrace(TraceType traceType) {
+            var accessor = GetHandle();
+            var ticSettings = new ChromatogramTraceSettings(traceType);
+            var tic = accessor.GetChromatogramDataEx([ticSettings], FirstSpectrum(), LastSpectrum());
+            var signals = ChromatogramSignal.FromChromatogramData(tic);
+            var signal = signals[0];
+
+            var builder = new FlatBufferBuilder(4096);
+            Offset<ChromatogramData> dataOffset = StoreChromatogramData(signal, builder);
+
+            ChromatogramDescription.StartChromatogramDescription(builder);
+            ChromatogramDescription.AddTraceType(builder, (TraceTypeT)(int)traceType);
+            ChromatogramDescription.AddStartIndex(builder, FirstSpectrum());
+            ChromatogramDescription.AddEndIndex(builder, LastSpectrum());
+            ChromatogramDescription.AddData(builder, dataOffset);
+            var description = ChromatogramDescription.EndChromatogramDescription(builder);
+            builder.Finish(description.Value);
             return builder.DataBuffer;
         }
 
@@ -754,6 +958,7 @@ namespace librawfilereader
                 var label = header.Label.TrimEnd(':');
                 TrailerMap[label] = i;
             }
+            Headers = headers;
             return RawFileReaderError.Ok;
         }
     }
@@ -988,6 +1193,34 @@ namespace librawfilereader
         public static unsafe RawVec FileDescription(IntPtr handleToken) {
             RawFileReader reader = GetHandleForToken(handleToken);
             var buffer = reader.GetFileMetadata();
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
+            var size = bytes.Length;
+            return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_instrument_method")]
+        public static unsafe RawVec InstrumentMethod(IntPtr handleToken, int method) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var buffer = reader.GetInstrumentMethodFor(method);
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
+            var size = bytes.Length;
+            return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_tic")]
+        public static unsafe RawVec GetTIC(IntPtr handleToken) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var buffer = reader.GetSummaryTrace(TraceType.TIC);
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
+            var size = bytes.Length;
+            return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_bpc")]
+        public static unsafe RawVec GetBPC(IntPtr handleToken)
+        {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var buffer = reader.GetSummaryTrace(TraceType.BasePeak);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
             return MemoryToRustVec(bytes, (nuint)size);

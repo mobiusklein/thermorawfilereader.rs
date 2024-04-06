@@ -23,6 +23,10 @@
 pub(crate) mod gen;
 pub(crate) mod wrap;
 
-pub use crate::wrap::{RawFileReaderError, RawFileReader, InstrumentModel, FileDescription, SpectrumData, RawSpectrum};
 #[doc = "The FlatBuffers schema used to exchange data, see [`schema.fbs`](https://github.com/mobiusklein/thermorawfilereader.rs/blob/main/schema/schema.fbs)"]
 pub use crate::gen::schema_generated::librawfilereader as schema;
+pub use crate::wrap::{
+    ChromatogramData, ChromatogramDescription, FileDescription, InstrumentMethod, InstrumentModel,
+    RawFileReader, RawFileReaderError, RawFileReaderIntoIter, RawFileReaderIter, RawSpectrum,
+    SpectrumData
+};

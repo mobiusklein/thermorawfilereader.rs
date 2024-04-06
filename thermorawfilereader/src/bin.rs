@@ -11,9 +11,15 @@ pub fn main() -> io::Result<()> {
     )?;
 
     let instrument = handle.instrument_model();
-    instrument.model().and_then(|s| {
+    instrument.model().map(|s| {
         println!("Instrument Model: {}", s);
-        Some(())
+    });
+
+    handle.bpc().data().map(|d| {
+        let time = d.time();
+        if !time.is_empty() {
+            println!("Trace Start {} -> {} End", time.first().unwrap(), time.last().unwrap());
+        }
     });
 
     let start = time::Instant::now();

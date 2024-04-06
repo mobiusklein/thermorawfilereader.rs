@@ -599,6 +599,267 @@ impl<'a> flatbuffers::Verifiable for IonizationMode {
 }
 
 impl flatbuffers::SimpleToVerifyInSlice for IonizationMode {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_TRACE_TYPE_T: i16 = -1;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_TRACE_TYPE_T: i16 = 50;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TRACE_TYPE_T: [TraceTypeT; 46] = [
+  TraceTypeT::StartMSChromatogramTraces,
+  TraceTypeT::MassRange,
+  TraceTypeT::TIC,
+  TraceTypeT::BasePeak,
+  TraceTypeT::Fragment,
+  TraceTypeT::Custom,
+  TraceTypeT::PrecursorMass,
+  TraceTypeT::EndMSChromatogramTraces,
+  TraceTypeT::StartAnalogChromatogramTraces,
+  TraceTypeT::Analog1,
+  TraceTypeT::Analog2,
+  TraceTypeT::Analog3,
+  TraceTypeT::Analog4,
+  TraceTypeT::Analog5,
+  TraceTypeT::Analog6,
+  TraceTypeT::Analog7,
+  TraceTypeT::Analog8,
+  TraceTypeT::EndAnalogChromatogramTraces,
+  TraceTypeT::StartPDAChromatogramTraces,
+  TraceTypeT::WavelengthRange,
+  TraceTypeT::TotalAbsorbance,
+  TraceTypeT::SpectrumMax,
+  TraceTypeT::EndPDAChromatogramTraces,
+  TraceTypeT::StartUVChromatogramTraces,
+  TraceTypeT::ChannelA,
+  TraceTypeT::ChannelB,
+  TraceTypeT::ChannelC,
+  TraceTypeT::ChannelD,
+  TraceTypeT::ChannelE,
+  TraceTypeT::ChannelF,
+  TraceTypeT::ChannelG,
+  TraceTypeT::ChannelH,
+  TraceTypeT::EndUVChromatogramTraces,
+  TraceTypeT::StartPCA2DChromatogramTraces,
+  TraceTypeT::A2DChannel1,
+  TraceTypeT::A2DChannel2,
+  TraceTypeT::A2DChannel3,
+  TraceTypeT::ChromatogramA2DChannel3,
+  TraceTypeT::A2DChannel4,
+  TraceTypeT::ChromatogramA2DChannel4,
+  TraceTypeT::A2DChannel5,
+  TraceTypeT::A2DChannel6,
+  TraceTypeT::A2DChannel7,
+  TraceTypeT::A2DChannel8,
+  TraceTypeT::EndPCA2DChromatogramTraces,
+  TraceTypeT::EndAllChromatogramTraces,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TraceTypeT(pub i16);
+#[allow(non_upper_case_globals)]
+impl TraceTypeT {
+  pub const StartMSChromatogramTraces: Self = Self(-1);
+  pub const MassRange: Self = Self(0);
+  pub const TIC: Self = Self(1);
+  pub const BasePeak: Self = Self(2);
+  pub const Fragment: Self = Self(3);
+  pub const Custom: Self = Self(4);
+  pub const PrecursorMass: Self = Self(5);
+  pub const EndMSChromatogramTraces: Self = Self(6);
+  pub const StartAnalogChromatogramTraces: Self = Self(10);
+  pub const Analog1: Self = Self(11);
+  pub const Analog2: Self = Self(12);
+  pub const Analog3: Self = Self(13);
+  pub const Analog4: Self = Self(14);
+  pub const Analog5: Self = Self(15);
+  pub const Analog6: Self = Self(16);
+  pub const Analog7: Self = Self(17);
+  pub const Analog8: Self = Self(18);
+  pub const EndAnalogChromatogramTraces: Self = Self(19);
+  pub const StartPDAChromatogramTraces: Self = Self(20);
+  pub const WavelengthRange: Self = Self(21);
+  pub const TotalAbsorbance: Self = Self(22);
+  pub const SpectrumMax: Self = Self(23);
+  pub const EndPDAChromatogramTraces: Self = Self(24);
+  pub const StartUVChromatogramTraces: Self = Self(30);
+  pub const ChannelA: Self = Self(31);
+  pub const ChannelB: Self = Self(32);
+  pub const ChannelC: Self = Self(33);
+  pub const ChannelD: Self = Self(34);
+  pub const ChannelE: Self = Self(35);
+  pub const ChannelF: Self = Self(36);
+  pub const ChannelG: Self = Self(37);
+  pub const ChannelH: Self = Self(38);
+  pub const EndUVChromatogramTraces: Self = Self(39);
+  pub const StartPCA2DChromatogramTraces: Self = Self(40);
+  pub const A2DChannel1: Self = Self(41);
+  pub const A2DChannel2: Self = Self(42);
+  pub const A2DChannel3: Self = Self(43);
+  pub const ChromatogramA2DChannel3: Self = Self(43);
+  pub const A2DChannel4: Self = Self(44);
+  pub const ChromatogramA2DChannel4: Self = Self(44);
+  pub const A2DChannel5: Self = Self(45);
+  pub const A2DChannel6: Self = Self(46);
+  pub const A2DChannel7: Self = Self(47);
+  pub const A2DChannel8: Self = Self(48);
+  pub const EndPCA2DChromatogramTraces: Self = Self(49);
+  pub const EndAllChromatogramTraces: Self = Self(50);
+
+  pub const ENUM_MIN: i16 = -1;
+  pub const ENUM_MAX: i16 = 50;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::StartMSChromatogramTraces,
+    Self::MassRange,
+    Self::TIC,
+    Self::BasePeak,
+    Self::Fragment,
+    Self::Custom,
+    Self::PrecursorMass,
+    Self::EndMSChromatogramTraces,
+    Self::StartAnalogChromatogramTraces,
+    Self::Analog1,
+    Self::Analog2,
+    Self::Analog3,
+    Self::Analog4,
+    Self::Analog5,
+    Self::Analog6,
+    Self::Analog7,
+    Self::Analog8,
+    Self::EndAnalogChromatogramTraces,
+    Self::StartPDAChromatogramTraces,
+    Self::WavelengthRange,
+    Self::TotalAbsorbance,
+    Self::SpectrumMax,
+    Self::EndPDAChromatogramTraces,
+    Self::StartUVChromatogramTraces,
+    Self::ChannelA,
+    Self::ChannelB,
+    Self::ChannelC,
+    Self::ChannelD,
+    Self::ChannelE,
+    Self::ChannelF,
+    Self::ChannelG,
+    Self::ChannelH,
+    Self::EndUVChromatogramTraces,
+    Self::StartPCA2DChromatogramTraces,
+    Self::A2DChannel1,
+    Self::A2DChannel2,
+    Self::A2DChannel3,
+    Self::ChromatogramA2DChannel3,
+    Self::A2DChannel4,
+    Self::ChromatogramA2DChannel4,
+    Self::A2DChannel5,
+    Self::A2DChannel6,
+    Self::A2DChannel7,
+    Self::A2DChannel8,
+    Self::EndPCA2DChromatogramTraces,
+    Self::EndAllChromatogramTraces,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::StartMSChromatogramTraces => Some("StartMSChromatogramTraces"),
+      Self::MassRange => Some("MassRange"),
+      Self::TIC => Some("TIC"),
+      Self::BasePeak => Some("BasePeak"),
+      Self::Fragment => Some("Fragment"),
+      Self::Custom => Some("Custom"),
+      Self::PrecursorMass => Some("PrecursorMass"),
+      Self::EndMSChromatogramTraces => Some("EndMSChromatogramTraces"),
+      Self::StartAnalogChromatogramTraces => Some("StartAnalogChromatogramTraces"),
+      Self::Analog1 => Some("Analog1"),
+      Self::Analog2 => Some("Analog2"),
+      Self::Analog3 => Some("Analog3"),
+      Self::Analog4 => Some("Analog4"),
+      Self::Analog5 => Some("Analog5"),
+      Self::Analog6 => Some("Analog6"),
+      Self::Analog7 => Some("Analog7"),
+      Self::Analog8 => Some("Analog8"),
+      Self::EndAnalogChromatogramTraces => Some("EndAnalogChromatogramTraces"),
+      Self::StartPDAChromatogramTraces => Some("StartPDAChromatogramTraces"),
+      Self::WavelengthRange => Some("WavelengthRange"),
+      Self::TotalAbsorbance => Some("TotalAbsorbance"),
+      Self::SpectrumMax => Some("SpectrumMax"),
+      Self::EndPDAChromatogramTraces => Some("EndPDAChromatogramTraces"),
+      Self::StartUVChromatogramTraces => Some("StartUVChromatogramTraces"),
+      Self::ChannelA => Some("ChannelA"),
+      Self::ChannelB => Some("ChannelB"),
+      Self::ChannelC => Some("ChannelC"),
+      Self::ChannelD => Some("ChannelD"),
+      Self::ChannelE => Some("ChannelE"),
+      Self::ChannelF => Some("ChannelF"),
+      Self::ChannelG => Some("ChannelG"),
+      Self::ChannelH => Some("ChannelH"),
+      Self::EndUVChromatogramTraces => Some("EndUVChromatogramTraces"),
+      Self::StartPCA2DChromatogramTraces => Some("StartPCA2DChromatogramTraces"),
+      Self::A2DChannel1 => Some("A2DChannel1"),
+      Self::A2DChannel2 => Some("A2DChannel2"),
+      Self::A2DChannel3 => Some("A2DChannel3"),
+      Self::ChromatogramA2DChannel3 => Some("ChromatogramA2DChannel3"),
+      Self::A2DChannel4 => Some("A2DChannel4"),
+      Self::ChromatogramA2DChannel4 => Some("ChromatogramA2DChannel4"),
+      Self::A2DChannel5 => Some("A2DChannel5"),
+      Self::A2DChannel6 => Some("A2DChannel6"),
+      Self::A2DChannel7 => Some("A2DChannel7"),
+      Self::A2DChannel8 => Some("A2DChannel8"),
+      Self::EndPCA2DChromatogramTraces => Some("EndPCA2DChromatogramTraces"),
+      Self::EndAllChromatogramTraces => Some("EndAllChromatogramTraces"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for TraceTypeT {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for TraceTypeT {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<i16>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for TraceTypeT {
+    type Output = TraceTypeT;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<i16>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for TraceTypeT {
+  type Scalar = i16;
+  #[inline]
+  fn to_little_endian(self) -> i16 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: i16) -> Self {
+    let b = i16::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for TraceTypeT {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    i16::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TraceTypeT {}
 // struct InstrumentConfigurationT, aligned to 1
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
@@ -1665,6 +1926,154 @@ impl core::fmt::Debug for SpectrumData<'_> {
       ds.finish()
   }
 }
+pub enum InstrumentMethodTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct InstrumentMethodT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for InstrumentMethodT<'a> {
+  type Inner = InstrumentMethodT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> InstrumentMethodT<'a> {
+  pub const VT_INDEX: flatbuffers::VOffsetT = 4;
+  pub const VT_TEXT: flatbuffers::VOffsetT = 6;
+  pub const VT_DISPLAY_NAME: flatbuffers::VOffsetT = 8;
+  pub const VT_NAME: flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    InstrumentMethodT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args InstrumentMethodTArgs<'args>
+  ) -> flatbuffers::WIPOffset<InstrumentMethodT<'bldr>> {
+    let mut builder = InstrumentMethodTBuilder::new(_fbb);
+    if let Some(x) = args.name { builder.add_name(x); }
+    if let Some(x) = args.display_name { builder.add_display_name(x); }
+    if let Some(x) = args.text { builder.add_text(x); }
+    builder.add_index(args.index);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn index(&self) -> u8 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u8>(InstrumentMethodT::VT_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn text(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(InstrumentMethodT::VT_TEXT, None)}
+  }
+  #[inline]
+  pub fn display_name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(InstrumentMethodT::VT_DISPLAY_NAME, None)}
+  }
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(InstrumentMethodT::VT_NAME, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for InstrumentMethodT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<u8>("index", Self::VT_INDEX, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text", Self::VT_TEXT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("display_name", Self::VT_DISPLAY_NAME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct InstrumentMethodTArgs<'a> {
+    pub index: u8,
+    pub text: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub display_name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for InstrumentMethodTArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    InstrumentMethodTArgs {
+      index: 0,
+      text: None,
+      display_name: None,
+      name: None,
+    }
+  }
+}
+
+pub struct InstrumentMethodTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> InstrumentMethodTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_index(&mut self, index: u8) {
+    self.fbb_.push_slot::<u8>(InstrumentMethodT::VT_INDEX, index, 0);
+  }
+  #[inline]
+  pub fn add_text(&mut self, text: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(InstrumentMethodT::VT_TEXT, text);
+  }
+  #[inline]
+  pub fn add_display_name(&mut self, display_name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(InstrumentMethodT::VT_DISPLAY_NAME, display_name);
+  }
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(InstrumentMethodT::VT_NAME, name);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> InstrumentMethodTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    InstrumentMethodTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<InstrumentMethodT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for InstrumentMethodT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("InstrumentMethodT");
+      ds.field("index", &self.index());
+      ds.field("text", &self.text());
+      ds.field("display_name", &self.display_name());
+      ds.field("name", &self.name());
+      ds.finish()
+  }
+}
 pub enum AcquisitionTOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -2094,6 +2503,268 @@ impl core::fmt::Debug for SpectrumDescription<'_> {
       ds.field("data", &self.data());
       ds.field("filter_string", &self.filter_string());
       ds.field("acquisition", &self.acquisition());
+      ds.finish()
+  }
+}
+pub enum ChromatogramDataOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct ChromatogramData<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for ChromatogramData<'a> {
+  type Inner = ChromatogramData<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> ChromatogramData<'a> {
+  pub const VT_TIME: flatbuffers::VOffsetT = 4;
+  pub const VT_INTENSITY: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    ChromatogramData { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args ChromatogramDataArgs<'args>
+  ) -> flatbuffers::WIPOffset<ChromatogramData<'bldr>> {
+    let mut builder = ChromatogramDataBuilder::new(_fbb);
+    if let Some(x) = args.intensity { builder.add_intensity(x); }
+    if let Some(x) = args.time { builder.add_time(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn time(&self) -> Option<flatbuffers::Vector<'a, f64>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(ChromatogramData::VT_TIME, None)}
+  }
+  #[inline]
+  pub fn intensity(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(ChromatogramData::VT_INTENSITY, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for ChromatogramData<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("time", Self::VT_TIME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("intensity", Self::VT_INTENSITY, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct ChromatogramDataArgs<'a> {
+    pub time: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
+    pub intensity: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+}
+impl<'a> Default for ChromatogramDataArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    ChromatogramDataArgs {
+      time: None,
+      intensity: None,
+    }
+  }
+}
+
+pub struct ChromatogramDataBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> ChromatogramDataBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_time(&mut self, time: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ChromatogramData::VT_TIME, time);
+  }
+  #[inline]
+  pub fn add_intensity(&mut self, intensity: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ChromatogramData::VT_INTENSITY, intensity);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> ChromatogramDataBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    ChromatogramDataBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<ChromatogramData<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for ChromatogramData<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("ChromatogramData");
+      ds.field("time", &self.time());
+      ds.field("intensity", &self.intensity());
+      ds.finish()
+  }
+}
+pub enum ChromatogramDescriptionOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct ChromatogramDescription<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for ChromatogramDescription<'a> {
+  type Inner = ChromatogramDescription<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> ChromatogramDescription<'a> {
+  pub const VT_TRACE_TYPE: flatbuffers::VOffsetT = 4;
+  pub const VT_DATA: flatbuffers::VOffsetT = 6;
+  pub const VT_START_INDEX: flatbuffers::VOffsetT = 8;
+  pub const VT_END_INDEX: flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    ChromatogramDescription { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args ChromatogramDescriptionArgs<'args>
+  ) -> flatbuffers::WIPOffset<ChromatogramDescription<'bldr>> {
+    let mut builder = ChromatogramDescriptionBuilder::new(_fbb);
+    builder.add_end_index(args.end_index);
+    builder.add_start_index(args.start_index);
+    if let Some(x) = args.data { builder.add_data(x); }
+    builder.add_trace_type(args.trace_type);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn trace_type(&self) -> TraceTypeT {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<TraceTypeT>(ChromatogramDescription::VT_TRACE_TYPE, Some(TraceTypeT::MassRange)).unwrap()}
+  }
+  #[inline]
+  pub fn data(&self) -> Option<ChromatogramData<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<ChromatogramData>>(ChromatogramDescription::VT_DATA, None)}
+  }
+  #[inline]
+  pub fn start_index(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(ChromatogramDescription::VT_START_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn end_index(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(ChromatogramDescription::VT_END_INDEX, Some(0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for ChromatogramDescription<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<TraceTypeT>("trace_type", Self::VT_TRACE_TYPE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<ChromatogramData>>("data", Self::VT_DATA, false)?
+     .visit_field::<i32>("start_index", Self::VT_START_INDEX, false)?
+     .visit_field::<i32>("end_index", Self::VT_END_INDEX, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct ChromatogramDescriptionArgs<'a> {
+    pub trace_type: TraceTypeT,
+    pub data: Option<flatbuffers::WIPOffset<ChromatogramData<'a>>>,
+    pub start_index: i32,
+    pub end_index: i32,
+}
+impl<'a> Default for ChromatogramDescriptionArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    ChromatogramDescriptionArgs {
+      trace_type: TraceTypeT::MassRange,
+      data: None,
+      start_index: 0,
+      end_index: 0,
+    }
+  }
+}
+
+pub struct ChromatogramDescriptionBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> ChromatogramDescriptionBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_trace_type(&mut self, trace_type: TraceTypeT) {
+    self.fbb_.push_slot::<TraceTypeT>(ChromatogramDescription::VT_TRACE_TYPE, trace_type, TraceTypeT::MassRange);
+  }
+  #[inline]
+  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<ChromatogramData<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ChromatogramData>>(ChromatogramDescription::VT_DATA, data);
+  }
+  #[inline]
+  pub fn add_start_index(&mut self, start_index: i32) {
+    self.fbb_.push_slot::<i32>(ChromatogramDescription::VT_START_INDEX, start_index, 0);
+  }
+  #[inline]
+  pub fn add_end_index(&mut self, end_index: i32) {
+    self.fbb_.push_slot::<i32>(ChromatogramDescription::VT_END_INDEX, end_index, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> ChromatogramDescriptionBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    ChromatogramDescriptionBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<ChromatogramDescription<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for ChromatogramDescription<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("ChromatogramDescription");
+      ds.field("trace_type", &self.trace_type());
+      ds.field("data", &self.data());
+      ds.field("start_index", &self.start_index());
+      ds.field("end_index", &self.end_index());
       ds.finish()
   }
 }
