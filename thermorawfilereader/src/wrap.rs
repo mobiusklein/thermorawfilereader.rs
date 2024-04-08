@@ -12,12 +12,12 @@ use flatbuffers::{root, Vector};
 
 use dotnetrawfilereader_sys::{get_runtime, RawVec};
 
-use crate::constants::TraceType;
+use crate::constants::{IonizationMode, MassAnalyzer, TraceType};
 use crate::schema::{
     root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
     ChromatogramDescription as ChromatogramDescriptionT, FileDescriptionT,
-    InstrumentConfigurationT, InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT,
-    SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode,
+    InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT,
+    SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode
 };
 
 #[repr(u32)]
@@ -121,6 +121,7 @@ impl<'a> IntoIterator for SpectrumData<'a> {
     }
 }
 
+/// The signal trace of a chromatogram
 pub struct ChromatogramData<'a> {
     time: Vector<'a, f64>,
     intensity: Vector<'a, f32>,
@@ -275,6 +276,15 @@ pub struct InstrumentModel {
     data: RawVec<u8>,
 }
 
+/// An instrument configuration is a set of hardware components
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct InstrumentConfiguration {
+    /// The mass analyzer used in this configuration
+    pub mass_analyzer: MassAnalyzer,
+    /// The ionization mode used in this configuration
+    pub ionization_mode: IonizationMode
+}
+
 impl InstrumentModel {
     /// Create a new [`InstrumentModel`] by wrapping an owning memory buffer
     pub fn new(data: RawVec<u8>) -> Self {
@@ -323,9 +333,13 @@ impl InstrumentModel {
         self.view().software_version()
     }
 
-    ///
-    pub fn configurations(&self) -> Option<flatbuffers::Vector<'_, InstrumentConfigurationT>> {
-        self.view().configurations()
+    /// The set of distinct instrument configuration names.
+    pub fn configurations(&self) -> impl Iterator<Item=InstrumentConfiguration> + '_ {
+        self.view().configurations().into_iter().flatten().map(|c| {
+            let ionization_mode = c.ionization_mode().0.into();
+            let mass_analyzer = c.mass_analyzer().0.into();
+            InstrumentConfiguration { ionization_mode, mass_analyzer }
+        })
     }
 }
 
@@ -353,12 +367,12 @@ impl FileDescription {
         root::<FileDescriptionT>(&self.data).unwrap()
     }
 
-    /// Read the sample identifier provided by the user, if one is present
+    /// The sample identifier provided by the user, if one is present
     pub fn sample_id(&self) -> Option<&str> {
         self.view().sample_id()
     }
 
-    /// Read the name of the RAW file being described, as it was recorded by
+    /// The name of the RAW file being described, as it was recorded by
     /// the control software
     pub fn source_file(&self) -> Option<&str> {
         self.view().source_file()
@@ -369,12 +383,17 @@ impl FileDescription {
         self.view().creation_date()
     }
 
-    /// Read out the number of spectra at MS levels 1-10.
+    /// The number of spectra at MS levels 1-10.
     ///
     /// This returns a [`flatbuffers::Vector`] of counts where index `i` corresponds
     /// to the number of MS level `i+1` spectra in the RAW file.
     pub fn spectra_per_ms_level(&self) -> Option<flatbuffers::Vector<'_, u32>> {
         self.view().spectra_per_ms_level()
+    }
+
+    /// Trailer headers for the RAW file.
+    pub fn trailer_headers(&self) -> Option<Vector<'static, flatbuffers::ForwardsUOffset<&str>>> {
+        self.view().trailer_headers()
     }
 }
 
@@ -444,14 +463,17 @@ impl ChromatogramDescription {
         self.view().trace_type().into()
     }
 
+    /// The scan number the chromatogram starts at
     pub fn start_index(&self) -> usize {
         (self.view().start_index() as usize).saturating_sub(1)
     }
 
+    /// The scan number the chromatogram ends at
     pub fn end_index(&self) -> usize {
         self.view().end_index() as usize
     }
 
+    /// Access the time-intensity array pair
     pub fn data(&self) -> Option<ChromatogramData> {
         let view = self.view();
         if let Some(data_view) = view.data() {

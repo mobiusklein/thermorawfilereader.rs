@@ -11,8 +11,6 @@ using ThermoFisher.CommonCore.Data.FilterEnums;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
-using System.Reflection;
-using System.ComponentModel.DataAnnotations;
 
 namespace librawfilereader
 {
@@ -778,11 +776,20 @@ namespace librawfilereader
             var pathOffset = builder.CreateString(Path);
             var countsOffset = FileDescriptionT.CreateSpectraPerMsLevelVector(builder, counts);
 
+            StringOffset[] headerOffsets = new StringOffset[Headers.Length];
+            for(var i = 0; i < Headers.Length; i++) {
+                var header = Headers[i];
+                var offset = builder.CreateString(header.Label);
+                headerOffsets[i] = offset;
+            }
+            var headersOffset = FileDescriptionT.CreateTrailerHeadersVector(builder, headerOffsets);
+
             FileDescriptionT.StartFileDescriptionT(builder);
             FileDescriptionT.AddCreationDate(builder, dateOffset);
             FileDescriptionT.AddSampleId(builder, sampleIDOffset);
             FileDescriptionT.AddSourceFile(builder, pathOffset);
             FileDescriptionT.AddSpectraPerMsLevel(builder, countsOffset);
+            FileDescriptionT.AddTrailerHeaders(builder, headersOffset);
             var fileDescOffset = FileDescriptionT.EndFileDescriptionT(builder);
 
             builder.Finish(fileDescOffset.Value);

@@ -14,14 +14,15 @@ and this project adheres to [Semantic Versioning].
 - Added `RawFileReader::tic` and `RawFileReader::bpc` to access summary chromatograms.
   - `ChromatogramDescription` in the FlatBuffer schema
   - `rawfilereader_get_tic`/`Exports.GetTIC` and `rawfilereader_get_bpc`/`Exports.GetBPC` in the .NET FFI library.
+  - Added `TraceType` enum for all available trace types, but most are not yet available on the Rust side.
+  - Added `IonizationMode` and `MassAnalyzer` enums to simplify decoding by downstream Rust code    since FlatBuffers enums don't support exhaustive matching.
 
 ### Changed
 - The unpacking of `GetTrailerExtraInformation` now uses more efficient type coercion logic where possible.
 - More wrapper types are now part of the public API.
+- Increased the default buffer size for profile spectra.
 
-## [0.0.2] - 2024-04-06
-
-## [0.0.1] - 2024-04-06
+## [0.2.0] - 2024-04-06
 
 - initial release
 
@@ -30,6 +31,5 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.0.2...HEAD
-[0.0.2]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.0.1...v0.0.2
-[0.0.1]: https://github.com/mobiusklein/thermorawfilereader.rs/releases/tag/v0.0.1
+[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.0

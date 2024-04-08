@@ -99,7 +99,101 @@ impl From<TraceTypeT> for TraceType {
             48 => Self::A2DChannel8,
             49 => Self::EndPCA2DChromatogramTraces,
             50 => Self::EndAllChromatogramTraces,
-            _ => panic!("Failed to map {:?} to a valid TraceType", value)
+            _ => Self::EndAllChromatogramTraces
+        }
+    }
+}
+
+
+
+/// This enum mirrors the different types of ionization modes covered in Thermo's RawFileReader library
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum IonizationMode
+{
+    ElectronImpact = 0,
+    ChemicalIonization = 1,
+    FastAtomBombardment = 2,
+    ElectroSpray = 3,
+    AtmosphericPressureChemicalIonization = 4,
+    NanoSpray = 5,
+    ThermoSpray = 6,
+    FieldDesorption = 7,
+    MatrixAssistedLaserDesorptionIonization = 8,
+    GlowDischarge = 9,
+    Any = 10,
+    PaperSprayIonization = 11,
+    CardNanoSprayIonization = 12,
+    IonizationMode1 = 13,
+    IonizationMode2 = 14,
+    IonizationMode3 = 15,
+    IonizationMode4 = 16,
+    IonizationMode5 = 17,
+    IonizationMode6 = 18,
+    IonizationMode7 = 19,
+    IonizationMode8 = 20,
+    IonizationMode9 = 21,
+    IonModeBeyondKnown = 22,
+}
+
+impl From<u8> for IonizationMode {
+    fn from(value: u8) -> Self {
+        match value {
+             0 => Self::ElectronImpact,
+             1 => Self::ChemicalIonization,
+             2 => Self::FastAtomBombardment,
+             3 => Self::ElectroSpray,
+             4 => Self::AtmosphericPressureChemicalIonization,
+             5 => Self::NanoSpray,
+             6 => Self::ThermoSpray,
+             7 => Self::FieldDesorption,
+             8 => Self::MatrixAssistedLaserDesorptionIonization,
+             9 => Self::GlowDischarge,
+             10 => Self::Any,
+             11 => Self::PaperSprayIonization,
+             12 => Self::CardNanoSprayIonization,
+             13 => Self::IonizationMode1,
+             14 => Self::IonizationMode2,
+             15 => Self::IonizationMode3,
+             16 => Self::IonizationMode4,
+             17 => Self::IonizationMode5,
+             18 => Self::IonizationMode6,
+             19 => Self::IonizationMode7,
+             20 => Self::IonizationMode8,
+             21 => Self::IonizationMode9,
+             22 => Self::IonModeBeyondKnown,
+             _ => Self::IonModeBeyondKnown
+        }
+    }
+}
+
+
+/// This enum mirrors the different types of mass analyzers in Thermo's RawFileReader library
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum MassAnalyzer {
+    Unknown = 0,
+    ITMS = 1,
+    TQMS = 2,
+    SQMS = 3,
+    TOFMS = 4,
+    FTMS = 5,
+    Sector = 6,
+    ASTMS = 7,
+}
+
+impl From<u8> for MassAnalyzer {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Self::Unknown,
+            1 => Self::ITMS,
+            2 => Self::TQMS,
+            3 => Self::SQMS,
+            4 => Self::TOFMS,
+            5 => Self::FTMS,
+            6 => Self::Sector,
+            7 => Self::ASTMS,
+            _ => Self::Unknown
         }
     }
 }

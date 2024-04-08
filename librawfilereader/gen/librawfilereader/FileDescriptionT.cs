@@ -48,13 +48,17 @@ public struct FileDescriptionT : IFlatbufferObject
   public ArraySegment<byte>? GetSpectraPerMsLevelBytes() { return __p.__vector_as_arraysegment(10); }
 #endif
   public uint[] GetSpectraPerMsLevelArray() { return __p.__vector_as_array<uint>(10); }
+  public string TrailerHeaders(int j) { int o = __p.__offset(12); return o != 0 ? __p.__string(__p.__vector(o) + j * 4) : null; }
+  public int TrailerHeadersLength { get { int o = __p.__offset(12); return o != 0 ? __p.__vector_len(o) : 0; } }
 
   public static Offset<librawfilereader.FileDescriptionT> CreateFileDescriptionT(FlatBufferBuilder builder,
       StringOffset creation_dateOffset = default(StringOffset),
       StringOffset sample_idOffset = default(StringOffset),
       StringOffset source_fileOffset = default(StringOffset),
-      VectorOffset spectra_per_ms_levelOffset = default(VectorOffset)) {
-    builder.StartTable(4);
+      VectorOffset spectra_per_ms_levelOffset = default(VectorOffset),
+      VectorOffset trailer_headersOffset = default(VectorOffset)) {
+    builder.StartTable(5);
+    FileDescriptionT.AddTrailerHeaders(builder, trailer_headersOffset);
     FileDescriptionT.AddSpectraPerMsLevel(builder, spectra_per_ms_levelOffset);
     FileDescriptionT.AddSourceFile(builder, source_fileOffset);
     FileDescriptionT.AddSampleId(builder, sample_idOffset);
@@ -62,7 +66,7 @@ public struct FileDescriptionT : IFlatbufferObject
     return FileDescriptionT.EndFileDescriptionT(builder);
   }
 
-  public static void StartFileDescriptionT(FlatBufferBuilder builder) { builder.StartTable(4); }
+  public static void StartFileDescriptionT(FlatBufferBuilder builder) { builder.StartTable(5); }
   public static void AddCreationDate(FlatBufferBuilder builder, StringOffset creationDateOffset) { builder.AddOffset(0, creationDateOffset.Value, 0); }
   public static void AddSampleId(FlatBufferBuilder builder, StringOffset sampleIdOffset) { builder.AddOffset(1, sampleIdOffset.Value, 0); }
   public static void AddSourceFile(FlatBufferBuilder builder, StringOffset sourceFileOffset) { builder.AddOffset(2, sourceFileOffset.Value, 0); }
@@ -72,6 +76,12 @@ public struct FileDescriptionT : IFlatbufferObject
   public static VectorOffset CreateSpectraPerMsLevelVectorBlock(FlatBufferBuilder builder, ArraySegment<uint> data) { builder.StartVector(4, data.Count, 4); builder.Add(data); return builder.EndVector(); }
   public static VectorOffset CreateSpectraPerMsLevelVectorBlock(FlatBufferBuilder builder, IntPtr dataPtr, int sizeInBytes) { builder.StartVector(1, sizeInBytes, 1); builder.Add<uint>(dataPtr, sizeInBytes); return builder.EndVector(); }
   public static void StartSpectraPerMsLevelVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
+  public static void AddTrailerHeaders(FlatBufferBuilder builder, VectorOffset trailerHeadersOffset) { builder.AddOffset(4, trailerHeadersOffset.Value, 0); }
+  public static VectorOffset CreateTrailerHeadersVector(FlatBufferBuilder builder, StringOffset[] data) { builder.StartVector(4, data.Length, 4); for (int i = data.Length - 1; i >= 0; i--) builder.AddOffset(data[i].Value); return builder.EndVector(); }
+  public static VectorOffset CreateTrailerHeadersVectorBlock(FlatBufferBuilder builder, StringOffset[] data) { builder.StartVector(4, data.Length, 4); builder.Add(data); return builder.EndVector(); }
+  public static VectorOffset CreateTrailerHeadersVectorBlock(FlatBufferBuilder builder, ArraySegment<StringOffset> data) { builder.StartVector(4, data.Count, 4); builder.Add(data); return builder.EndVector(); }
+  public static VectorOffset CreateTrailerHeadersVectorBlock(FlatBufferBuilder builder, IntPtr dataPtr, int sizeInBytes) { builder.StartVector(1, sizeInBytes, 1); builder.Add<StringOffset>(dataPtr, sizeInBytes); return builder.EndVector(); }
+  public static void StartTrailerHeadersVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
   public static Offset<librawfilereader.FileDescriptionT> EndFileDescriptionT(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<librawfilereader.FileDescriptionT>(o);
@@ -88,6 +98,7 @@ static public class FileDescriptionTVerify
       && verifier.VerifyString(tablePos, 6 /*SampleId*/, false)
       && verifier.VerifyString(tablePos, 8 /*SourceFile*/, false)
       && verifier.VerifyVectorOfData(tablePos, 10 /*SpectraPerMsLevel*/, 4 /*uint*/, false)
+      && verifier.VerifyVectorOfStrings(tablePos, 12 /*TrailerHeaders*/, false)
       && verifier.VerifyTableEnd(tablePos);
   }
 }

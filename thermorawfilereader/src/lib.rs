@@ -20,15 +20,15 @@
 //!
 //! # Licensing
 //! By using this library, you agree to the [RawFileReader License](https://github.com/thermofisherlsms/RawFileReader/blob/main/License.doc)
+mod constants;
 pub(crate) mod gen;
 pub(crate) mod wrap;
-mod constants;
 
 #[doc = "The FlatBuffers schema used to exchange data, see [`schema.fbs`](https://github.com/mobiusklein/thermorawfilereader.rs/blob/main/schema/schema.fbs)"]
 pub use crate::gen::schema_generated::librawfilereader as schema;
-pub use constants::TraceType;
 pub use crate::wrap::{
-    ChromatogramData, ChromatogramDescription, FileDescription, InstrumentMethod, InstrumentModel,
-    RawFileReader, RawFileReaderError, RawFileReaderIntoIter, RawFileReaderIter, RawSpectrum,
-    SpectrumData
+    ChromatogramData, ChromatogramDescription, FileDescription, InstrumentConfiguration,
+    InstrumentMethod, InstrumentModel, RawFileReader, RawFileReaderError, RawFileReaderIntoIter,
+    RawFileReaderIter, RawSpectrum, SpectrumData,
 };
+pub use constants::{IonizationMode, MassAnalyzer, TraceType};
