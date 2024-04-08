@@ -15,13 +15,6 @@ pub fn main() -> io::Result<()> {
         println!("Instrument Model: {}", s);
     });
 
-    handle.bpc().data().map(|d| {
-        let time = d.time();
-        if !time.is_empty() {
-            println!("Trace Start {} -> {} End", time.first().unwrap(), time.last().unwrap());
-        }
-    });
-
     let start = time::Instant::now();
     if target < 0 {
         handle.set_signal_loading(false);

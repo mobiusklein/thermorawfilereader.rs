@@ -325,9 +325,149 @@ namespace librawfilereader
 
         private const string InjectionTimeKey = "Ion Injection Time (ms)";
         private const string ScanEventKey = "Scan Evnet";
-        private const string MaserScanKey = "Master Scan";
+        private const string MasterScanKey = "Master Scan";
         private const string MonoisotopicMZKey = "Monoisotopic M/Z";
         private const string ChargeStateKey = "Charge State";
+        private static readonly string[] IsolationLevelKeys = [
+            "MS2 Isolation Width",
+            "MS3 Isolation Width",
+            "MS4 Isolation Width",
+            "MS5 Isolation Width",
+            "MS6 Isolation Width",
+            "MS7 Isolation Width",
+            "MS8 Isolation Width",
+            "MS9 Isolation Width",
+            "MS10 Isolation Width"
+        ];
+
+        bool GetShortTrailerExtraFor(IRawDataPlus accessor, int scanNumber, string key, out short value)
+        {
+            object tmp;
+            HeaderItem header;
+            int headerIdx;
+
+            if (TrailerMap.TryGetValue(key, out headerIdx))
+            {
+                tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
+                header = Headers[headerIdx];
+                if (tmp != null)
+                {
+                    switch (header.DataType)
+                    {
+                        case GenericDataTypes.SHORT:
+                            {
+                                value = (short)tmp;
+                                return true;
+                            }
+                        case GenericDataTypes.LONG:
+                            {
+                                value = (short)(long)tmp;
+                                return true;
+                            }
+                        case GenericDataTypes.ULONG:
+                            {
+                                value = (short)(ulong)tmp;
+                                return true;
+                            }
+                        case GenericDataTypes.USHORT:
+                            {
+                                value = (short)(ushort)tmp;
+                                return true;
+                            }
+                        default:
+                            {
+                                value = Convert.ToInt16(tmp);
+                                return true;
+                            }
+                    }
+                }
+            }
+            value = 0;
+            return false;
+        }
+
+
+        bool GetIntTrailerExtraFor(IRawDataPlus accessor, int scanNumber, string key, out int value, int defaultValue=0)
+        {
+            object tmp;
+            HeaderItem header;
+            int headerIdx;
+
+            if (TrailerMap.TryGetValue(key, out headerIdx))
+            {
+                tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
+                header = Headers[headerIdx];
+                if (tmp != null)
+                {
+                    switch (header.DataType)
+                    {
+                        case GenericDataTypes.SHORT:
+                            {
+                                value = (short)tmp;
+                                return true;
+                            }
+                        case GenericDataTypes.LONG:
+                            {
+                                value = (int)(long)tmp;
+                                return true;
+                            }
+                        case GenericDataTypes.ULONG:
+                            {
+                                value = (int)(ulong)tmp;
+                                return true;
+                            }
+                        case GenericDataTypes.USHORT:
+                            {
+                                value = (ushort)tmp;
+                                return true;
+                            }
+                        default:
+                            {
+                                value = Convert.ToInt32(tmp);
+                                return true;
+                            }
+                    }
+                }
+            }
+            value = defaultValue;
+            return false;
+        }
+
+        bool GetDoubleTrailerExtraFor(IRawDataPlus accessor, int scanNumber, string key, out double value) {
+            object tmp;
+            HeaderItem header;
+            int headerIdx;
+
+            if (TrailerMap.TryGetValue(key, out headerIdx))
+            {
+                tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
+                header = Headers[headerIdx];
+                if (tmp != null)
+                {
+                    switch (header.DataType)
+                    {
+                        case GenericDataTypes.FLOAT:
+                            {
+                                value = (float)tmp;
+                                return true;
+                            }
+                        case GenericDataTypes.DOUBLE:
+                            {
+                                value = (double)tmp;
+                                return true;
+                            };
+                        default:
+                            {
+                                value = Convert.ToDouble(tmp);
+                                return true;
+
+                            }
+                    }
+                }
+            }
+            value = 0;
+            return false;
+        }
 
         (PrecursorProperties?, AcquisitionProperties) ExtractPrecursorAndTrailerMetadata(int scanNumber, short msLevel, IScanFilter filter, IRawDataPlus accessor, ScanStatistics stats)
         {
@@ -340,193 +480,16 @@ namespace librawfilereader
             double injectionTime = 0.0;
             int masterScanNumber = -1;
             short scanEventNum = 1;
-            object tmp;
-            HeaderItem header;
-            int headerIdx;
 
-            if (TrailerMap.TryGetValue(InjectionTimeKey, out headerIdx)) {
-                tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
-                header = Headers[headerIdx];
-                if (tmp != null)
-                {
-                    switch (header.DataType) {
-                        case GenericDataTypes.FLOAT:
-                        {
-                            injectionTime = (float)tmp;
-                            break;
-                        }
-                        case GenericDataTypes.DOUBLE: {
-                            injectionTime = (double)tmp;
-                            break;
-                        };
-                        default: {
-                            injectionTime = Convert.ToDouble(tmp);
-                            break;
-                        }
-                    }
-                }
-            }
-            if (TrailerMap.TryGetValue(ScanEventKey, out headerIdx))
-            {
-                tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
-                header = Headers[headerIdx];
-                if (tmp != null)
-                {
-                    switch(header.DataType) {
-                        case GenericDataTypes.SHORT: {
-                            scanEventNum = (short)tmp;
-                            break;
-                        }
-                        case GenericDataTypes.LONG:
-                        {
-                            scanEventNum = (short)(long)tmp;
-                            break;
-                        }
-                        case GenericDataTypes.ULONG:
-                        {
-                            scanEventNum = (short)(ulong)tmp;
-                            break;
-                        }
-                        case GenericDataTypes.USHORT:
-                        {
-                            scanEventNum = (short)(ushort)tmp;
-                            break;
-                        }
-                        default: {
-                            scanEventNum = Convert.ToInt16(tmp);
-                            break;
-                        }
-                    }
-                }
-            }
+            GetDoubleTrailerExtraFor(accessor, scanNumber, InjectionTimeKey, out injectionTime);
+            GetShortTrailerExtraFor(accessor, scanNumber, ScanEventKey, out scanEventNum);
 
             if (msLevel > 1)
             {
-                if (TrailerMap.TryGetValue(MaserScanKey, out headerIdx)) {
-                    tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
-                    header = Headers[headerIdx];
-                    if (tmp != null) {
-                        switch (header.DataType)
-                        {
-                            case GenericDataTypes.SHORT:
-                                {
-                                    masterScanNumber = (short)tmp;
-                                    break;
-                                }
-                            case GenericDataTypes.LONG:
-                                {
-                                    masterScanNumber = (int)tmp;
-                                    break;
-                                }
-                            case GenericDataTypes.ULONG:
-                                {
-                                    masterScanNumber = (int)(ulong)tmp;
-                                    break;
-                                }
-                            case GenericDataTypes.USHORT:
-                                {
-                                    masterScanNumber = (int)(ushort)tmp;
-                                    break;
-                                }
-                            default:
-                                {
-                                    masterScanNumber = Convert.ToInt32(tmp);
-                                    break;
-                                }
-                        }
-                    }
-                };
-                if (TrailerMap.TryGetValue(MonoisotopicMZKey, out headerIdx)) {
-                    tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
-                    header = Headers[headerIdx];
-                    if (tmp != null)
-                    {
-                        switch (header.DataType)
-                        {
-                            case GenericDataTypes.FLOAT:
-                                {
-                                    monoisotopicMZ = (float)tmp;
-                                    break;
-                                }
-                            case GenericDataTypes.DOUBLE:
-                                {
-                                    monoisotopicMZ = (double)tmp;
-                                    break;
-                                };
-                            default:
-                                {
-                                    monoisotopicMZ = Convert.ToDouble(tmp);
-                                    break;
-                                }
-                        }
-                    }
-                }
-                if (TrailerMap.TryGetValue(ChargeStateKey, out headerIdx))
-                {
-                    tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
-                    if (tmp != null)
-                    {
-                        header = Headers[headerIdx];
-                        if (tmp != null)
-                        {
-                            switch (header.DataType)
-                            {
-                                case GenericDataTypes.SHORT:
-                                    {
-                                        precursorCharge = (short)tmp;
-                                        break;
-                                    }
-                                case GenericDataTypes.LONG:
-                                    {
-                                        precursorCharge = (short)(int)tmp;
-                                        break;
-                                    }
-                                case GenericDataTypes.ULONG:
-                                    {
-                                        precursorCharge = (short)(ulong)tmp;
-                                        break;
-                                    }
-                                case GenericDataTypes.USHORT:
-                                    {
-                                        precursorCharge = (short)(ushort)tmp;
-                                        break;
-                                    }
-                                default:
-                                    {
-                                        precursorCharge = Convert.ToInt16(tmp);
-                                        break;
-                                    }
-                            }
-                        }
-                    }
-                }
-                var v = string.Format("MS{0} Isolation Width", msLevel);
-                if (TrailerMap.TryGetValue(v, out headerIdx))
-                {
-                    tmp = accessor.GetTrailerExtraValue(scanNumber, headerIdx);
-                    header = Headers[headerIdx];
-                    if (tmp != null)
-                    {
-                        switch (header.DataType)
-                        {
-                            case GenericDataTypes.FLOAT:
-                                {
-                                    isolationWidth = (float)tmp;
-                                    break;
-                                }
-                            case GenericDataTypes.DOUBLE:
-                                {
-                                    isolationWidth = (double)tmp;
-                                    break;
-                                };
-                            default:
-                                {
-                                    isolationWidth = Convert.ToDouble(tmp);
-                                    break;
-                                }
-                        }
-                    }
-                }
+                GetIntTrailerExtraFor(accessor, scanNumber, MasterScanKey, out masterScanNumber, -1);
+                GetDoubleTrailerExtraFor(accessor, scanNumber, MonoisotopicMZKey, out monoisotopicMZ);
+                GetShortTrailerExtraFor(accessor, scanNumber, ChargeStateKey, out precursorCharge);
+                GetDoubleTrailerExtraFor(accessor, scanNumber, IsolationLevelKeys[msLevel - 2], out isolationWidth);
             }
 
             AcquisitionProperties acquisitionProperties = new AcquisitionProperties(injectionTime, null, filter.MassAnalyzer, stats.LowMass, stats.HighMass, scanEventNum);
@@ -624,18 +587,21 @@ namespace librawfilereader
         {
             var analyzers = new Dictionary<(MassAnalyzer, IonizationMode), long>();
             var accessor = GetHandle();
-            var filters = accessor.GetFilters();
+            var events = accessor.ScanEvents;
+
             int counter = 0;
-            foreach (var filter in filters)
-            {
-                var a = AcquisitionProperties.CastMassAnalyzer(filter.MassAnalyzer);
-                var i = AcquisitionProperties.CastIonizationMode(filter.IonizationMode);
-                if (analyzers.ContainsKey((a, i)))
-                {
-                    continue;
+            for (var segmentIdx = 0; segmentIdx < events.Segments; segmentIdx++) {
+                for(var eventIdx = 0; eventIdx < events.GetEventCount(segmentIdx); eventIdx++) {
+                    var ev = events.GetEvent(segmentIdx, eventIdx);
+                    var a = AcquisitionProperties.CastMassAnalyzer(ev.MassAnalyzer);
+                    var i = AcquisitionProperties.CastIonizationMode(ev.IonizationMode);
+                    if (analyzers.ContainsKey((a, i)))
+                    {
+                        continue;
+                    }
+                    analyzers.Add((a, i), counter);
+                    counter += 1;
                 }
-                analyzers.Add((a, i), counter);
-                counter += 1;
             }
             return analyzers;
         }
@@ -845,7 +811,8 @@ namespace librawfilereader
             short level = MSLevelFromFilter(filter);
             Polarity polarity = GetPolarity(filter);
 
-            var builder = new FlatBufferBuilder(4096);
+            // Centroid spectra are usually compact, but profile spectra are much bigger
+            var builder = new FlatBufferBuilder(mode == SpectrumMode.Centroid ? 8192 : 262144);
             Offset<SpectrumData> dataOffset = new();
 
             if (includeSignal)

@@ -12,11 +12,12 @@ use flatbuffers::{root, Vector};
 
 use dotnetrawfilereader_sys::{get_runtime, RawVec};
 
+use crate::constants::TraceType;
 use crate::schema::{
     root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
     ChromatogramDescription as ChromatogramDescriptionT, FileDescriptionT,
     InstrumentConfigurationT, InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT,
-    SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode, TraceTypeT,
+    SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode,
 };
 
 #[repr(u32)]
@@ -142,6 +143,7 @@ impl<'a> ChromatogramData<'a> {
         Cow::Borrowed(bytemuck::cast_slice(self.intensity.bytes()))
     }
 
+    /// Iterate over time-intensity pairs
     pub fn iter(&self) -> std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>> {
         let it = self.time.iter().zip(self.intensity.iter());
         it
@@ -437,8 +439,9 @@ impl ChromatogramDescription {
         root::<ChromatogramDescriptionT>(&self.data).unwrap()
     }
 
-    pub fn trace_type(&self) -> TraceTypeT {
-        self.view().trace_type()
+    /// Read the trace type
+    pub fn trace_type(&self) -> TraceType {
+        self.view().trace_type().into()
     }
 
     pub fn start_index(&self) -> usize {
@@ -615,6 +618,7 @@ impl RawFileReader {
         InstrumentModel::new(buf)
     }
 
+    /// Retrieve descriptive metadata about the file and summary measures
     pub fn file_description(&self) -> FileDescription {
         self.validate_impl();
         let descr_fn = self
@@ -629,6 +633,10 @@ impl RawFileReader {
         FileDescription::new(buf)
     }
 
+    /// Read the `index`-th instrument method.
+    ///
+    /// If no instrument method is found, the Thermo library returns an
+    /// empty string. Instead, this returns `None`.
     pub fn instrument_method(&self, index: u8) -> Option<InstrumentMethod> {
         self.validate_impl();
         let descr_fn = self
@@ -648,6 +656,7 @@ impl RawFileReader {
         }
     }
 
+    /// Read the total ion current chromatogram spanning the entire MS run
     pub fn tic(&self) -> ChromatogramDescription {
         self.validate_impl();
         let descr_fn = self
@@ -661,6 +670,7 @@ impl RawFileReader {
         ChromatogramDescription::new(buf)
     }
 
+    /// Read the base peak current chromatogram spanning the entire MS run
     pub fn bpc(&self) -> ChromatogramDescription {
         self.validate_impl();
         let descr_fn = self
@@ -941,7 +951,7 @@ mod test {
     fn test_tic() -> io::Result<()> {
         let handle = RawFileReader::open("../tests/data/small.RAW")?;
         let tic  = handle.tic();
-        assert_eq!(tic.trace_type(), TraceTypeT::TIC);
+        assert_eq!(tic.trace_type(), TraceType::TIC);
         assert_eq!(tic.start_index(), 0);
         assert_eq!(tic.end_index(), 48);
         let data = tic.data().unwrap();
@@ -957,7 +967,7 @@ mod test {
     fn test_bpc() -> io::Result<()> {
         let handle = RawFileReader::open("../tests/data/small.RAW")?;
         let bpc  = handle.bpc();
-        assert_eq!(bpc.trace_type(), TraceTypeT::BasePeak);
+        assert_eq!(bpc.trace_type(), TraceType::BasePeak);
         assert_eq!(bpc.start_index(), 0);
         assert_eq!(bpc.end_index(), 48);
         let data = bpc.data().unwrap();
