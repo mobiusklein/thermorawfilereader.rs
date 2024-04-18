@@ -29,6 +29,6 @@ pub use crate::gen::schema_generated::librawfilereader as schema;
 pub use crate::wrap::{
     ChromatogramData, ChromatogramDescription, FileDescription, InstrumentConfiguration,
     InstrumentMethod, InstrumentModel, RawFileReader, RawFileReaderError, RawFileReaderIntoIter,
-    RawFileReaderIter, RawSpectrum, SpectrumData,
+    RawFileReaderIter, RawSpectrum, SpectrumData, Acquisition
 };
 pub use constants::{IonizationMode, MassAnalyzer, TraceType};

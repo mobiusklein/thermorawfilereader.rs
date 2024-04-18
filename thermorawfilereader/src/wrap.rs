@@ -487,6 +487,56 @@ impl ChromatogramDescription {
     }
 }
 
+
+/// Describes a scan acquisition.
+///
+/// Acts as a wrapper around [`AcquisitionT`] that translates
+/// raw FlatBuffer encodings.
+pub struct Acquisition<'a> {
+    data: AcquisitionT<'a>,
+}
+
+impl<'a> Acquisition<'a> {
+    pub fn new(data: AcquisitionT<'a>) -> Self {
+        Self { data }
+    }
+
+    #[inline(always)]
+    pub fn low_mz(&self) -> f64 {
+        self.data.low_mz()
+    }
+
+    #[inline(always)]
+    pub fn high_mz(&self) -> f64 {
+        self.data.high_mz()
+    }
+
+    #[inline(always)]
+    pub fn injection_time(&self) -> f32 {
+        self.data.injection_time()
+    }
+
+    #[inline(always)]
+    pub fn compensation_voltage(&self) -> Option<f32> {
+        self.data.compensation_voltage()
+    }
+
+    #[inline(always)]
+    pub fn mass_analyzer(&self) -> MassAnalyzer {
+        self.data.mass_analyzer().0.into()
+    }
+
+    #[inline(always)]
+    pub fn scan_event(&self) -> i32 {
+        self.data.scan_event()
+    }
+
+    #[inline(always)]
+    pub fn ionization_mode(&self) -> IonizationMode {
+        self.data.ionization_mode().0.into()
+    }
+}
+
 /// A wrapper around a .NET `RawFileReader` instance. It carries a reference to a
 /// .NET runtime and a FFI pointer to access data through. The dotnet runtime is
 /// controlled via locks and is expected to be thread-safe.
