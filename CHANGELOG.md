@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
-## [Unreleased]
+## [0.2.2] - 2024-04-18
 
 ### Added
 - Added `RawFileReader::instrument_method` to access the instrument method text segments stored in a RAW file.
