@@ -115,6 +115,51 @@ namespace librawfilereader
         public byte* Data;
         public nuint Len;
         public nuint Capacity;
+
+        public static unsafe RawVec Allocate(nuint size) {
+            var vec = new RawVec();
+            Exports.RustAllocateMemory(size, &vec);
+            return vec;
+        }
+
+        public unsafe void Resize(nuint size) {
+            var self = this;
+            Exports.RustReallocateMemory(size, &self);
+            Data = self.Data;
+            Capacity = self.Capacity;
+            Len = self.Len;
+        }
+
+        public unsafe void ResizeEnd(nuint size) {
+            var self = this;
+            Exports.RustReallocateEndMemory(size, &self);
+            Data = self.Data;
+            Capacity = self.Capacity;
+            Len = self.Len;
+        }
+
+        public unsafe Span<byte> AsSpan() {
+            return new Span<byte>(Data, (int)Len);
+        }
+
+        public unsafe ReadOnlySpan<byte> AsReadOnlySpan()
+        {
+            return new ReadOnlySpan<byte>(Data, (int)Len);
+        }
+
+        public unsafe Memory<byte> ToMemory() {
+            var span = AsSpan();
+            return new Memory<byte>(span.ToArray());
+        }
+
+        public unsafe ReadOnlyMemory<byte> ToReadOnlyMemory() {
+            var span = AsReadOnlySpan();
+            return new ReadOnlyMemory<byte>(span.ToArray());
+        }
+
+        public static RawVec FromArray(byte[] bytes) {
+            return Exports.MemoryToRustVec(bytes, (nuint)bytes.Length);
+        }
     }
 
     /// <summary>
@@ -939,15 +984,21 @@ namespace librawfilereader
 
     public static class Exports
     {
-        private static unsafe delegate*<nuint, RawVec*, void> RustAllocateMemory;
+        public static unsafe delegate*<nuint, RawVec*, void> RustAllocateMemory;
+        public static unsafe delegate*<nuint, RawVec*, void> RustReallocateMemory;
+        public static unsafe delegate*<nuint, RawVec*, void> RustReallocateEndMemory;
 
         private static Dictionary<IntPtr, RawFileReader> OpenHandles = new Dictionary<nint, RawFileReader>();
         private static IntPtr HandleCounter = 1;
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_set_memory_allocator")]
         public static unsafe void SetRustAllocateMemory(delegate*<nuint, RawVec*, void> rustAllocateMemory) => RustAllocateMemory = rustAllocateMemory;
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_set_memory_reallocator")]
+        public static unsafe void SetRustReallocateMemory(delegate*<nuint, RawVec*, void> rustAllocateMemory) => RustReallocateMemory = rustAllocateMemory;
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_set_memory_reallocator_end")]
+        public static unsafe void SetRustReallocateEndMemory(delegate*<nuint, RawVec*, void> rustAllocateMemory) => RustReallocateEndMemory = rustAllocateMemory;
 
-        private unsafe static RawVec MemoryToRustVec(Span<byte> buffer, nuint size)
+        public unsafe static RawVec MemoryToRustVec(Span<byte> buffer, nuint size)
         {
             var vec = new RawVec();
             RustAllocateMemory(size, &vec);
@@ -1146,6 +1197,9 @@ namespace librawfilereader
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
             return MemoryToRustVec(bytes, (nuint)size);
+            // var content = buffer.RawVec();
+            // System.Console.WriteLine("{0} {1} {2} {3} {4}", content.Len, content.Capacity, content.AsSpan()[(int)content.Len - 1], content.AsSpan()[(int)content.Len - 2], content.AsSpan()[(int)content.Len - 3]);
+            // return content;
         }
 
         /// <summary>

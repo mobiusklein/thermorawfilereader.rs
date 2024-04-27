@@ -42,6 +42,8 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using librawfilereader;
+
 
 #if ENABLE_SPAN_T && (UNSAFE_BYTEBUFFER || NETSTANDARD2_1)
 using System.Buffers.Binary;
@@ -61,6 +63,8 @@ namespace Google.FlatBuffers
         public abstract Memory<byte> Memory { get; }
         public abstract ReadOnlyMemory<byte> ReadOnlyMemory { get; }
 
+        public abstract RawVec RawVec { get; }
+
 #else
         public byte[] Buffer
         {
@@ -76,6 +80,39 @@ namespace Google.FlatBuffers
         }
 
         public abstract void GrowFront(int newSize);
+    }
+
+    public sealed class RawVecAllocator : ByteBufferAllocator {
+        private RawVec _buffer;
+
+        public RawVecAllocator(nuint capacity) {
+            _buffer = RawVec.Allocate(capacity);
+            InitBuffer();
+        }
+
+        private void InitBuffer()
+        {
+            Length = (int)_buffer.Len;
+        }
+
+        public override Span<byte> Span => _buffer.AsSpan();
+        public override ReadOnlySpan<byte> ReadOnlySpan => _buffer.AsReadOnlySpan();
+        public override Memory<byte> Memory => _buffer.ToMemory();
+        public override ReadOnlyMemory<byte> ReadOnlyMemory => _buffer.ToReadOnlyMemory();
+        public override RawVec RawVec => _buffer;
+
+        public override void GrowFront(int newSize)
+        {
+            if ((Length & 0xC0000000) != 0)
+                throw new Exception(
+                    "ByteBuffer: cannot grow buffer beyond 2 gigabytes.");
+
+            if (newSize < Length)
+                throw new Exception("ByteBuffer: cannot truncate buffer.");
+
+            _buffer.ResizeEnd((nuint)newSize);
+            InitBuffer();
+        }
     }
 
     public sealed class ByteArrayAllocator : ByteBufferAllocator
@@ -108,6 +145,7 @@ namespace Google.FlatBuffers
         public override ReadOnlySpan<byte> ReadOnlySpan => _buffer;
         public override Memory<byte> Memory => _buffer;
         public override ReadOnlyMemory<byte> ReadOnlyMemory => _buffer;
+        public override RawVec RawVec => RawVec.FromArray(_buffer);
 #endif
 
         private void InitBuffer()
@@ -133,7 +171,11 @@ namespace Google.FlatBuffers
             _pos = position;
         }
 
-        public ByteBuffer(int size) : this(new byte[size]) { }
+        public ByteBuffer(int size) {
+            Console.WriteLine("Using RawVecAllocator with initial size {0}", size);
+            _buffer = new RawVecAllocator((nuint)size);
+            _pos = 0;
+         }
 
         public ByteBuffer(byte[] buffer) : this(buffer, 0) { }
 
@@ -288,6 +330,15 @@ namespace Google.FlatBuffers
         public Span<byte> ToSpan(int pos, int len)
         {
             return _buffer.Span.Slice(pos, len);
+        }
+
+        /// <summary>
+        /// Retrieve a RawVec representation of the buffer. This may be the owning representation, not a copy,
+        /// and the caller should assume they no longer control that buffer.
+        /// </summary>
+        /// <returns>RawVec holding the entire buffer</returns>
+        public RawVec RawVec() {
+            return _buffer.RawVec;
         }
 #else
         public ArraySegment<byte> ToArraySegment(int pos, int len)
@@ -652,7 +703,7 @@ namespace Google.FlatBuffers
             // that contains it.
             ConversionUnion union;
             union.intValue = 0;
-            union.floatValue = value;    
+            union.floatValue = value;
             WriteLittleEndian(offset, sizeof(float), (ulong)union.intValue);
         }
 
@@ -765,7 +816,7 @@ namespace Google.FlatBuffers
 #if ENABLE_SPAN_T // && UNSAFE_BYTEBUFFER
             ReadOnlySpan<byte> span = _buffer.ReadOnlySpan.Slice(offset);
             return BinaryPrimitives.ReadUInt64LittleEndian(span);
-#else            
+#else
             fixed (byte* ptr = _buffer.Buffer)
             {
                 return BitConverter.IsLittleEndian
@@ -885,16 +936,16 @@ namespace Google.FlatBuffers
         }
 
         /// <summary>
-        /// Copies an array segment of type T into this buffer, ending at the 
-        /// given offset into this buffer. The starting offset is calculated 
+        /// Copies an array segment of type T into this buffer, ending at the
+        /// given offset into this buffer. The starting offset is calculated
         /// based on the count of the array segment and is the value returned.
         /// </summary>
         /// <typeparam name="T">The type of the input data (must be a struct)
         /// </typeparam>
-        /// <param name="offset">The offset into this buffer where the copy 
+        /// <param name="offset">The offset into this buffer where the copy
         /// will end</param>
         /// <param name="x">The array segment to copy data from</param>
-        /// <returns>The 'start' location of this buffer now, after the copy 
+        /// <returns>The 'start' location of this buffer now, after the copy
         /// completed</returns>
         public int Put<T>(int offset, ArraySegment<T> x)
             where T : struct
@@ -942,17 +993,17 @@ namespace Google.FlatBuffers
         }
 
         /// <summary>
-        /// Copies an array segment of type T into this buffer, ending at the 
-        /// given offset into this buffer. The starting offset is calculated 
+        /// Copies an array segment of type T into this buffer, ending at the
+        /// given offset into this buffer. The starting offset is calculated
         /// based on the count of the array segment and is the value returned.
         /// </summary>
         /// <typeparam name="T">The type of the input data (must be a struct)
         /// </typeparam>
-        /// <param name="offset">The offset into this buffer where the copy 
+        /// <param name="offset">The offset into this buffer where the copy
         /// will end</param>
         /// <param name="ptr">The pointer to copy data from</param>
         /// <param name="sizeInBytes">The number of bytes to copy</param>
-        /// <returns>The 'start' location of this buffer now, after the copy 
+        /// <returns>The 'start' location of this buffer now, after the copy
         /// completed</returns>
         public int Put<T>(int offset, IntPtr ptr, int sizeInBytes)
             where T : struct
@@ -980,7 +1031,7 @@ namespace Google.FlatBuffers
                 // if we are LE, just do a block copy
 #if ENABLE_SPAN_T && UNSAFE_BYTEBUFFER
                 unsafe
-                { 
+                {
                     var span = new Span<byte>(ptr.ToPointer(), sizeInBytes);
                     span.CopyTo(_buffer.Span.Slice(offset, sizeInBytes));
                 }
