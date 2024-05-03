@@ -721,11 +721,25 @@ impl RawFileReader {
         let buf = descr_fn(self.raw_file_reader, index as i32);
         root::<InstrumentMethodT>(&buf).unwrap();
         let method = InstrumentMethod::new(buf);
-        if method.text().is_none() {
+        if method.text().is_none() || method.text().is_some_and(|s| s.is_empty()) {
             None
         } else {
             Some(method)
         }
+    }
+
+    /// Get the number of instrument methods that are present in the file
+    pub fn instrument_method_count(&self) -> usize {
+        self.validate_impl();
+        let descr_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> u32>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("InstrumentMethodCount"),
+            )
+            .unwrap();
+        let n = descr_fn(self.raw_file_reader);
+        n as usize
     }
 
     /// Read the total ion current chromatogram spanning the entire MS run

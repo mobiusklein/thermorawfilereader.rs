@@ -636,6 +636,11 @@ namespace librawfilereader
             return builder.DataBuffer;
         }
 
+        public uint GetInstrumentMethodCount()  {
+            var accessor = GetHandle();
+            return (uint)accessor.InstrumentMethodsCount;
+        }
+
         public ByteBuffer GetInstrumentMethodFor(int method) {
             var accessor = GetHandle();
             string methodText = accessor.GetInstrumentMethod(method);
@@ -1179,6 +1184,12 @@ namespace librawfilereader
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
             return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_instrument_method_count")]
+        public static unsafe uint InstrumentMethodCount(IntPtr handleToken) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            return reader.GetInstrumentMethodCount();
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_tic")]
