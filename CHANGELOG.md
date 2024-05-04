@@ -5,16 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
-## [0.2.4] - 2024-05-04
-
-### Added
-
-- Add instrument_method_count and fix instrument_method invariant
-
-### Changed
-
-- Version bump
-
 ## [0.2.3] - 2024-04-18
 
 ### Fixed
@@ -47,8 +37,7 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.4...HEAD
-[0.2.4]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.4
+[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.3...HEAD
 [0.2.3]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.3
 [0.2.2]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.2
 [0.2.1]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.1

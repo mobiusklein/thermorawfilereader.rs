@@ -60,7 +60,6 @@ commit_parsers = [
   { message = "^test", group = "Fixed" },
   { message = "^fix", group = "Fixed" },
   { message = "^.*: fix", group = "Fixed" },
-  { message = "^.*", group = "Changed" },
 ]
 # protect breaking changes from being skipped due to matching a skipping commit_parser
 protect_breaking_commits = false
