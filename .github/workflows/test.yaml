@@ -25,11 +25,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - name: Setup just
-        uses: extractions/setup-just@v2
-      - name: "Compile .NET Bundle"
-        run: |
-          just bundle
+
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
