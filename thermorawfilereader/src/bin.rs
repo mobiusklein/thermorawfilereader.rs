@@ -15,6 +15,10 @@ pub fn main() -> io::Result<()> {
         println!("Instrument Model: {}", s);
     });
 
+    instrument.configurations().enumerate().for_each(|(i, c)| {
+        println!("Conf {i}: {c}")
+    });
+
     let start = time::Instant::now();
     if target < 0 {
         handle.set_signal_loading(false);

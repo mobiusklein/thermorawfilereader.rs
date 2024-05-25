@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.Interfaces;
 using ThermoFisher.CommonCore.RawFileReader;
+using ThermoFisher.CommonCore.Data.FilterEnums;
 
 using Google.FlatBuffers;
-using ThermoFisher.CommonCore.Data.FilterEnums;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
@@ -53,6 +53,7 @@ namespace librawfilereader
         public double LowMZ;
         public double HighMZ;
         public int ScanEventNumber;
+        public float? Resolution;
 
         public static MassAnalyzer CastMassAnalyzer(MassAnalyzerType analyzer)
         {
@@ -98,7 +99,7 @@ namespace librawfilereader
             return (IonizationMode)value;
         }
 
-        public AcquisitionProperties(double injectionTime, double? compensationVoltage, MassAnalyzerType analyzer, double lowMZ, double highMZ, int scanEventNumber)
+        public AcquisitionProperties(double injectionTime, double? compensationVoltage, MassAnalyzerType analyzer, double lowMZ, double highMZ, int scanEventNumber, float? resolution)
         {
             InjectionTime = injectionTime;
             CompensationVoltage = compensationVoltage;
@@ -106,6 +107,7 @@ namespace librawfilereader
             LowMZ = lowMZ;
             HighMZ = highMZ;
             ScanEventNumber = scanEventNumber;
+            Resolution = resolution;
         }
     }
 
@@ -338,6 +340,9 @@ namespace librawfilereader
             "MS10 Isolation Width"
         ];
 
+        private static readonly string OrbitrapResolutionKey = "Orbitrap Resolution";
+        private static readonly string FTResolutionKey = "FT Resolution";
+
         bool GetShortTrailerExtraFor(IRawDataPlus accessor, int scanNumber, string key, out short value)
         {
             object tmp;
@@ -478,6 +483,8 @@ namespace librawfilereader
             double injectionTime = 0.0;
             int masterScanNumber = -1;
             short scanEventNum = 1;
+            double resolution = 0.0;
+            float? resolution_opt = null;
 
             GetDoubleTrailerExtraFor(accessor, scanNumber, InjectionTimeKey, out injectionTime);
             GetShortTrailerExtraFor(accessor, scanNumber, ScanEventKey, out scanEventNum);
@@ -490,7 +497,12 @@ namespace librawfilereader
                 GetDoubleTrailerExtraFor(accessor, scanNumber, IsolationLevelKeys[msLevel - 2], out isolationWidth);
             }
 
-            AcquisitionProperties acquisitionProperties = new AcquisitionProperties(injectionTime, null, filter.MassAnalyzer, stats.LowMass, stats.HighMass, scanEventNum);
+            if (!GetDoubleTrailerExtraFor(accessor, scanNumber, OrbitrapResolutionKey, out resolution)) {
+                GetDoubleTrailerExtraFor(accessor, scanNumber, FTResolutionKey, out resolution);
+            };
+            resolution_opt = resolution == 0.0 ? null : (float)resolution;
+
+            AcquisitionProperties acquisitionProperties = new AcquisitionProperties(injectionTime, null, filter.MassAnalyzer, stats.LowMass, stats.HighMass, scanEventNum, resolution_opt);
 
             if (filter.CompensationVoltage == TriState.On)
             {
@@ -621,7 +633,6 @@ namespace librawfilereader
             foreach (var ((analyzer, ionizer), i) in InstrumentConfigsByComponents)
             {
                 var conf = InstrumentConfigurationT.CreateInstrumentConfigurationT(builder, analyzer, ionizer);
-
             }
             var confOffsets = builder.EndVector();
             InstrumentModelT.StartInstrumentModelT(builder);
@@ -741,6 +752,9 @@ namespace librawfilereader
             AcquisitionT.AddMassAnalyzer(builder, acquisitionProperties.Analyzer);
             AcquisitionT.AddScanEvent(builder, acquisitionProperties.ScanEventNumber);
             AcquisitionT.AddIonizationMode(builder, AcquisitionProperties.CastIonizationMode(filter.IonizationMode));
+            if (acquisitionProperties.Resolution.HasValue) {
+                AcquisitionT.AddResolution(builder, acquisitionProperties.Resolution.Value);
+            }
             var acquisitionOffset = AcquisitionT.EndAcquisitionT(builder);
             return acquisitionOffset;
         }

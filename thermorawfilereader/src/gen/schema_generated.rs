@@ -2114,6 +2114,7 @@ impl<'a> AcquisitionT<'a> {
   pub const VT_MASS_ANALYZER: flatbuffers::VOffsetT = 12;
   pub const VT_SCAN_EVENT: flatbuffers::VOffsetT = 14;
   pub const VT_IONIZATION_MODE: flatbuffers::VOffsetT = 16;
+  pub const VT_RESOLUTION: flatbuffers::VOffsetT = 18;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -2127,6 +2128,7 @@ impl<'a> AcquisitionT<'a> {
     let mut builder = AcquisitionTBuilder::new(_fbb);
     builder.add_high_mz(args.high_mz);
     builder.add_low_mz(args.low_mz);
+    if let Some(x) = args.resolution { builder.add_resolution(x); }
     builder.add_scan_event(args.scan_event);
     if let Some(x) = args.compensation_voltage { builder.add_compensation_voltage(x); }
     builder.add_injection_time(args.injection_time);
@@ -2185,6 +2187,13 @@ impl<'a> AcquisitionT<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<IonizationMode>(AcquisitionT::VT_IONIZATION_MODE, Some(IonizationMode::NanoSpray)).unwrap()}
   }
+  #[inline]
+  pub fn resolution(&self) -> Option<f32> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(AcquisitionT::VT_RESOLUTION, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for AcquisitionT<'_> {
@@ -2201,6 +2210,7 @@ impl flatbuffers::Verifiable for AcquisitionT<'_> {
      .visit_field::<MassAnalyzer>("mass_analyzer", Self::VT_MASS_ANALYZER, false)?
      .visit_field::<i32>("scan_event", Self::VT_SCAN_EVENT, false)?
      .visit_field::<IonizationMode>("ionization_mode", Self::VT_IONIZATION_MODE, false)?
+     .visit_field::<f32>("resolution", Self::VT_RESOLUTION, false)?
      .finish();
     Ok(())
   }
@@ -2213,6 +2223,7 @@ pub struct AcquisitionTArgs {
     pub mass_analyzer: MassAnalyzer,
     pub scan_event: i32,
     pub ionization_mode: IonizationMode,
+    pub resolution: Option<f32>,
 }
 impl<'a> Default for AcquisitionTArgs {
   #[inline]
@@ -2225,6 +2236,7 @@ impl<'a> Default for AcquisitionTArgs {
       mass_analyzer: MassAnalyzer::FTMS,
       scan_event: 1,
       ionization_mode: IonizationMode::NanoSpray,
+      resolution: None,
     }
   }
 }
@@ -2263,6 +2275,10 @@ impl<'a: 'b, 'b> AcquisitionTBuilder<'a, 'b> {
     self.fbb_.push_slot::<IonizationMode>(AcquisitionT::VT_IONIZATION_MODE, ionization_mode, IonizationMode::NanoSpray);
   }
   #[inline]
+  pub fn add_resolution(&mut self, resolution: f32) {
+    self.fbb_.push_slot_always::<f32>(AcquisitionT::VT_RESOLUTION, resolution);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> AcquisitionTBuilder<'a, 'b> {
     let start = _fbb.start_table();
     AcquisitionTBuilder {
@@ -2287,6 +2303,7 @@ impl core::fmt::Debug for AcquisitionT<'_> {
       ds.field("mass_analyzer", &self.mass_analyzer());
       ds.field("scan_event", &self.scan_event());
       ds.field("ionization_mode", &self.ionization_mode());
+      ds.field("resolution", &self.resolution());
       ds.finish()
   }
 }
