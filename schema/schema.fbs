@@ -188,6 +188,7 @@ table AcquisitionT {
     scan_event: int32 = 1;
     // The ionization mechanism used for this spectrum
     ionization_mode: IonizationMode = NanoSpray;
+    resolution: float32 = null;
 }
 
 table SpectrumDescription {

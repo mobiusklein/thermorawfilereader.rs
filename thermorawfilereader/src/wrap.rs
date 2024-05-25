@@ -285,6 +285,12 @@ pub struct InstrumentConfiguration {
     pub ionization_mode: IonizationMode
 }
 
+impl Display for InstrumentConfiguration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self:?}")
+    }
+}
+
 impl InstrumentModel {
     /// Create a new [`InstrumentModel`] by wrapping an owning memory buffer
     pub fn new(data: RawVec<u8>) -> Self {
@@ -534,6 +540,11 @@ impl<'a> Acquisition<'a> {
     #[inline(always)]
     pub fn ionization_mode(&self) -> IonizationMode {
         self.data.ionization_mode().0.into()
+    }
+
+    #[inline(always)]
+    pub fn resolution(&self) -> Option<f32> {
+        self.data.resolution()
     }
 }
 
