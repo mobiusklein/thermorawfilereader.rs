@@ -355,34 +355,40 @@ namespace librawfilereader
                 header = Headers[headerIdx];
                 if (tmp != null)
                 {
-                    switch (header.DataType)
-                    {
-                        case GenericDataTypes.SHORT:
-                            {
-                                value = (short)tmp;
-                                return true;
-                            }
-                        case GenericDataTypes.LONG:
-                            {
-                                value = (short)(long)tmp;
-                                return true;
-                            }
-                        case GenericDataTypes.ULONG:
-                            {
-                                value = (short)(ulong)tmp;
-                                return true;
-                            }
-                        case GenericDataTypes.USHORT:
-                            {
-                                value = (short)(ushort)tmp;
-                                return true;
-                            }
-                        default:
-                            {
-                                value = Convert.ToInt16(tmp);
-                                return true;
-                            }
+                    try {
+                        switch (header.DataType)
+                        {
+                            case GenericDataTypes.SHORT:
+                                {
+                                    value = (short)tmp;
+                                    return true;
+                                }
+                            case GenericDataTypes.LONG:
+                                {
+                                    value = Convert.ToInt16(tmp);
+                                    return true;
+                                }
+                            case GenericDataTypes.ULONG:
+                                {
+                                    value = Convert.ToInt16(tmp);
+                                    return true;
+                                }
+                            case GenericDataTypes.USHORT:
+                                {
+                                    value = (short)(ushort)tmp;
+                                    return true;
+                                }
+                            default:
+                                {
+                                    value = Convert.ToInt16(tmp);
+                                    return true;
+                                }
+                        }
+                    } catch (InvalidCastException) {
+                        value = Convert.ToInt16(tmp);
+                        return true;
                     }
+
                 }
             }
             value = 0;
@@ -402,33 +408,39 @@ namespace librawfilereader
                 header = Headers[headerIdx];
                 if (tmp != null)
                 {
-                    switch (header.DataType)
-                    {
-                        case GenericDataTypes.SHORT:
-                            {
-                                value = (short)tmp;
-                                return true;
-                            }
-                        case GenericDataTypes.LONG:
-                            {
-                                value = (int)(long)tmp;
-                                return true;
-                            }
-                        case GenericDataTypes.ULONG:
-                            {
-                                value = (int)(ulong)tmp;
-                                return true;
-                            }
-                        case GenericDataTypes.USHORT:
-                            {
-                                value = (ushort)tmp;
-                                return true;
-                            }
-                        default:
-                            {
-                                value = Convert.ToInt32(tmp);
-                                return true;
-                            }
+                    try {
+                        switch (header.DataType)
+                        {
+                            case GenericDataTypes.SHORT:
+                                {
+                                    value = (short)tmp;
+                                    return true;
+                                }
+                            case GenericDataTypes.LONG:
+                                {
+                                    value = (int)(long)tmp;
+                                    return true;
+                                }
+                            case GenericDataTypes.ULONG:
+                                {
+                                    value = (int)(ulong)tmp;
+                                    return true;
+                                }
+                            case GenericDataTypes.USHORT:
+                                {
+                                    value = (ushort)tmp;
+                                    return true;
+                                }
+                            default:
+                                {
+                                    value = Convert.ToInt32(tmp);
+                                    return true;
+                                }
+                        }
+                    }
+                    catch (InvalidCastException) {
+                        value = Convert.ToInt32(tmp);
+                        return true;
                     }
                 }
             }
@@ -447,24 +459,28 @@ namespace librawfilereader
                 header = Headers[headerIdx];
                 if (tmp != null)
                 {
-                    switch (header.DataType)
-                    {
-                        case GenericDataTypes.FLOAT:
-                            {
-                                value = (float)tmp;
-                                return true;
-                            }
-                        case GenericDataTypes.DOUBLE:
-                            {
-                                value = (double)tmp;
-                                return true;
-                            };
-                        default:
-                            {
-                                value = Convert.ToDouble(tmp);
-                                return true;
-
-                            }
+                    try {
+                        switch (header.DataType)
+                        {
+                            case GenericDataTypes.FLOAT:
+                                {
+                                    value = (float)tmp;
+                                    return true;
+                                }
+                            case GenericDataTypes.DOUBLE:
+                                {
+                                    value = (double)tmp;
+                                    return true;
+                                };
+                            default:
+                                {
+                                    value = Convert.ToDouble(tmp);
+                                    return true;
+                                }
+                        }
+                    } catch (InvalidCastException) {
+                        value = Convert.ToDouble(tmp);
+                        return true;
                     }
                 }
             }
