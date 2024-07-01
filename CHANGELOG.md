@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
+## [0.2.6] - 2024-07-01
+
+### Fixed
+
+- Replace outdated `tempdir` dependency  with `tempfile`
+
 ## [0.2.5] - 2024-05-27
 
 ### Added
@@ -57,8 +63,9 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.5...HEAD
-[0.2.5]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.5
+[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.5...v0.2.6
+[0.2.5]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.4
 [0.2.3]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.3
 [0.2.2]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.2
