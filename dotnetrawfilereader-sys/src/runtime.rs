@@ -12,7 +12,7 @@ use std::path::{self, Path, PathBuf};
 use std::sync::{Arc, OnceLock, RwLock};
 
 use include_dir::{include_dir, Dir};
-use tempdir::TempDir;
+use tempfile::{TempDir, Builder as TempDirBuilder};
 
 use netcorehost::{hostfxr::AssemblyDelegateLoader, nethost, pdcstring::PdCString};
 
@@ -88,7 +88,7 @@ impl DotNetLibraryBundle {
                 }
                 Ok(BundleStore::Path(pathbuf))
             }).unwrap_or_else(|_| {
-                Ok(BundleStore::TempDir(TempDir::new(TMP_NAME)?))
+                Ok(BundleStore::TempDir(TempDirBuilder::new().prefix(TMP_NAME).tempdir()?))
             })?
         };
         Ok(Self {
