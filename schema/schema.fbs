@@ -156,6 +156,21 @@ table SpectrumData {
     intensity: [float32];
 }
 
+table BaselineNoiseDataT {
+    mass: [float64];
+    noise: [float32];
+    baseline: [float32];
+}
+
+table TrailerValueT {
+    label: string;
+    value: string;
+}
+
+table TrailerValuesT {
+    trailers: [TrailerValueT];
+}
+
 struct PrecursorT {
     mz: float64;
     intensity: float32;

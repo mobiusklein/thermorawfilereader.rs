@@ -19,6 +19,14 @@ pub fn main() -> io::Result<()> {
         println!("Conf {i}: {c}")
     });
 
+    let file_descr = handle.file_description();
+    if let Some(headers) = file_descr.trailer_headers() {
+        println!("Trailer Names");
+        headers.iter().for_each(|h| {
+            println!("\t{h}");
+        });
+    }
+
     let start = time::Instant::now();
     if target < 0 {
         handle.set_signal_loading(false);
@@ -35,6 +43,16 @@ pub fn main() -> io::Result<()> {
         println!("Found {data_points} points");
     } else {
         handle.describe(target as usize);
+        let dta = handle.get_baseline_noise(target as usize).unwrap();
+        let noise = dta.noise();
+        handle.set_centroid_spectra(true);
+        let spec = handle.get(target as usize).unwrap();
+        println!("{} peaks, {} noise points", spec.data().unwrap().len(), noise.len());
+
+        // spec.data().unwrap().into_iter().for_each(|(mz, int)| {
+        //     println!("{mz}\t{int}")
+        // })
+
     }
     let end = time::Instant::now();
     println!("{:03} seconds", (end - start).as_secs_f32());

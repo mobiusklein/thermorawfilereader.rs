@@ -1943,6 +1943,348 @@ impl core::fmt::Debug for SpectrumData<'_> {
       ds.finish()
   }
 }
+pub enum BaselineNoiseDataTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct BaselineNoiseDataT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for BaselineNoiseDataT<'a> {
+  type Inner = BaselineNoiseDataT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> BaselineNoiseDataT<'a> {
+  pub const VT_MASS: flatbuffers::VOffsetT = 4;
+  pub const VT_NOISE: flatbuffers::VOffsetT = 6;
+  pub const VT_BASELINE: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    BaselineNoiseDataT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args BaselineNoiseDataTArgs<'args>
+  ) -> flatbuffers::WIPOffset<BaselineNoiseDataT<'bldr>> {
+    let mut builder = BaselineNoiseDataTBuilder::new(_fbb);
+    if let Some(x) = args.baseline { builder.add_baseline(x); }
+    if let Some(x) = args.noise { builder.add_noise(x); }
+    if let Some(x) = args.mass { builder.add_mass(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn mass(&self) -> Option<flatbuffers::Vector<'a, f64>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(BaselineNoiseDataT::VT_MASS, None)}
+  }
+  #[inline]
+  pub fn noise(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(BaselineNoiseDataT::VT_NOISE, None)}
+  }
+  #[inline]
+  pub fn baseline(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(BaselineNoiseDataT::VT_BASELINE, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for BaselineNoiseDataT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("mass", Self::VT_MASS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("noise", Self::VT_NOISE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("baseline", Self::VT_BASELINE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct BaselineNoiseDataTArgs<'a> {
+    pub mass: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
+    pub noise: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+    pub baseline: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+}
+impl<'a> Default for BaselineNoiseDataTArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    BaselineNoiseDataTArgs {
+      mass: None,
+      noise: None,
+      baseline: None,
+    }
+  }
+}
+
+pub struct BaselineNoiseDataTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> BaselineNoiseDataTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_mass(&mut self, mass: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BaselineNoiseDataT::VT_MASS, mass);
+  }
+  #[inline]
+  pub fn add_noise(&mut self, noise: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BaselineNoiseDataT::VT_NOISE, noise);
+  }
+  #[inline]
+  pub fn add_baseline(&mut self, baseline: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BaselineNoiseDataT::VT_BASELINE, baseline);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> BaselineNoiseDataTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    BaselineNoiseDataTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<BaselineNoiseDataT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for BaselineNoiseDataT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("BaselineNoiseDataT");
+      ds.field("mass", &self.mass());
+      ds.field("noise", &self.noise());
+      ds.field("baseline", &self.baseline());
+      ds.finish()
+  }
+}
+pub enum TrailerValueTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct TrailerValueT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for TrailerValueT<'a> {
+  type Inner = TrailerValueT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> TrailerValueT<'a> {
+  pub const VT_LABEL: flatbuffers::VOffsetT = 4;
+  pub const VT_VALUE: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    TrailerValueT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args TrailerValueTArgs<'args>
+  ) -> flatbuffers::WIPOffset<TrailerValueT<'bldr>> {
+    let mut builder = TrailerValueTBuilder::new(_fbb);
+    if let Some(x) = args.value { builder.add_value(x); }
+    if let Some(x) = args.label { builder.add_label(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn label(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(TrailerValueT::VT_LABEL, None)}
+  }
+  #[inline]
+  pub fn value(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(TrailerValueT::VT_VALUE, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for TrailerValueT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("label", Self::VT_LABEL, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("value", Self::VT_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct TrailerValueTArgs<'a> {
+    pub label: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub value: Option<flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for TrailerValueTArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    TrailerValueTArgs {
+      label: None,
+      value: None,
+    }
+  }
+}
+
+pub struct TrailerValueTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> TrailerValueTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_label(&mut self, label: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(TrailerValueT::VT_LABEL, label);
+  }
+  #[inline]
+  pub fn add_value(&mut self, value: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(TrailerValueT::VT_VALUE, value);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> TrailerValueTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    TrailerValueTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<TrailerValueT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for TrailerValueT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("TrailerValueT");
+      ds.field("label", &self.label());
+      ds.field("value", &self.value());
+      ds.finish()
+  }
+}
+pub enum TrailerValuesTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct TrailerValuesT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for TrailerValuesT<'a> {
+  type Inner = TrailerValuesT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> TrailerValuesT<'a> {
+  pub const VT_TRAILERS: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    TrailerValuesT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args TrailerValuesTArgs<'args>
+  ) -> flatbuffers::WIPOffset<TrailerValuesT<'bldr>> {
+    let mut builder = TrailerValuesTBuilder::new(_fbb);
+    if let Some(x) = args.trailers { builder.add_trailers(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn trailers(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TrailerValueT<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TrailerValueT>>>>(TrailerValuesT::VT_TRAILERS, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for TrailerValuesT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<TrailerValueT>>>>("trailers", Self::VT_TRAILERS, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct TrailerValuesTArgs<'a> {
+    pub trailers: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TrailerValueT<'a>>>>>,
+}
+impl<'a> Default for TrailerValuesTArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    TrailerValuesTArgs {
+      trailers: None,
+    }
+  }
+}
+
+pub struct TrailerValuesTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> TrailerValuesTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_trailers(&mut self, trailers: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<TrailerValueT<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(TrailerValuesT::VT_TRAILERS, trailers);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> TrailerValuesTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    TrailerValuesTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<TrailerValuesT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for TrailerValuesT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("TrailerValuesT");
+      ds.field("trailers", &self.trailers());
+      ds.finish()
+  }
+}
 pub enum InstrumentMethodTOffset {}
 #[derive(Copy, Clone, PartialEq)]
 

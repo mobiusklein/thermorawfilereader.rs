@@ -11,6 +11,7 @@ using Google.FlatBuffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
+using ThermoFisher.CommonCore.Data;
 
 namespace librawfilereader
 {
@@ -717,6 +718,53 @@ namespace librawfilereader
             return offset;
         }
 
+        public ByteBuffer GetAdvancedPacketData(int scanNumber) {
+            var accessor = GetHandle();
+            var packetData = accessor.GetAdvancedPacketData(scanNumber);
+            var noiseData = packetData.NoiseData;
+            FlatBufferBuilder builder = new FlatBufferBuilder(1024);
+            BaselineNoiseDataT.StartNoiseVector(builder, noiseData.Length);
+            foreach(var b in noiseData.Reverse()) {
+                builder.AddFloat(b.Noise);
+            }
+            var noiseOffset = builder.EndVector();
+
+            BaselineNoiseDataT.StartBaselineVector(builder, noiseData.Length);
+            foreach (var b in noiseData.Reverse())
+            {
+                builder.AddFloat(b.Baseline);
+            }
+            var baselineOffset = builder.EndVector();
+
+            BaselineNoiseDataT.StartMassVector(builder, noiseData.Length);
+            foreach (var b in noiseData.Reverse())
+            {
+                builder.AddDouble(b.Mass);
+            }
+            var massOffset = builder.EndVector();
+
+            BaselineNoiseDataT.StartBaselineNoiseDataT(builder);
+            BaselineNoiseDataT.AddNoise(builder, noiseOffset);
+            BaselineNoiseDataT.AddBaseline(builder, baselineOffset);
+            BaselineNoiseDataT.AddMass(builder, massOffset);
+
+            var offset = BaselineNoiseDataT.EndBaselineNoiseDataT(builder);
+            builder.Finish(offset.Value);
+            return builder.DataBuffer;
+        }
+
+        // TODO
+        public void CollectTrailers(int scanNumber) {
+            var accessor = GetHandle();
+            var trailers = accessor.GetTrailerExtraInformation(scanNumber);
+
+            FlatBufferBuilder builder = new FlatBufferBuilder(1024);
+
+            for(var i = 0; i < trailers.Length; i++) {
+
+            }
+        }
+
         public ByteBuffer GetSummaryTrace(TraceType traceType) {
             var accessor = GetHandle();
             var ticSettings = new ChromatogramTraceSettings(traceType);
@@ -1028,7 +1076,7 @@ namespace librawfilereader
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_open")]
         public static unsafe IntPtr Open(IntPtr textPtr, int textLength)
         {
-            var text = Marshal.PtrToStringAnsi(textPtr, textLength);
+            var text = Marshal.PtrToStringUTF8(textPtr, textLength);
             var handle = new RawFileReader(text);
             IntPtr handleToken;
             lock (OpenHandles)
@@ -1178,6 +1226,15 @@ namespace librawfilereader
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             var buffer = reader.SpectrumDescriptionFor(scanNumber, includeSignal != 0, centroidSpectra != 0);
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
+            var size = bytes.Length;
+            return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_advanced_packet_data_for")]
+        public static unsafe RawVec AdvancedPacketDataFor(IntPtr handleToken, int scanNumber) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var buffer = reader.GetAdvancedPacketData(scanNumber);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
             return MemoryToRustVec(bytes, (nuint)size);

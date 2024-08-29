@@ -8,7 +8,7 @@ use std::{io, ptr};
 use netcorehost::hostfxr::ManagedFunction;
 use netcorehost::{hostfxr::AssemblyDelegateLoader, pdcstr};
 
-use flatbuffers::{root, Vector};
+use flatbuffers::{root, root_unchecked, Vector};
 
 use dotnetrawfilereader_sys::{get_runtime, RawVec};
 
@@ -17,7 +17,8 @@ use crate::schema::{
     root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
     ChromatogramDescription as ChromatogramDescriptionT, FileDescriptionT,
     InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT,
-    SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode
+    SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode,
+    BaselineNoiseDataT
 };
 
 #[repr(u32)]
@@ -118,6 +119,39 @@ impl<'a> IntoIterator for SpectrumData<'a> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+
+
+pub struct BaselineNoiseData {
+    data: RawVec<u8>
+}
+
+impl BaselineNoiseData {
+    pub fn new(data: RawVec<u8>) -> Self {
+        Self { data }
+    }
+
+    /// Check that the buffer is a valid `BaselineNoiseData`
+    pub fn check(&self) -> bool {
+        root::<BaselineNoiseDataT>(&self.data).is_ok()
+    }
+
+    /// View the underlying buffer as a `BaselineNoiseData`
+    pub fn view(&self) -> BaselineNoiseDataT {
+        unsafe { root_unchecked::<BaselineNoiseDataT>(&self.data) }
+    }
+
+    pub fn noise(&self) -> Vector<'_, f32> {
+        self.view().noise().unwrap()
+    }
+
+    pub fn baseline(&self) -> Vector<'_, f32> {
+        self.view().baseline().unwrap()
+    }
+
+    pub fn mass(&self) -> Vector<'_, f64> {
+        self.view().mass().unwrap()
     }
 }
 
@@ -398,7 +432,7 @@ impl FileDescription {
     }
 
     /// Trailer headers for the RAW file.
-    pub fn trailer_headers(&self) -> Option<Vector<'static, flatbuffers::ForwardsUOffset<&str>>> {
+    pub fn trailer_headers(&self) -> Option<Vector<'_, flatbuffers::ForwardsUOffset<&str>>> {
         self.view().trailer_headers()
     }
 }
@@ -850,6 +884,23 @@ impl RawFileReader {
         Some(RawSpectrum::new(buffer))
     }
 
+    pub fn get_baseline_noise(&self, index: usize) -> Option<BaselineNoiseData> {
+        if index >= self.len() {
+            return None;
+        }
+        self.validate_impl();
+
+        let buffer_fn = self.context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("AdvancedPacketDataFor"),
+            )
+            .unwrap();
+
+        let buff = buffer_fn(self.raw_file_reader, (index as i32) + 1);
+        Some(BaselineNoiseData::new(buff))
+    }
+
     /// A utility for debugging, get a spectrum and access some of its fields, printing them
     /// to `STDOUT`
     pub fn describe(&self, index: usize) {
@@ -1092,6 +1143,18 @@ mod test {
         let fd = handle.file_description();
         assert_eq!(fd.sample_id(), Some("1"));
         assert_eq!(fd.source_file(), Some("../tests/data/small.RAW"));
+        let counts = fd.spectra_per_ms_level().unwrap();
+        assert_eq!(counts.get(0), 14);
+        assert_eq!(counts.get(1), 34);
+        Ok(())
+    }
+
+    #[test]
+    fn test_open_unicode_filename() -> io::Result<()> {
+        let handle = RawFileReader::open("../tests/data/small_µ.RAW")?;
+        let fd = handle.file_description();
+        assert_eq!(fd.sample_id(), Some("1"));
+        assert_eq!(fd.source_file(), Some("../tests/data/small_µ.RAW"));
         let counts = fd.spectra_per_ms_level().unwrap();
         assert_eq!(counts.get(0), 14);
         assert_eq!(counts.get(1), 34);
