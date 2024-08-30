@@ -2,9 +2,9 @@
 1f1873824be022e558863203985e125a *dotnetrawfilereader-sys/lib/ThermoFisher.CommonCore.Data.dll
 2f759eb1d65e92ff6e3da7a7f9f87631 *dotnetrawfilereader-sys/lib/librawfilereader.runtimeconfig.json
 3730cf820500fc8e614e5ac7902aad19 *dotnetrawfilereader-sys/lib/ThermoFisher.CommonCore.BackgroundSubtraction.dll
-5b2b8e7976d82906223c4b97d6389f7b *dotnetrawfilereader-sys/lib/librawfilereader.dll
+8f739707b7dc8fc873659020ba759d92 *dotnetrawfilereader-sys/lib/librawfilereader.pdb
 9619dec910d3fe78fe4adfa61ed23a40 *dotnetrawfilereader-sys/lib/librawfilereader.deps.json
-ae3bb4da4213b16e8add8439a838c2fe *dotnetrawfilereader-sys/lib/librawfilereader.pdb
 d3f0c37e9712f80319c7c8a2fb189ee1 *dotnetrawfilereader-sys/lib/ThermoFisher.CommonCore.RawFileReader.dll
+df95bc126a9c679efc5495f0c182d0ec *dotnetrawfilereader-sys/lib/librawfilereader.dll
 e3f54f0ec58158a9edf08858f6279fe5 *dotnetrawfilereader-sys/lib/OpenMcdf.Extensions.dll
 fd43dbfef5c06aa572a5341115c58998 *dotnetrawfilereader-sys/lib/OpenMcdf.dll

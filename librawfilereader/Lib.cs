@@ -753,16 +753,27 @@ namespace librawfilereader
             return builder.DataBuffer;
         }
 
-        // TODO
-        public void CollectTrailers(int scanNumber) {
+        public ByteBuffer GetRawTrailersForScan(int scanNumber) {
             var accessor = GetHandle();
             var trailers = accessor.GetTrailerExtraInformation(scanNumber);
 
             FlatBufferBuilder builder = new FlatBufferBuilder(1024);
 
-            for(var i = 0; i < trailers.Length; i++) {
+            var trailerOffsets = new Offset<TrailerValueT>[trailers.Length];
 
+            for(var i = 0; i < trailers.Length; i++) {
+                var labelOffset = builder.CreateString(trailers.Labels[i]);
+                var valueOffset = builder.CreateString(trailers.Values[i]);
+                var trailerOffset = TrailerValueT.CreateTrailerValueT(builder, labelOffset, valueOffset);
+                trailerOffsets[i] = trailerOffset;
             }
+
+            var trailersVecOffset = builder.CreateVectorOfTables(trailerOffsets);
+            TrailerValuesT.StartTrailerValuesT(builder);
+            TrailerValuesT.AddTrailers(builder, trailersVecOffset);
+            var offset = TrailerValuesT.EndTrailerValuesT(builder);
+            builder.Finish(offset.Value);
+            return builder.DataBuffer;
         }
 
         public ByteBuffer GetSummaryTrace(TraceType traceType) {
@@ -1293,6 +1304,15 @@ namespace librawfilereader
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             var buffer = reader.GetSummaryTrace(TraceType.BasePeak);
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
+            var size = bytes.Length;
+            return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_raw_trailer_values_for")]
+        public static unsafe RawVec GetRawTrailerValuesFor(IntPtr handleToken, int scanNumber) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var buffer = reader.GetRawTrailersForScan(scanNumber);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
             return MemoryToRustVec(bytes, (nuint)size);

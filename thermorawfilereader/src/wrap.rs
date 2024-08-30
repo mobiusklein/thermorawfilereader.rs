@@ -15,10 +15,9 @@ use dotnetrawfilereader_sys::{get_runtime, RawVec};
 use crate::constants::{IonizationMode, MassAnalyzer, TraceType};
 use crate::schema::{
     root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
-    ChromatogramDescription as ChromatogramDescriptionT, FileDescriptionT,
-    InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT,
-    SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode,
-    BaselineNoiseDataT
+    BaselineNoiseDataT, ChromatogramDescription as ChromatogramDescriptionT, FileDescriptionT,
+    InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT, SpectrumData as SpectrumDataT,
+    SpectrumDescription, SpectrumMode, TrailerValuesT,
 };
 
 #[repr(u32)]
@@ -69,137 +68,6 @@ impl Debug for RawSpectrum {
         f.debug_struct("RawSpectrum")
             .field("data-size", &self.data.len())
             .finish()
-    }
-}
-
-/// A sub-set of a [`RawSpectrum`] corresponding to the m/z and intensity arrays
-/// of a mass spectrum. All data is borrowed internally from the [`RawSpectrum`]'s
-/// buffer.
-#[derive(Debug)]
-pub struct SpectrumData<'a> {
-    mz: Vector<'a, f64>,
-    intensity: Vector<'a, f32>,
-}
-
-impl<'a> SpectrumData<'a> {
-    /// The m/z array of the spectrum
-    pub fn mz(&self) -> Cow<'a, [f64]> {
-        #[cfg(target_endian = "big")]
-        return Cow::Owned(self.mz.iter().copied().collect());
-        #[cfg(target_endian = "little")]
-        Cow::Borrowed(bytemuck::cast_slice(self.mz.bytes()))
-    }
-
-    /// The intensity array of the spectrum
-    pub fn intensity(&self) -> Cow<'a, [f32]> {
-        #[cfg(target_endian = "big")]
-        return Cow::Owned(self.intensity.iter().copied().collect());
-        #[cfg(target_endian = "little")]
-        Cow::Borrowed(bytemuck::cast_slice(self.intensity.bytes()))
-    }
-
-    pub fn iter(&self) -> std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>> {
-        let it = self.mz.iter().zip(self.intensity.iter());
-        it
-    }
-
-    pub fn len(&self) -> usize {
-        self.mz.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.mz.is_empty()
-    }
-}
-
-impl<'a> IntoIterator for SpectrumData<'a> {
-    type Item = (f64, f32);
-
-    type IntoIter = std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
-
-
-pub struct BaselineNoiseData {
-    data: RawVec<u8>
-}
-
-impl BaselineNoiseData {
-    pub fn new(data: RawVec<u8>) -> Self {
-        Self { data }
-    }
-
-    /// Check that the buffer is a valid `BaselineNoiseData`
-    pub fn check(&self) -> bool {
-        root::<BaselineNoiseDataT>(&self.data).is_ok()
-    }
-
-    /// View the underlying buffer as a `BaselineNoiseData`
-    pub fn view(&self) -> BaselineNoiseDataT {
-        unsafe { root_unchecked::<BaselineNoiseDataT>(&self.data) }
-    }
-
-    pub fn noise(&self) -> Vector<'_, f32> {
-        self.view().noise().unwrap()
-    }
-
-    pub fn baseline(&self) -> Vector<'_, f32> {
-        self.view().baseline().unwrap()
-    }
-
-    pub fn mass(&self) -> Vector<'_, f64> {
-        self.view().mass().unwrap()
-    }
-}
-
-/// The signal trace of a chromatogram
-pub struct ChromatogramData<'a> {
-    time: Vector<'a, f64>,
-    intensity: Vector<'a, f32>,
-}
-
-impl<'a> ChromatogramData<'a> {
-    /// The time array of the spectrum, in minutes
-    pub fn time(&self) -> Cow<'a, [f64]> {
-        #[cfg(target_endian = "big")]
-        return Cow::Owned(self.time.iter().copied().collect());
-        #[cfg(target_endian = "little")]
-        Cow::Borrowed(bytemuck::cast_slice(self.time.bytes()))
-    }
-
-    /// The intensity array of the spectrum
-    pub fn intensity(&self) -> Cow<'a, [f32]> {
-        #[cfg(target_endian = "big")]
-        return Cow::Owned(self.intensity.iter().copied().collect());
-        #[cfg(target_endian = "little")]
-        Cow::Borrowed(bytemuck::cast_slice(self.intensity.bytes()))
-    }
-
-    /// Iterate over time-intensity pairs
-    pub fn iter(&self) -> std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>> {
-        let it = self.time.iter().zip(self.intensity.iter());
-        it
-    }
-
-    pub fn len(&self) -> usize {
-        self.time.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.time.is_empty()
-    }
-}
-
-impl<'a> IntoIterator for ChromatogramData<'a> {
-    type Item = (f64, f32);
-
-    type IntoIter = std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
     }
 }
 
@@ -302,6 +170,227 @@ impl RawSpectrum {
     }
 }
 
+/// A sub-set of a [`RawSpectrum`] corresponding to the m/z and intensity arrays
+/// of a mass spectrum. All data is borrowed internally from the [`RawSpectrum`]'s
+/// buffer.
+#[derive(Debug)]
+pub struct SpectrumData<'a> {
+    mz: Vector<'a, f64>,
+    intensity: Vector<'a, f32>,
+}
+
+impl<'a> SpectrumData<'a> {
+    /// The m/z array of the spectrum
+    pub fn mz(&self) -> Cow<'a, [f64]> {
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.mz.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.mz.bytes()))
+    }
+
+    /// The intensity array of the spectrum
+    pub fn intensity(&self) -> Cow<'a, [f32]> {
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.intensity.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.intensity.bytes()))
+    }
+
+    pub fn iter(
+        &self,
+    ) -> std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>> {
+        let it = self.mz.iter().zip(self.intensity.iter());
+        it
+    }
+
+    pub fn len(&self) -> usize {
+        self.mz.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.mz.is_empty()
+    }
+}
+
+impl<'a> IntoIterator for SpectrumData<'a> {
+    type Item = (f64, f32);
+
+    type IntoIter =
+        std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+pub struct TrailerValues {
+    data: RawVec<u8>,
+}
+
+impl Debug for TrailerValues {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let items: Vec<_> = self.iter().collect();
+        f.debug_struct("TrailerValues")
+            .field("data-size", &self.data.len())
+            .field("entries", &items)
+            .finish()
+    }
+}
+
+/// A single Trailer Extra value entry.
+///
+/// This borrows its storage from the original buffer.
+#[derive(Debug, Clone, Copy)]
+pub struct TrailerValue<'a> {
+    /// The human-readable label for this trailer
+    pub label: &'a str,
+    /// The raw value string for this trailer
+    pub value: &'a str,
+}
+
+impl TrailerValues {
+    pub fn new(data: RawVec<u8>) -> Self {
+        Self { data }
+    }
+
+    /// Check that the buffer is a valid `BaselineNoiseData`
+    pub fn check(&self) -> bool {
+        root::<TrailerValuesT>(&self.data).is_ok()
+    }
+
+    /// View the underlying buffer as a `BaselineNoiseData`
+    pub fn view(&self) -> TrailerValuesT {
+        unsafe { root_unchecked::<TrailerValuesT>(&self.data) }
+    }
+
+    pub fn len(&self) -> usize {
+        self.view()
+            .trailers()
+            .into_iter()
+            .next()
+            .map(|v| v.len())
+            .unwrap_or_default()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.view().trailers().is_some_and(|v| v.is_empty())
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = TrailerValue<'_>> + '_ {
+        self.view()
+            .trailers()
+            .into_iter()
+            .flatten()
+            .map(|i| -> TrailerValue<'_> {
+                TrailerValue {
+                    label: i.label().unwrap(),
+                    value: i.value().unwrap(),
+                }
+            })
+    }
+
+    pub fn get(&self, index: usize) -> Option<TrailerValue<'_>> {
+        self.view().trailers().into_iter().next().and_then(|vec| {
+            if index >= vec.len() {
+                None
+            } else {
+                let i = vec.get(index);
+                Some(TrailerValue {
+                    label: i.label().unwrap(),
+                    value: i.value().unwrap(),
+                })
+            }
+        })
+    }
+
+    pub fn get_label(&self, label: &str) -> Option<TrailerValue<'_>> {
+        self.iter().find(|i| i.label == label)
+    }
+}
+
+pub struct BaselineNoiseData {
+    data: RawVec<u8>,
+}
+
+impl BaselineNoiseData {
+    pub fn new(data: RawVec<u8>) -> Self {
+        Self { data }
+    }
+
+    /// Check that the buffer is a valid `BaselineNoiseData`
+    pub fn check(&self) -> bool {
+        root::<BaselineNoiseDataT>(&self.data).is_ok()
+    }
+
+    /// View the underlying buffer as a `BaselineNoiseData`
+    pub fn view(&self) -> BaselineNoiseDataT {
+        unsafe { root_unchecked::<BaselineNoiseDataT>(&self.data) }
+    }
+
+    pub fn noise(&self) -> Vector<'_, f32> {
+        self.view().noise().unwrap()
+    }
+
+    pub fn baseline(&self) -> Vector<'_, f32> {
+        self.view().baseline().unwrap()
+    }
+
+    pub fn mass(&self) -> Vector<'_, f64> {
+        self.view().mass().unwrap()
+    }
+}
+
+/// The signal trace of a chromatogram
+pub struct ChromatogramData<'a> {
+    time: Vector<'a, f64>,
+    intensity: Vector<'a, f32>,
+}
+
+impl<'a> ChromatogramData<'a> {
+    /// The time array of the spectrum, in minutes
+    pub fn time(&self) -> Cow<'a, [f64]> {
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.time.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.time.bytes()))
+    }
+
+    /// The intensity array of the spectrum
+    pub fn intensity(&self) -> Cow<'a, [f32]> {
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.intensity.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.intensity.bytes()))
+    }
+
+    /// Iterate over time-intensity pairs
+    pub fn iter(
+        &self,
+    ) -> std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>> {
+        let it = self.time.iter().zip(self.intensity.iter());
+        it
+    }
+
+    pub fn len(&self) -> usize {
+        self.time.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.time.is_empty()
+    }
+}
+
+impl<'a> IntoIterator for ChromatogramData<'a> {
+    type Item = (f64, f32);
+
+    type IntoIter =
+        std::iter::Zip<flatbuffers::VectorIter<'a, f64>, flatbuffers::VectorIter<'a, f32>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 /// A wrapper around the `InstrumentModel` FlatBuffer schema. It mirrors the data
 /// stored there-in.
 ///
@@ -316,7 +405,7 @@ pub struct InstrumentConfiguration {
     /// The mass analyzer used in this configuration
     pub mass_analyzer: MassAnalyzer,
     /// The ionization mode used in this configuration
-    pub ionization_mode: IonizationMode
+    pub ionization_mode: IonizationMode,
 }
 
 impl Display for InstrumentConfiguration {
@@ -374,11 +463,14 @@ impl InstrumentModel {
     }
 
     /// The set of distinct instrument configuration names.
-    pub fn configurations(&self) -> impl Iterator<Item=InstrumentConfiguration> + '_ {
+    pub fn configurations(&self) -> impl Iterator<Item = InstrumentConfiguration> + '_ {
         self.view().configurations().into_iter().flatten().map(|c| {
             let ionization_mode = c.ionization_mode().0.into();
             let mass_analyzer = c.mass_analyzer().0.into();
-            InstrumentConfiguration { ionization_mode, mass_analyzer }
+            InstrumentConfiguration {
+                ionization_mode,
+                mass_analyzer,
+            }
         })
     }
 }
@@ -436,7 +528,6 @@ impl FileDescription {
         self.view().trailer_headers()
     }
 }
-
 
 /// The text describing how the instrument was told to operate.
 ///
@@ -526,7 +617,6 @@ impl ChromatogramDescription {
         }
     }
 }
-
 
 /// Describes a scan acquisition.
 ///
@@ -884,13 +974,18 @@ impl RawFileReader {
         Some(RawSpectrum::new(buffer))
     }
 
+    /// Retrieve the baseline and noise supplemental arrays for a spectrum.
+    ///
+    /// ## Note
+    /// This method is experimental and may not work reliably.
     pub fn get_baseline_noise(&self, index: usize) -> Option<BaselineNoiseData> {
         if index >= self.len() {
             return None;
         }
         self.validate_impl();
 
-        let buffer_fn = self.context
+        let buffer_fn = self
+            .context
             .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32) -> RawVec<u8>>(
                 pdcstr!("librawfilereader.Exports, librawfilereader"),
                 pdcstr!("AdvancedPacketDataFor"),
@@ -899,6 +994,30 @@ impl RawFileReader {
 
         let buff = buffer_fn(self.raw_file_reader, (index as i32) + 1);
         Some(BaselineNoiseData::new(buff))
+    }
+
+    /// Get the trailer extra values for scan at `index`.
+    ///
+    /// The trailer extra values are key-value pairs whose exact meaning
+    /// is under dependent upon the instrument and method used. All values
+    /// are passed as strings which must be parsed into the appropriate Rust
+    /// type to be useful.
+    pub fn get_raw_trailers_for(&self, index: usize) -> Option<TrailerValues> {
+        if index >= self.len() {
+            return None;
+        }
+        self.validate_impl();
+
+        let buffer_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("GetRawTrailerValuesFor"),
+            )
+            .unwrap();
+
+        let buff = buffer_fn(self.raw_file_reader, (index as i32) + 1);
+        Some(TrailerValues::new(buff))
     }
 
     /// A utility for debugging, get a spectrum and access some of its fields, printing them
@@ -1062,6 +1181,18 @@ mod test {
     }
 
     #[test]
+    fn test_read_trailers() -> io::Result<()> {
+        let handle = RawFileReader::open("../tests/data/small.RAW")?;
+
+        assert_eq!(handle.len(), 48);
+
+        let trailers = handle.get_raw_trailers_for(5).unwrap();
+        assert_eq!(trailers.len(), 26);
+
+        Ok(())
+    }
+
+    #[test]
     fn test_read_512kb() -> io::Result<()> {
         let handle = RawFileReader::open("../tests/data/small.RAW")?;
 
@@ -1098,7 +1229,7 @@ mod test {
     #[test]
     fn test_tic() -> io::Result<()> {
         let handle = RawFileReader::open("../tests/data/small.RAW")?;
-        let tic  = handle.tic();
+        let tic = handle.tic();
         assert_eq!(tic.trace_type(), TraceType::TIC);
         assert_eq!(tic.start_index(), 0);
         assert_eq!(tic.end_index(), 48);
@@ -1107,14 +1238,18 @@ mod test {
         assert_eq!(data.intensity().len(), 48);
         let expected = 196618480.0f32;
         let total = data.intensity().iter().sum::<f32>();
-        assert!((expected - total).abs() < 1e-3, "sum = {total}, expected {expected} ({})", (expected - total).abs());
+        assert!(
+            (expected - total).abs() < 1e-3,
+            "sum = {total}, expected {expected} ({})",
+            (expected - total).abs()
+        );
         Ok(())
     }
 
     #[test]
     fn test_bpc() -> io::Result<()> {
         let handle = RawFileReader::open("../tests/data/small.RAW")?;
-        let bpc  = handle.bpc();
+        let bpc = handle.bpc();
         assert_eq!(bpc.trace_type(), TraceType::BasePeak);
         assert_eq!(bpc.start_index(), 0);
         assert_eq!(bpc.end_index(), 48);
@@ -1123,7 +1258,11 @@ mod test {
         assert_eq!(data.intensity().len(), 48);
         let expected = 16132207.0f32;
         let total = data.intensity().iter().sum::<f32>();
-        assert!((expected - total).abs() < 1e-3, "sum = {total}, expected {expected} ({})", (expected - total).abs());
+        assert!(
+            (expected - total).abs() < 1e-3,
+            "sum = {total}, expected {expected} ({})",
+            (expected - total).abs()
+        );
         Ok(())
     }
 
