@@ -28,17 +28,15 @@ test:
 
 alias t := test
 
-changelog:
+changelog version:
     #!/usr/bin/env python
 
     import subprocess
     import re
 
-    new_content = subprocess.check_output(['git', 'cliff', '-s', 'all', '-u', '--bump'], stderr=subprocess.DEVNULL).decode()
+    new_content = subprocess.check_output(['git', 'cliff', '-s', 'all', '-u', '-t', '{{version}}'], stderr=subprocess.DEVNULL).decode()
 
-    new_version = subprocess.check_output(
-        ["git", "cliff", "--bumped-version"], stderr=subprocess.DEVNULL
-    ).decode().strip()
+    new_version = "{{version}}"
 
     buffer = open('CHANGELOG.md').read()
 
@@ -48,15 +46,21 @@ changelog:
     line_to_patch = buffer[offset]
     buffer[offset] = re.sub(r"v\d+\.\d+\.\d+[^\.]*", new_version, line_to_patch)
     version_link_template = buffer[offset + 1]
-    version_link_template = re.sub(
-        r"\d+\.\d+\.\d+[^\.]*(?=\])", new_version[1:], version_link_template
-    )
-    version_link_template = re.sub(
-        r"v\d+\.\d+\.\d+[^\.]*", new_version, version_link_template
-    )
+
+    last_two_versions = version_link_template.split("/")[-1]
+    second_to_last_version, last_version = last_two_versions.split("...")
+    version_link_template = version_link_template.replace(last_version[1:], new_version[1:])
+    version_link_template = version_link_template.replace(second_to_last_version, last_version)
 
     buffer.insert(offset + 1, version_link_template)
 
     buffer = '\n'.join(buffer)
     open('CHANGELOG.md', 'wt').write(buffer)
 
+
+release tag: (changelog tag)
+    git add CHANGELOG.md
+    git commit -m "chore: update changelog"
+    git tag {{tag}}
+    cargo publish -p dotnetrawfilereader-sys
+    cargo publish -p thermorawfilereader
