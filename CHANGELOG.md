@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
+## [0.2.7] - 2024-08-30
+
+### Added
+
+- Add `RawFileReader::get_raw_trailers_for` to retrieve raw trailer values for a scan
+
+### Fixed
+
+- Fix support unicode characters in paths
+
 ## [0.2.6] - 2024-07-01
 
 ### Fixed
@@ -63,7 +73,8 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.6...HEAD
+[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.7...HEAD
+[0.2.7]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.4
