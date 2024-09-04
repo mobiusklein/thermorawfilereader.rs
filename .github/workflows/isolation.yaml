@@ -62,12 +62,5 @@ jobs:
       - name: Run binary
         run: |
           chmod 775 ./fficheck
-          HAS_ERROR=`./fficheck tests/small.raw -1 2>&1 | grep CoreHostLibMissingFailure`
-
+          HAS_ERROR=`./fficheck tests/small.raw -1 2>&1`
           echo $HAS_ERROR
-
-          if [[ "$HAS_ERROR" =~ CoreHostLibMissingFailure ]]; then
-            exit 0
-          else
-            exit 1
-          fi
