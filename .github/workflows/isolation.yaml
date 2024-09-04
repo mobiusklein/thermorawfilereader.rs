@@ -8,12 +8,12 @@ env:
 name: Test (Isolated)
 jobs:
 
-  test:
+  test_in_container_with_dotnet:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-    name: Test Suite
+    name: Test Suite In Container
     runs-on: ${{ matrix.os }}
     container:
         image: rust:1.76.0
@@ -35,3 +35,31 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+      - name: Run cargo install
+        uses: actions-rs/cargo@v1
+        with:
+          command: install --path ./thermorawfilereader --root .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fficheck
+          path: bin/fficheck
+          retention-days: 1
+
+  test_binary_without_dotnet:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    name: Test Binary Without Runtime
+    runs-on: ${{ matrix.os }}
+    container:
+        image: rust:1.76.0
+    needs: test_in_container_with_dotnet
+    steps:
+      - name: Fetch binary
+        uses: actions/download-artifact@v4
+        with:
+          name: fficheck
+      - name: Run binary
+        run: >-
+          ./fficheck tests/small.raw -1
