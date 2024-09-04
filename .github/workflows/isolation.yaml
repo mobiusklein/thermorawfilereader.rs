@@ -36,9 +36,8 @@ jobs:
         with:
           command: test
       - name: Run cargo install
-        uses: actions-rs/cargo@v1
-        with:
-          command: install --path ./thermorawfilereader --root .
+        run: |
+           cargo install --path ./thermorawfilereader --root .
       - uses: actions/upload-artifact@v4
         with:
           name: fficheck
