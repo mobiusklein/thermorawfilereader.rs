@@ -16,4 +16,4 @@ mod runtime;
 mod buffer;
 
 pub use crate::buffer::{RawVec, configure_allocator};
-pub use crate::runtime::{BundleStore, DotNetLibraryBundle, get_runtime, set_runtime_dir};
+pub use crate::runtime::{BundleStore, DotNetLibraryBundle, get_runtime, try_get_runtime, set_runtime_dir, DotNetRuntimeCreationError};

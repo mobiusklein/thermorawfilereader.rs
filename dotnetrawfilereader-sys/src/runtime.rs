@@ -24,6 +24,24 @@ const TMP_NAME: &str = concat!("rawfilereader_libs_", env!("CARGO_PKG_VERSION"))
 const DEFAULT_VAR_NAME: &str = "DOTNET_RAWFILEREADER_BUNDLE_PATH";
 
 
+/// Things that can go wrong while creating a .NET runtime
+#[derive(Debug, thiserror::Error)]
+pub enum DotNetRuntimeCreationError {
+    /// An error might occur while creating the .NET DLL bundle
+    #[error("Failed to create a directory on the file system to hold .NET DLLs")]
+    FailedToWriteDLLBundle(#[source] io::Error),
+    /// An error might occur while loading the Hostfxr layer of the .NET runtime
+    #[error("Failed to load hostfxr. Is there a .NET runtime available?")]
+    LoadHostfxrError(#[source] #[from] nethost::LoadHostfxrError),
+    /// An error might occur while loading the core .NET runtime or library invocation
+    #[error("Failed to load .NET host runtime. Is there a .NET runtime available?")]
+    HostingError(#[source] #[from] netcorehost::error::HostingError),
+    /// Any other I/O error that might occur
+    #[error(transparent)]
+    IOError(io::Error)
+}
+
+
 /// Represent a directory to store bundled files within.
 #[derive(Debug)]
 pub enum BundleStore {
@@ -107,11 +125,21 @@ impl DotNetLibraryBundle {
 
     /// Get a reference to the .NET runtime, creating it if one has not yet been created.
     ///
-    /// See [`DotNetLibraryBundle::create_runtime`] for specific runtime creation
+    /// This function will panic if a runtime cannot be found. Calls [`DotNetLibraryBundle::try_runtime`] and unwraps.
+    ///
+    /// See [`DotNetLibraryBundle::try_create_runtime`] for specific runtime creation
     pub fn runtime(&self) -> Arc<AssemblyDelegateLoader> {
+        self.try_create_runtime().unwrap()
+    }
+
+    /// Get a reference to the .NET runtime, creating it if one has not yet been created
+    /// or return an error if the runtime could not be created.
+    ///
+    /// See [`DotNetLibraryBundle::try_create_runtime`] for specific runtime creation
+    pub fn try_runtime(&self) -> Result<Arc<AssemblyDelegateLoader>, DotNetRuntimeCreationError> {
         if let Ok(mut guard) = self.assembly_loader.write() {
             if guard.is_none() {
-                *guard = Some(self.create_runtime());
+                *guard = Some(self.try_create_runtime()?);
             }
         }
         let a = self
@@ -119,7 +147,7 @@ impl DotNetLibraryBundle {
             .read()
             .map(|a| a.clone().unwrap())
             .unwrap();
-        a
+        Ok(a)
     }
 
     /// Write all of the bundled .NET DLLs to the file system at this location
@@ -151,29 +179,32 @@ impl DotNetLibraryBundle {
         Ok(())
     }
 
-    /// Create a new .NET runtime using [`netcorehost`](https://docs.rs/netcorehost/latest/netcorehost/)
-    pub fn create_runtime(&self) -> Arc<AssemblyDelegateLoader> {
-        let hostfxr = nethost::load_hostfxr().unwrap();
-        self.write_bundle().unwrap();
+    pub fn try_create_runtime(&self) -> Result<Arc<AssemblyDelegateLoader>, DotNetRuntimeCreationError> {
+        let hostfxr = nethost::load_hostfxr()?;
+        self.write_bundle().map_err(|e| {
+            match e.kind() {
+                io::ErrorKind::PermissionDenied | io::ErrorKind::NotFound => DotNetRuntimeCreationError::FailedToWriteDLLBundle(e),
+                _ => DotNetRuntimeCreationError::IOError(e),
+            }
+        })?;
+
         let runtime_path = self.path().join("librawfilereader.runtimeconfig.json");
         let runtime_path_encoded: PdCString = runtime_path.to_string_lossy().parse().unwrap();
 
         let context = hostfxr
-            .initialize_for_runtime_config(runtime_path_encoded)
-            .unwrap();
+            .initialize_for_runtime_config(runtime_path_encoded)?;
+
 
         let assembly_path = self.path().join("librawfilereader.dll");
         let assembly_path_encoded: PdCString = assembly_path.to_string_lossy().parse().unwrap();
 
         let delegate_loader = Arc::new(
             context
-                .get_delegate_loader_for_assembly(assembly_path_encoded)
-                .unwrap(),
+                .get_delegate_loader_for_assembly(assembly_path_encoded)?
         );
 
         configure_allocator(&delegate_loader);
-
-        delegate_loader
+        Ok(delegate_loader)
     }
 }
 
@@ -192,11 +223,21 @@ pub fn set_runtime_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
 }
 
 /// Get a reference to a shared .NET runtime and associated DLL bundle
+///
+/// Panics if a runtime cannot be created. Calls [`try_get_runtime`] and unwraps.
 pub fn get_runtime() -> Arc<AssemblyDelegateLoader> {
+    try_get_runtime().unwrap()
+}
+
+
+/// Get a reference to a shared .NET runtime and associated DLL bundle
+/// or return and error if the runtime cannot be created.
+pub fn try_get_runtime() -> Result<Arc<AssemblyDelegateLoader>, DotNetRuntimeCreationError> {
     let bundle = BUNDLE.get_or_init(DotNetLibraryBundle::default);
 
-    bundle.runtime()
+    bundle.try_runtime()
 }
+
 
 #[cfg(test)]
 mod test {

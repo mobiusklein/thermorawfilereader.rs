@@ -28,6 +28,7 @@ netcorehost = { version = "0.17.0", default-features = false, features = [
     "nethost"
 ]}
 tempfile = "3.10.1"
+thiserror = { workspace = true }
 
 [package.metadata.docs.rs]
 no-default-features = true

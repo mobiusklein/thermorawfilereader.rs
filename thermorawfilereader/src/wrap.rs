@@ -10,7 +10,7 @@ use netcorehost::{hostfxr::AssemblyDelegateLoader, pdcstr};
 
 use flatbuffers::{root, root_unchecked, Vector};
 
-use dotnetrawfilereader_sys::{get_runtime, RawVec};
+use dotnetrawfilereader_sys::{try_get_runtime, RawVec};
 
 use crate::constants::{IonizationMode, MassAnalyzer, TraceType};
 use crate::schema::{
@@ -715,7 +715,14 @@ impl RawFileReader {
     /// Open a ThermoFisher RAW file from a path. This may also create the .NET runtime
     /// if this is the first time it was called.
     pub fn open<P: Into<PathBuf>>(path: P) -> io::Result<Self> {
-        let context = get_runtime();
+        let context = try_get_runtime().map_err(|e| {
+            match e {
+                dotnetrawfilereader_sys::DotNetRuntimeCreationError::FailedToWriteDLLBundle(r) => io::Error::new(io::ErrorKind::Other, r),
+                dotnetrawfilereader_sys::DotNetRuntimeCreationError::LoadHostfxrError(r) => io::Error::new(io::ErrorKind::Other, r),
+                dotnetrawfilereader_sys::DotNetRuntimeCreationError::HostingError(r) => io::Error::new(io::ErrorKind::Other, r),
+                dotnetrawfilereader_sys::DotNetRuntimeCreationError::IOError(r) => r,
+            }
+        })?;
         let open_fn = context.get_function_with_unmanaged_callers_only::<fn(text_ptr: *const u8, text_length: i32) -> *mut c_void>(
             pdcstr!("librawfilereader.Exports, librawfilereader"),
             pdcstr!("Open")

@@ -6,3 +6,8 @@ debug = true
 resolver = "2"
 
 members = ["thermorawfilereader", "dotnetrawfilereader-sys", ]
+
+
+[workspace.dependencies]
+
+thiserror = "1.0.63"

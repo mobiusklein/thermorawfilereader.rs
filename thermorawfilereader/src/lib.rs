@@ -32,3 +32,6 @@ pub use crate::wrap::{
     RawFileReaderIter, RawSpectrum, SpectrumData, Acquisition
 };
 pub use constants::{IonizationMode, MassAnalyzer, TraceType};
+
+#[doc(alias = "Re-exported from `dotnetrawfilereader_sys`")]
+pub use dotnetrawfilereader_sys::{DotNetRuntimeCreationError, set_runtime_dir, try_get_runtime};
