@@ -61,6 +61,7 @@ jobs:
           name: fficheck
       - name: Run binary
         run: |
+          set +e
           chmod 775 ./fficheck
           HAS_ERROR=`./fficheck tests/small.raw -1 2>&1`
           echo $HAS_ERROR
