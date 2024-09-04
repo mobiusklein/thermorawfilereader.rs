@@ -61,4 +61,5 @@ jobs:
           name: fficheck
       - name: Run binary
         run: >-
+          chmod 775 ./fficheck
           ./fficheck tests/small.raw -1
