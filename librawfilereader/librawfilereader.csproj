@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <InvariantGlobalization>false</InvariantGlobalization>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <DefineConstants>$(DefineConstants);UNSAFE_BYTEBUFFER</DefineConstants>
     <DefineConstants>$(DefineConstants);ENABLE_SPAN_T</DefineConstants>
