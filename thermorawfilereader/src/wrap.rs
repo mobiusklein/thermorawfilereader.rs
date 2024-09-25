@@ -755,13 +755,13 @@ impl RawFileReader {
             RawFileReaderError::InvalidFormat => {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
-                    "File does not appear to be a valid RAW file",
+                    format!("File does not appear to be a valid RAW file. {}", handle.error_message().unwrap_or_default()),
                 ))
             }
             RawFileReaderError::Error | RawFileReaderError::HandleNotFound => {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
-                    "An unknown error occured",
+                    format!("An unknown error occured {}", handle.error_message().unwrap_or_default())
                 ))
             }
         }
@@ -1080,6 +1080,25 @@ impl RawFileReader {
             .unwrap();
         let code = status_fn(self.raw_file_reader);
         code.into()
+    }
+
+    /// Retrieve the "file error" status message. This message may
+    /// or may not be meaningful depending upon what went wrong.
+    pub fn error_message(&self) -> Option<String> {
+        self.validate_impl();
+        let status_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("GetErrorMessageFor"),
+            )
+            .unwrap();
+        let result = status_fn(self.raw_file_reader);
+        if result.len() == 0 || result.len() == 1 && result[0] == 0 {
+            return None
+        }
+        let message = String::from_utf8(result.to_vec()).expect("Failed to decode message, invalid UTF8");
+        Some(message)
     }
 }
 

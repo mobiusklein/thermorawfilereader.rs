@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
 using ThermoFisher.CommonCore.Data;
+using System.Text;
 
 namespace librawfilereader
 {
@@ -213,6 +214,17 @@ namespace librawfilereader
             accessor.IncludeReferenceAndExceptionData = true;
             return accessor;
             // return Handle;
+        }
+
+        public string FileErrorMessage() {
+            var accessor = GetHandleRaw();
+            if (accessor.FileError.HasError) {
+                return accessor.FileError.ErrorMessage;
+            }
+            if (accessor.FileError.HasWarning) {
+                return accessor.FileError.WarningMessage;
+            }
+            return "";
         }
 
         public int FirstSpectrum()
@@ -1316,6 +1328,20 @@ namespace librawfilereader
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
             return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_file_error_message")]
+        public static unsafe RawVec GetErrorMessageFor(IntPtr handleToken) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var message = reader.FileErrorMessage();
+            // Bad things happen if the string is length zero.
+            // If the string is empty, instead operate on a string
+            // of just the nul byte.
+            message = message.Length == 0 ? "\0" : message;
+            var bytes = Encoding.UTF8.GetBytes(message);
+            var bytesSpan = bytes.AsSpan();
+            var size = bytes.Length;
+            return MemoryToRustVec(bytesSpan, (nuint)size);
         }
     }
 }
