@@ -218,13 +218,16 @@ namespace librawfilereader
 
         public string FileErrorMessage() {
             var accessor = GetHandleRaw();
-            if (accessor.FileError.HasError) {
-                return accessor.FileError.ErrorMessage;
+            string buffer = "";
+            if (accessor.IsError) {
+                if (accessor.FileError.HasError) {
+                    buffer += accessor.FileError.ErrorMessage + "\n";
+                }
+                if (accessor.FileError.HasWarning) {
+                    buffer += accessor.FileError.WarningMessage + "\n";
+                }
             }
-            if (accessor.FileError.HasWarning) {
-                return accessor.FileError.WarningMessage;
-            }
-            return "";
+            return buffer;
         }
 
         public int FirstSpectrum()
