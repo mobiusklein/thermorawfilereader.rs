@@ -1010,6 +1010,7 @@ namespace librawfilereader
             }
             if (accessor.IsError)
             {
+                Console.WriteLine("Error: {0}, {1}", accessor.FileError.ErrorMessage, accessor.FileError.WarningMessage);
                 return RawFileReaderError.InvalidFormat;
             }
             else
@@ -1082,6 +1083,12 @@ namespace librawfilereader
 
             }
             return vec;
+        }
+
+
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_test_add")]
+        public static unsafe int TestAdd(int a, int b) {
+            return a + b;
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_open")]

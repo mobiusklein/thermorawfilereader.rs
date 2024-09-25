@@ -47,4 +47,16 @@
   <ItemGroup>
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- <PackageReference Include="Microsoft.DotNet.ILCompiler; runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="8.0.8" /> -->
+  </ItemGroup>
+
+  <PropertyGroup>
+    <PublishAot>true</PublishAot>
+    <StripSymbols>false</StripSymbols>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <EnableNativeEventPipe>false</EnableNativeEventPipe>
+    <IlcGenerateWin32Resources>false</IlcGenerateWin32Resources>
+  </PropertyGroup>
+
 </Project>

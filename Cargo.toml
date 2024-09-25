@@ -5,7 +5,7 @@ debug = true
 
 resolver = "2"
 
-members = ["thermorawfilereader", "dotnetrawfilereader-sys", ]
+members = ["thermorawfilereader", "dotnetrawfilereader-sys", "ffilib"]
 
 
 [workspace.dependencies]
