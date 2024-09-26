@@ -96,7 +96,7 @@ fn main() -> io::Result<()> {
 
     let mut ar = cc::Build::new().get_archiver();
 
-    fh.write_all(format!("Archiver: {ar:?}").as_bytes())?;
+    fh.write_all(format!("Archiver: {ar:?}\n\n").as_bytes())?;
 
     let mut ar_proc = ar
         .arg(format!("/out:{out_dir}/bootstrapperdll.lib"))
