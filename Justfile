@@ -10,12 +10,12 @@ dotnet:
 
 bundle:
     rm -rf dotnetrawfilereader-sys/lib/*
-    cd librawfilereader && dotnet publish -c Release -o ../dotnetrawfilereader-sys/lib/
+    cd librawfilereader && dotnet publish librawfilereader.csproj -c Release -o ../dotnetrawfilereader-sys/lib/
     md5sum dotnetrawfilereader-sys/lib/* | sort | tee dotnetrawfilereader-sys/lib/checksum
 
 bundle-debug:
     rm -rf dotnetrawfilereader-sys/lib/*
-    cd librawfilereader && dotnet publish -c Debug -o ../dotnetrawfilereader-sys/lib/
+    cd librawfilereader && dotnet publish  librawfilereader.csproj -c Debug -o ../dotnetrawfilereader-sys/lib/
     md5sum dotnetrawfilereader-sys/lib/* | sort | tee dotnetrawfilereader-sys/lib/checksum
 
 index := "1"

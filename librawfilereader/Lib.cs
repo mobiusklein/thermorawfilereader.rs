@@ -1121,7 +1121,7 @@ namespace librawfilereader
             return handleToken;
         }
 
-        private static RawFileReader GetHandleForToken(IntPtr handleToken)
+        public static RawFileReader GetHandleForToken(IntPtr handleToken)
         {
             RawFileReader handle;
             lock (OpenHandles)
@@ -1352,6 +1352,29 @@ namespace librawfilereader
             var bytesSpan = bytes.AsSpan();
             var size = bytes.Length;
             return MemoryToRustVec(bytesSpan, (nuint)size);
+        }
+    }
+
+    public static class Program {
+        static void Main(string[] args)
+        {
+            // Display the number of command line arguments.
+            Console.WriteLine(args.Length);
+            if (args.Length == 0) {
+                Console.WriteLine("No CLI arguments received");
+                return;
+            }
+            var name = args.First();
+            var ptr = Marshal.StringToCoTaskMemUTF8(name);
+            unsafe {
+                delegate* unmanaged <nint, int, nint> OpenFn = &Exports.Open;
+
+                var token = OpenFn(ptr, name.Length);
+                var handle = Exports.GetHandleForToken(token);
+                Console.WriteLine(handle.Status);
+                Console.WriteLine(handle.FileErrorMessage());
+            }
+            Marshal.FreeCoTaskMem(ptr);
         }
     }
 }
