@@ -36,6 +36,9 @@
     <Reference Include="ThermoFisher.CommonCore.RawFileReader">
       <HintPath>lib/ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
     </Reference>
+    <Reference Include="ThermoFisher.CommonCore.RandomAccessReaderPlugin">
+      <HintPath>lib/ThermoFisher.CommonCore.RandomAccessReaderPlugin.dll</HintPath>
+    </Reference>
     <Reference Include="OpenMcdf">
       <HintPath>lib/OpenMcdf.dll</HintPath>
     </Reference>

@@ -6,12 +6,12 @@ using ThermoFisher.CommonCore.Data.Business;
 using ThermoFisher.CommonCore.Data.Interfaces;
 using ThermoFisher.CommonCore.RawFileReader;
 using ThermoFisher.CommonCore.Data.FilterEnums;
+using ThermoFisher.CommonCore.RandomAccessReaderPlugin;
 
 using Google.FlatBuffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
-using ThermoFisher.CommonCore.Data;
 using System.Text;
 
 namespace librawfilereader
@@ -190,7 +190,8 @@ namespace librawfilereader
         public RawFileReader(string path)
         {
             Path = path;
-            Manager = RawFileReaderAdapter.ThreadedFileFactory(Path);
+            Manager = RawFileReaderAdapter.RandomAccessThreadedFileFactory(Path, RandomAccessFileManager.Instance);
+            // Manager = RawFileReaderAdapter.ThreadedFileFactory(Path);
             // Handle = RawFileReaderAdapter.FileFactory(Path);
             Status = RawFileReaderError.Ok;
             InstrumentConfigsByComponents = new();

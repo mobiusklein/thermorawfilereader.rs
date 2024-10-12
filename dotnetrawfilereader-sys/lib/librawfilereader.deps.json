@@ -13,6 +13,7 @@
           "ThermoFisher.CommonCore.BackgroundSubtraction": "8.0.6.0",
           "ThermoFisher.CommonCore.Data": "8.0.6.0",
           "ThermoFisher.CommonCore.MassPrecisionEstimator": "8.0.6.0",
+          "ThermoFisher.CommonCore.RandomAccessReaderPlugin": "8.0.6.0",
           "ThermoFisher.CommonCore.RawFileReader": "8.0.6.0"
         },
         "runtime": {
@@ -59,6 +60,14 @@
           }
         }
       },
+      "ThermoFisher.CommonCore.RandomAccessReaderPlugin/8.0.6.0": {
+        "runtime": {
+          "ThermoFisher.CommonCore.RandomAccessReaderPlugin.dll": {
+            "assemblyVersion": "8.0.6.0",
+            "fileVersion": "8.0.6.0"
+          }
+        }
+      },
       "ThermoFisher.CommonCore.RawFileReader/8.0.6.0": {
         "runtime": {
           "ThermoFisher.CommonCore.RawFileReader.dll": {
@@ -96,6 +105,11 @@
       "sha512": ""
     },
     "ThermoFisher.CommonCore.MassPrecisionEstimator/8.0.6.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ThermoFisher.CommonCore.RandomAccessReaderPlugin/8.0.6.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
