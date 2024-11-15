@@ -1503,6 +1503,9 @@ impl<'a> FileDescriptionT<'a> {
   pub const VT_SOURCE_FILE: flatbuffers::VOffsetT = 8;
   pub const VT_SPECTRA_PER_MS_LEVEL: flatbuffers::VOffsetT = 10;
   pub const VT_TRAILER_HEADERS: flatbuffers::VOffsetT = 12;
+  pub const VT_SAMPLE_NAME: flatbuffers::VOffsetT = 14;
+  pub const VT_SAMPLE_VIAL: flatbuffers::VOffsetT = 16;
+  pub const VT_SAMPLE_COMMENT: flatbuffers::VOffsetT = 18;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1514,6 +1517,9 @@ impl<'a> FileDescriptionT<'a> {
     args: &'args FileDescriptionTArgs<'args>
   ) -> flatbuffers::WIPOffset<FileDescriptionT<'bldr>> {
     let mut builder = FileDescriptionTBuilder::new(_fbb);
+    if let Some(x) = args.sample_comment { builder.add_sample_comment(x); }
+    if let Some(x) = args.sample_vial { builder.add_sample_vial(x); }
+    if let Some(x) = args.sample_name { builder.add_sample_name(x); }
     if let Some(x) = args.trailer_headers { builder.add_trailer_headers(x); }
     if let Some(x) = args.spectra_per_ms_level { builder.add_spectra_per_ms_level(x); }
     if let Some(x) = args.source_file { builder.add_source_file(x); }
@@ -1558,6 +1564,27 @@ impl<'a> FileDescriptionT<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(FileDescriptionT::VT_TRAILER_HEADERS, None)}
   }
+  #[inline]
+  pub fn sample_name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(FileDescriptionT::VT_SAMPLE_NAME, None)}
+  }
+  #[inline]
+  pub fn sample_vial(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(FileDescriptionT::VT_SAMPLE_VIAL, None)}
+  }
+  #[inline]
+  pub fn sample_comment(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(FileDescriptionT::VT_SAMPLE_COMMENT, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for FileDescriptionT<'_> {
@@ -1572,6 +1599,9 @@ impl flatbuffers::Verifiable for FileDescriptionT<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("source_file", Self::VT_SOURCE_FILE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u32>>>("spectra_per_ms_level", Self::VT_SPECTRA_PER_MS_LEVEL, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("trailer_headers", Self::VT_TRAILER_HEADERS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("sample_name", Self::VT_SAMPLE_NAME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("sample_vial", Self::VT_SAMPLE_VIAL, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("sample_comment", Self::VT_SAMPLE_COMMENT, false)?
      .finish();
     Ok(())
   }
@@ -1582,6 +1612,9 @@ pub struct FileDescriptionTArgs<'a> {
     pub source_file: Option<flatbuffers::WIPOffset<&'a str>>,
     pub spectra_per_ms_level: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u32>>>,
     pub trailer_headers: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub sample_name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub sample_vial: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub sample_comment: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for FileDescriptionTArgs<'a> {
   #[inline]
@@ -1592,6 +1625,9 @@ impl<'a> Default for FileDescriptionTArgs<'a> {
       source_file: None,
       spectra_per_ms_level: None,
       trailer_headers: None,
+      sample_name: None,
+      sample_vial: None,
+      sample_comment: None,
     }
   }
 }
@@ -1622,6 +1658,18 @@ impl<'a: 'b, 'b> FileDescriptionTBuilder<'a, 'b> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FileDescriptionT::VT_TRAILER_HEADERS, trailer_headers);
   }
   #[inline]
+  pub fn add_sample_name(&mut self, sample_name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FileDescriptionT::VT_SAMPLE_NAME, sample_name);
+  }
+  #[inline]
+  pub fn add_sample_vial(&mut self, sample_vial: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FileDescriptionT::VT_SAMPLE_VIAL, sample_vial);
+  }
+  #[inline]
+  pub fn add_sample_comment(&mut self, sample_comment: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FileDescriptionT::VT_SAMPLE_COMMENT, sample_comment);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> FileDescriptionTBuilder<'a, 'b> {
     let start = _fbb.start_table();
     FileDescriptionTBuilder {
@@ -1644,6 +1692,9 @@ impl core::fmt::Debug for FileDescriptionT<'_> {
       ds.field("source_file", &self.source_file());
       ds.field("spectra_per_ms_level", &self.spectra_per_ms_level());
       ds.field("trailer_headers", &self.trailer_headers());
+      ds.field("sample_name", &self.sample_name());
+      ds.field("sample_vial", &self.sample_vial());
+      ds.field("sample_comment", &self.sample_comment());
       ds.finish()
   }
 }

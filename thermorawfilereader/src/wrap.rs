@@ -484,6 +484,22 @@ pub struct FileDescription {
     data: RawVec<u8>,
 }
 
+
+macro_rules! view_proxy {
+    ($meth:ident) => {
+        pub fn $meth(&self) -> Option<&str> {
+            self.view().$meth()
+        }
+    };
+    ($meth:ident, $descr:literal) => {
+        #[doc=$descr]
+        pub fn $meth(&self) -> Option<&str> {
+            self.view().$meth()
+        }
+    }
+}
+
+
 impl FileDescription {
     pub fn new(data: RawVec<u8>) -> Self {
         Self { data }
@@ -499,21 +515,12 @@ impl FileDescription {
         root::<FileDescriptionT>(&self.data).unwrap()
     }
 
-    /// The sample identifier provided by the user, if one is present
-    pub fn sample_id(&self) -> Option<&str> {
-        self.view().sample_id()
-    }
-
-    /// The name of the RAW file being described, as it was recorded by
-    /// the control software
-    pub fn source_file(&self) -> Option<&str> {
-        self.view().source_file()
-    }
-
-    /// The date the RAW file was created, or that the instrument run was performed
-    pub fn creation_date(&self) -> Option<&str> {
-        self.view().creation_date()
-    }
+    view_proxy!(sample_id, "The sample identifier provided by the user, if one is present");
+    view_proxy!(sample_vial, "The sample vial name provided by the user or sample handling system, if present");
+    view_proxy!(sample_comment, "The comment describing the sample as provided by the user, if present");
+    view_proxy!(sample_name, "The sample name provided by the user, if one is present");
+    view_proxy!(source_file, "The name of the RAW file being described, as it was recorded by the control software");
+    view_proxy!(creation_date, "The date the RAW file was created, or that the instrument run was performed");
 
     /// The number of spectra at MS levels 1-10.
     ///

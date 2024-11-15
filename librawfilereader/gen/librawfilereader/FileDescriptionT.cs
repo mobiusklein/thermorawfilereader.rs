@@ -50,14 +50,41 @@ public struct FileDescriptionT : IFlatbufferObject
   public uint[] GetSpectraPerMsLevelArray() { return __p.__vector_as_array<uint>(10); }
   public string TrailerHeaders(int j) { int o = __p.__offset(12); return o != 0 ? __p.__string(__p.__vector(o) + j * 4) : null; }
   public int TrailerHeadersLength { get { int o = __p.__offset(12); return o != 0 ? __p.__vector_len(o) : 0; } }
+  public string SampleName { get { int o = __p.__offset(14); return o != 0 ? __p.__string(o + __p.bb_pos) : null; } }
+#if ENABLE_SPAN_T
+  public Span<byte> GetSampleNameBytes() { return __p.__vector_as_span<byte>(14, 1); }
+#else
+  public ArraySegment<byte>? GetSampleNameBytes() { return __p.__vector_as_arraysegment(14); }
+#endif
+  public byte[] GetSampleNameArray() { return __p.__vector_as_array<byte>(14); }
+  public string SampleVial { get { int o = __p.__offset(16); return o != 0 ? __p.__string(o + __p.bb_pos) : null; } }
+#if ENABLE_SPAN_T
+  public Span<byte> GetSampleVialBytes() { return __p.__vector_as_span<byte>(16, 1); }
+#else
+  public ArraySegment<byte>? GetSampleVialBytes() { return __p.__vector_as_arraysegment(16); }
+#endif
+  public byte[] GetSampleVialArray() { return __p.__vector_as_array<byte>(16); }
+  public string SampleComment { get { int o = __p.__offset(18); return o != 0 ? __p.__string(o + __p.bb_pos) : null; } }
+#if ENABLE_SPAN_T
+  public Span<byte> GetSampleCommentBytes() { return __p.__vector_as_span<byte>(18, 1); }
+#else
+  public ArraySegment<byte>? GetSampleCommentBytes() { return __p.__vector_as_arraysegment(18); }
+#endif
+  public byte[] GetSampleCommentArray() { return __p.__vector_as_array<byte>(18); }
 
   public static Offset<librawfilereader.FileDescriptionT> CreateFileDescriptionT(FlatBufferBuilder builder,
       StringOffset creation_dateOffset = default(StringOffset),
       StringOffset sample_idOffset = default(StringOffset),
       StringOffset source_fileOffset = default(StringOffset),
       VectorOffset spectra_per_ms_levelOffset = default(VectorOffset),
-      VectorOffset trailer_headersOffset = default(VectorOffset)) {
-    builder.StartTable(5);
+      VectorOffset trailer_headersOffset = default(VectorOffset),
+      StringOffset sample_nameOffset = default(StringOffset),
+      StringOffset sample_vialOffset = default(StringOffset),
+      StringOffset sample_commentOffset = default(StringOffset)) {
+    builder.StartTable(8);
+    FileDescriptionT.AddSampleComment(builder, sample_commentOffset);
+    FileDescriptionT.AddSampleVial(builder, sample_vialOffset);
+    FileDescriptionT.AddSampleName(builder, sample_nameOffset);
     FileDescriptionT.AddTrailerHeaders(builder, trailer_headersOffset);
     FileDescriptionT.AddSpectraPerMsLevel(builder, spectra_per_ms_levelOffset);
     FileDescriptionT.AddSourceFile(builder, source_fileOffset);
@@ -66,7 +93,7 @@ public struct FileDescriptionT : IFlatbufferObject
     return FileDescriptionT.EndFileDescriptionT(builder);
   }
 
-  public static void StartFileDescriptionT(FlatBufferBuilder builder) { builder.StartTable(5); }
+  public static void StartFileDescriptionT(FlatBufferBuilder builder) { builder.StartTable(8); }
   public static void AddCreationDate(FlatBufferBuilder builder, StringOffset creationDateOffset) { builder.AddOffset(0, creationDateOffset.Value, 0); }
   public static void AddSampleId(FlatBufferBuilder builder, StringOffset sampleIdOffset) { builder.AddOffset(1, sampleIdOffset.Value, 0); }
   public static void AddSourceFile(FlatBufferBuilder builder, StringOffset sourceFileOffset) { builder.AddOffset(2, sourceFileOffset.Value, 0); }
@@ -82,6 +109,9 @@ public struct FileDescriptionT : IFlatbufferObject
   public static VectorOffset CreateTrailerHeadersVectorBlock(FlatBufferBuilder builder, ArraySegment<StringOffset> data) { builder.StartVector(4, data.Count, 4); builder.Add(data); return builder.EndVector(); }
   public static VectorOffset CreateTrailerHeadersVectorBlock(FlatBufferBuilder builder, IntPtr dataPtr, int sizeInBytes) { builder.StartVector(1, sizeInBytes, 1); builder.Add<StringOffset>(dataPtr, sizeInBytes); return builder.EndVector(); }
   public static void StartTrailerHeadersVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
+  public static void AddSampleName(FlatBufferBuilder builder, StringOffset sampleNameOffset) { builder.AddOffset(5, sampleNameOffset.Value, 0); }
+  public static void AddSampleVial(FlatBufferBuilder builder, StringOffset sampleVialOffset) { builder.AddOffset(6, sampleVialOffset.Value, 0); }
+  public static void AddSampleComment(FlatBufferBuilder builder, StringOffset sampleCommentOffset) { builder.AddOffset(7, sampleCommentOffset.Value, 0); }
   public static Offset<librawfilereader.FileDescriptionT> EndFileDescriptionT(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<librawfilereader.FileDescriptionT>(o);
@@ -99,6 +129,9 @@ static public class FileDescriptionTVerify
       && verifier.VerifyString(tablePos, 8 /*SourceFile*/, false)
       && verifier.VerifyVectorOfData(tablePos, 10 /*SpectraPerMsLevel*/, 4 /*uint*/, false)
       && verifier.VerifyVectorOfStrings(tablePos, 12 /*TrailerHeaders*/, false)
+      && verifier.VerifyString(tablePos, 14 /*SampleName*/, false)
+      && verifier.VerifyString(tablePos, 16 /*SampleVial*/, false)
+      && verifier.VerifyString(tablePos, 18 /*SampleComment*/, false)
       && verifier.VerifyTableEnd(tablePos);
   }
 }

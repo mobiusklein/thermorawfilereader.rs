@@ -875,6 +875,9 @@ namespace librawfilereader
 
             SampleInformation sampleInfo = accessor.SampleInformation;
             var sampleID = sampleInfo.SampleId;
+            var sampleVial = sampleInfo.Vial;
+            var sampleComment = sampleInfo.Comment;
+            var sampleName = sampleInfo.SampleName;
 
             var counts = new uint[10];
             foreach(var (k, v) in MSLevelCounts) {
@@ -882,7 +885,12 @@ namespace librawfilereader
             }
 
             var dateOffset = builder.CreateString(date);
+
             var sampleIDOffset = builder.CreateString(sampleID);
+            var sampleNameOffset = builder.CreateString(sampleName);
+            var sampleVialOffset = builder.CreateString(sampleVial);
+            var sampleCommentOffset = builder.CreateString(sampleComment);
+
             var pathOffset = builder.CreateString(Path);
             var countsOffset = FileDescriptionT.CreateSpectraPerMsLevelVector(builder, counts);
 
@@ -897,6 +905,9 @@ namespace librawfilereader
             FileDescriptionT.StartFileDescriptionT(builder);
             FileDescriptionT.AddCreationDate(builder, dateOffset);
             FileDescriptionT.AddSampleId(builder, sampleIDOffset);
+            FileDescriptionT.AddSampleComment(builder, sampleCommentOffset);
+            FileDescriptionT.AddSampleName(builder, sampleNameOffset);
+            FileDescriptionT.AddSampleVial(builder, sampleVialOffset);
             FileDescriptionT.AddSourceFile(builder, pathOffset);
             FileDescriptionT.AddSpectraPerMsLevel(builder, countsOffset);
             FileDescriptionT.AddTrailerHeaders(builder, headersOffset);

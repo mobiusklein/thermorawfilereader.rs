@@ -124,6 +124,9 @@ table FileDescriptionT {
     source_file: string;
     spectra_per_ms_level: [uint32];
     trailer_headers: [string];
+    sample_name: string;
+    sample_vial: string;
+    sample_comment: string;
 }
 
 table InstrumentModelT {
