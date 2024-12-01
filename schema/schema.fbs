@@ -159,6 +159,37 @@ table SpectrumData {
     intensity: [float32];
 }
 
+table StatusLogFloatT {
+    name: string;
+    times: [float64];
+    values: [float64];
+}
+
+table StatusLogBoolT {
+    name: string;
+    times: [float64];
+    values: [bool];
+}
+
+table StatusLogIntT {
+    name: string;
+    times: [float64];
+    values: [int64];
+}
+
+table StatusLogStringT {
+    name: string;
+    times: [float64];
+    values: [string];
+}
+
+table StatusLogCollectionT {
+    float_logs: [StatusLogFloatT];
+    bool_logs: [StatusLogBoolT];
+    int_logs: [StatusLogIntT];
+    string_logs: [StatusLogStringT];
+}
+
 table BaselineNoiseDataT {
     mass: [float64];
     noise: [float32];

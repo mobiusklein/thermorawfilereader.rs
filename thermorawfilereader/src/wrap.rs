@@ -14,10 +14,7 @@ use dotnetrawfilereader_sys::{try_get_runtime, RawVec};
 
 use crate::constants::{IonizationMode, MassAnalyzer, TraceType};
 use crate::schema::{
-    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
-    BaselineNoiseDataT, ChromatogramDescription as ChromatogramDescriptionT, FileDescriptionT,
-    InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT, SpectrumData as SpectrumDataT,
-    SpectrumDescription, SpectrumMode, TrailerValuesT,
+    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT, BaselineNoiseDataT, ChromatogramDescription as ChromatogramDescriptionT, FileDescriptionT, InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT, SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode, StatusLogCollectionT, TrailerValuesT
 };
 
 #[repr(u32)]
@@ -679,6 +676,29 @@ impl<'a> Acquisition<'a> {
     }
 }
 
+pub struct StatusLogCollection {
+    data: RawVec<u8>
+}
+
+impl StatusLogCollection {
+    pub fn new(data: RawVec<u8>) -> Self {
+        Self { data }
+    }
+
+    /// Check that the buffer is a valid `StatusLogCollectionT`
+    pub fn check(&self) -> bool {
+        root::<StatusLogCollectionT>(&self.data).is_ok()
+    }
+
+    /// View the underlying buffer as a `StatusLogCollectionT`
+    pub fn view(&self) -> StatusLogCollectionT {
+        root::<StatusLogCollectionT>(&self.data).unwrap()
+    }
+}
+
+
+
+
 /// A wrapper around a .NET `RawFileReader` instance. It carries a reference to a
 /// .NET runtime and a FFI pointer to access data through. The dotnet runtime is
 /// controlled via locks and is expected to be thread-safe.
@@ -1034,6 +1054,21 @@ impl RawFileReader {
         Some(TrailerValues::new(buff))
     }
 
+    pub fn get_status_logs(&self) -> Option<StatusLogCollection> {
+        self.validate_impl();
+
+        let descr_fn = self
+            .context
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void) -> RawVec<u8>>(
+                pdcstr!("librawfilereader.Exports, librawfilereader"),
+                pdcstr!("GetStatusLogs"),
+            )
+            .unwrap();
+
+        let buff = descr_fn(self.raw_file_reader);
+        Some(StatusLogCollection::new(buff))
+    }
+
     /// A utility for debugging, get a spectrum and access some of its fields, printing them
     /// to `STDOUT`
     pub fn describe(&self, index: usize) {
@@ -1336,5 +1371,32 @@ mod test {
     #[test]
     fn test_fail_gracefully_opening_non_raw_file() {
         assert!(RawFileReader::open("../test/data/small.mgf").is_err())
+    }
+
+    #[test]
+    fn test_status_logs() -> io::Result<()> {
+        let handle = RawFileReader::open("../tests/data/small.RAW")?;
+        let logs = handle.get_status_logs().unwrap();
+        assert!(logs.check());
+        let view = logs.view();
+
+        let float_stats = view.float_logs().unwrap();
+        for stat_log in float_stats.iter() {
+            let times = stat_log.times().unwrap();
+            let vals = stat_log.values().unwrap();
+            // eprintln!("{} {} {:?} {:?}", stat_log.name().unwrap(), times.len(), times.get(0), times.iter().last());
+            assert!(times.len() > 0);
+            assert_eq!(times.len(), vals.len());
+        }
+
+        let str_stats = view.string_logs().unwrap();
+        for stat_log in str_stats.iter() {
+            let times = stat_log.times().unwrap();
+            let vals = stat_log.values().unwrap();
+            // eprintln!("{} {} {:?} {:?}", stat_log.name().unwrap(), times.len(), vals.get(0), vals.iter().last());
+            assert!(times.len() > 0);
+            assert_eq!(times.len(), vals.len());
+        }
+        Ok(())
     }
 }

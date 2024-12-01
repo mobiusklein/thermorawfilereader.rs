@@ -976,6 +976,195 @@ namespace librawfilereader
             return builder.DataBuffer;
         }
 
+        public ByteBuffer StatusLogs() {
+            var accessor = GetHandle();
+
+            var builder = new FlatBufferBuilder(262144);
+
+            var floatLogs = new Dictionary<string, StatusLog<double>>();
+            var intLogs = new Dictionary<string, StatusLog<long>>();
+            var stringLogs = new Dictionary<string, StatusLog<string>>();
+            var boolLogs = new Dictionary<string, StatusLog<bool>>();
+
+            var nEntries = accessor.GetStatusLogEntriesCount();
+
+            for(var i = 0; i < nEntries; i++) {
+                var logsFor = accessor.GetStatusLogEntry(i);
+
+                foreach(var (datum, header) in logsFor.Values.Zip(accessor.GetStatusLogHeaderInformation())) {
+                    var dType = header.DataType;
+                    if (dType == GenericDataTypes.NULL)
+                    {
+                        continue;
+                    }
+                    switch (dType)
+                    {
+                        case GenericDataTypes.YESNO:
+                        case GenericDataTypes.ONOFF:
+                            {
+                                if (!boolLogs.ContainsKey(header.Label))
+                                {
+                                    boolLogs.Add(header.Label, new StatusLog<bool>(header.Label));
+                                }
+
+                                boolLogs[header.Label].Add((bool)datum, logsFor.Time);
+                                break;
+                            }
+                        case GenericDataTypes.Bool:
+                            {
+                                if (!boolLogs.ContainsKey(header.Label))
+                                {
+                                    boolLogs.Add(header.Label, new StatusLog<bool>(header.Label));
+                                }
+
+                                boolLogs[header.Label].Add((bool)datum, logsFor.Time);
+                                break;
+                            }
+                        case GenericDataTypes.CHAR:
+                            {
+                                if (!stringLogs.ContainsKey(header.Label))
+                                {
+                                    stringLogs.Add(header.Label, new StatusLog<string>(header.Label));
+                                }
+                                stringLogs[header.Label].Add(datum.ToString(), logsFor.Time);
+                                break;
+                            }
+                        case GenericDataTypes.CHAR_STRING:
+                            {
+                                if (!stringLogs.ContainsKey(header.Label))
+                                {
+                                    stringLogs.Add(header.Label, new StatusLog<string>(header.Label));
+                                }
+                                stringLogs[header.Label].Add(datum.ToString(), logsFor.Time);
+                                break;
+                            }
+                        case GenericDataTypes.WCHAR_STRING:
+                            {
+                                if (!stringLogs.ContainsKey(header.Label))
+                                {
+                                    stringLogs.Add(header.Label, new StatusLog<string>(header.Label));
+                                }
+                                stringLogs[header.Label].Add((string)datum, logsFor.Time);
+                                break;
+                            }
+                        case GenericDataTypes.FLOAT:
+                            {
+                                if (!floatLogs.ContainsKey(header.Label))
+                                {
+                                    floatLogs.Add(header.Label, new StatusLog<double>(header.Label));
+                                }
+
+                                floatLogs[header.Label].Add((float)datum, logsFor.Time);
+                                break;
+                            }
+                        case GenericDataTypes.DOUBLE:
+                            {
+                                if (!floatLogs.ContainsKey(header.Label))
+                                {
+                                    floatLogs.Add(header.Label, new StatusLog<double>(header.Label));
+                                }
+                                floatLogs[header.Label].Add((double)datum, logsFor.Time);
+                                break;
+                            }
+                        case GenericDataTypes.Int:
+                            {
+                                if (!intLogs.ContainsKey(header.Label))
+                                {
+                                    intLogs.Add(header.Label, new StatusLog<long>(header.Label));
+                                }
+                                intLogs[header.Label].Add((int)datum, logsFor.Time);
+                                break;
+                            }
+                        case GenericDataTypes.ULONG:
+                            {
+
+                                if (!intLogs.ContainsKey(header.Label))
+                                {
+                                    intLogs.Add(header.Label, new StatusLog<long>(header.Label));
+                                }
+                                intLogs[header.Label].Add((uint)datum, logsFor.Time);
+                                break;
+                            }
+                        case GenericDataTypes.SHORT:
+                            {
+                                if (!intLogs.ContainsKey(header.Label))
+                                {
+                                    intLogs.Add(header.Label, new StatusLog<long>(header.Label));
+                                }
+                                intLogs[header.Label].Add((short)datum, logsFor.Time);
+                                break;
+                            }
+                        case GenericDataTypes.USHORT:
+                            {
+                                if (!intLogs.ContainsKey(header.Label))
+                                {
+                                    intLogs.Add(header.Label, new StatusLog<long>(header.Label));
+                                }
+                                intLogs[header.Label].Add((ushort)datum, logsFor.Time);
+                                break;
+                            }
+                        default:
+                            {
+                                System.Console.Error.WriteLine("Skipping {0} {1}", header.Label, header.DataType);
+                                break;
+                            }
+                    }
+                }
+            }
+
+            var floatLogOffsets = new List<Offset<StatusLogFloatT>>();
+            foreach(var log in floatLogs.Values) {
+                var nameOffset = builder.CreateString(log.Name);
+                var timeOffset = StatusLogFloatT.CreateTimesVector(builder, log.Time.ToArray());
+                var dataOffset = StatusLogFloatT.CreateValuesVector(builder, log.Data.ToArray());
+                var tOffset = StatusLogFloatT.CreateStatusLogFloatT(builder, nameOffset, timeOffset, dataOffset);
+                floatLogOffsets.Add(tOffset);
+            }
+
+            var intLogOffsets = new List<Offset<StatusLogIntT>>();
+            foreach (var log in intLogs.Values)
+            {
+                var nameOffset = builder.CreateString(log.Name);
+                var timeOffset = StatusLogIntT.CreateTimesVector(builder, log.Time.ToArray());
+                var dataOffset = StatusLogIntT.CreateValuesVector(builder, log.Data.ToArray());
+                var tOffset = StatusLogIntT.CreateStatusLogIntT(builder, nameOffset, timeOffset, dataOffset);
+                intLogOffsets.Add(tOffset);
+            }
+
+            var boolLogOffsets = new List<Offset<StatusLogBoolT>>();
+            foreach (var log in boolLogs.Values)
+            {
+                var nameOffset = builder.CreateString(log.Name);
+                var timeOffset = StatusLogBoolT.CreateTimesVector(builder, log.Time.ToArray());
+                var dataOffset = StatusLogBoolT.CreateValuesVector(builder, log.Data.ToArray());
+                var tOffset = StatusLogBoolT.CreateStatusLogBoolT(builder, nameOffset, timeOffset, dataOffset);
+                boolLogOffsets.Add(tOffset);
+            }
+
+            var stringLogOffsets = new List<Offset<StatusLogStringT>>();
+            foreach (var log in stringLogs.Values)
+            {
+                var nameOffset = builder.CreateString(log.Name);
+                var timeOffset = StatusLogStringT.CreateTimesVector(builder, log.Time.ToArray());
+                var stringOffsets = new StringOffset [log.Data.Count];
+                for(var i = 0; i < log.Data.Count; i++) {
+                    stringOffsets[i] = builder.CreateString(log.Data[i]);
+                }
+                var dataOffset = StatusLogStringT.CreateValuesVector(builder, stringOffsets);
+                var tOffset = StatusLogStringT.CreateStatusLogStringT(builder, nameOffset, timeOffset, dataOffset);
+                stringLogOffsets.Add(tOffset);
+            }
+
+            var boolVecOffset = StatusLogCollectionT.CreateBoolLogsVector(builder, boolLogOffsets.ToArray());
+            var floatVecOffset = StatusLogCollectionT.CreateFloatLogsVector(builder, floatLogOffsets.ToArray());
+            var intVecOffset = StatusLogCollectionT.CreateIntLogsVector(builder, intLogOffsets.ToArray());
+            var stringVecOffset = StatusLogCollectionT.CreateStringLogsVector(builder, stringLogOffsets.ToArray());
+            var offset = StatusLogCollectionT.CreateStatusLogCollectionT(builder, floatVecOffset, boolVecOffset, intVecOffset, stringVecOffset);
+
+            builder.Finish(offset.Value);
+            return builder.DataBuffer;
+        }
+
         private void BuildScanTypeMap()
         {
             var accessor = GetHandle();
@@ -1357,6 +1546,15 @@ namespace librawfilereader
             var bytesSpan = bytes.AsSpan();
             var size = bytes.Length;
             return MemoryToRustVec(bytesSpan, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_status_logs")]
+        public static unsafe RawVec GetStatusLogs(IntPtr handleToken) {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var buffer = reader.StatusLogs();
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
+            var size = bytes.Length;
+            return MemoryToRustVec(bytes, (nuint)size);
         }
     }
 }

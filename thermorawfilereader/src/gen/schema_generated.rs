@@ -1994,6 +1994,678 @@ impl core::fmt::Debug for SpectrumData<'_> {
       ds.finish()
   }
 }
+pub enum StatusLogFloatTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct StatusLogFloatT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for StatusLogFloatT<'a> {
+  type Inner = StatusLogFloatT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> StatusLogFloatT<'a> {
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_TIMES: flatbuffers::VOffsetT = 6;
+  pub const VT_VALUES: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    StatusLogFloatT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args StatusLogFloatTArgs<'args>
+  ) -> flatbuffers::WIPOffset<StatusLogFloatT<'bldr>> {
+    let mut builder = StatusLogFloatTBuilder::new(_fbb);
+    if let Some(x) = args.values { builder.add_values(x); }
+    if let Some(x) = args.times { builder.add_times(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(StatusLogFloatT::VT_NAME, None)}
+  }
+  #[inline]
+  pub fn times(&self) -> Option<flatbuffers::Vector<'a, f64>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(StatusLogFloatT::VT_TIMES, None)}
+  }
+  #[inline]
+  pub fn values(&self) -> Option<flatbuffers::Vector<'a, f64>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(StatusLogFloatT::VT_VALUES, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for StatusLogFloatT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("times", Self::VT_TIMES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("values", Self::VT_VALUES, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct StatusLogFloatTArgs<'a> {
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub times: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
+    pub values: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
+}
+impl<'a> Default for StatusLogFloatTArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    StatusLogFloatTArgs {
+      name: None,
+      times: None,
+      values: None,
+    }
+  }
+}
+
+pub struct StatusLogFloatTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> StatusLogFloatTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogFloatT::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_times(&mut self, times: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogFloatT::VT_TIMES, times);
+  }
+  #[inline]
+  pub fn add_values(&mut self, values: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogFloatT::VT_VALUES, values);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> StatusLogFloatTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    StatusLogFloatTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<StatusLogFloatT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for StatusLogFloatT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("StatusLogFloatT");
+      ds.field("name", &self.name());
+      ds.field("times", &self.times());
+      ds.field("values", &self.values());
+      ds.finish()
+  }
+}
+pub enum StatusLogBoolTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct StatusLogBoolT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for StatusLogBoolT<'a> {
+  type Inner = StatusLogBoolT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> StatusLogBoolT<'a> {
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_TIMES: flatbuffers::VOffsetT = 6;
+  pub const VT_VALUES: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    StatusLogBoolT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args StatusLogBoolTArgs<'args>
+  ) -> flatbuffers::WIPOffset<StatusLogBoolT<'bldr>> {
+    let mut builder = StatusLogBoolTBuilder::new(_fbb);
+    if let Some(x) = args.values { builder.add_values(x); }
+    if let Some(x) = args.times { builder.add_times(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(StatusLogBoolT::VT_NAME, None)}
+  }
+  #[inline]
+  pub fn times(&self) -> Option<flatbuffers::Vector<'a, f64>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(StatusLogBoolT::VT_TIMES, None)}
+  }
+  #[inline]
+  pub fn values(&self) -> Option<flatbuffers::Vector<'a, bool>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, bool>>>(StatusLogBoolT::VT_VALUES, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for StatusLogBoolT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("times", Self::VT_TIMES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, bool>>>("values", Self::VT_VALUES, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct StatusLogBoolTArgs<'a> {
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub times: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
+    pub values: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, bool>>>,
+}
+impl<'a> Default for StatusLogBoolTArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    StatusLogBoolTArgs {
+      name: None,
+      times: None,
+      values: None,
+    }
+  }
+}
+
+pub struct StatusLogBoolTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> StatusLogBoolTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogBoolT::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_times(&mut self, times: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogBoolT::VT_TIMES, times);
+  }
+  #[inline]
+  pub fn add_values(&mut self, values: flatbuffers::WIPOffset<flatbuffers::Vector<'b , bool>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogBoolT::VT_VALUES, values);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> StatusLogBoolTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    StatusLogBoolTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<StatusLogBoolT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for StatusLogBoolT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("StatusLogBoolT");
+      ds.field("name", &self.name());
+      ds.field("times", &self.times());
+      ds.field("values", &self.values());
+      ds.finish()
+  }
+}
+pub enum StatusLogIntTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct StatusLogIntT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for StatusLogIntT<'a> {
+  type Inner = StatusLogIntT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> StatusLogIntT<'a> {
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_TIMES: flatbuffers::VOffsetT = 6;
+  pub const VT_VALUES: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    StatusLogIntT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args StatusLogIntTArgs<'args>
+  ) -> flatbuffers::WIPOffset<StatusLogIntT<'bldr>> {
+    let mut builder = StatusLogIntTBuilder::new(_fbb);
+    if let Some(x) = args.values { builder.add_values(x); }
+    if let Some(x) = args.times { builder.add_times(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(StatusLogIntT::VT_NAME, None)}
+  }
+  #[inline]
+  pub fn times(&self) -> Option<flatbuffers::Vector<'a, f64>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(StatusLogIntT::VT_TIMES, None)}
+  }
+  #[inline]
+  pub fn values(&self) -> Option<flatbuffers::Vector<'a, i64>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i64>>>(StatusLogIntT::VT_VALUES, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for StatusLogIntT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("times", Self::VT_TIMES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, i64>>>("values", Self::VT_VALUES, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct StatusLogIntTArgs<'a> {
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub times: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
+    pub values: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, i64>>>,
+}
+impl<'a> Default for StatusLogIntTArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    StatusLogIntTArgs {
+      name: None,
+      times: None,
+      values: None,
+    }
+  }
+}
+
+pub struct StatusLogIntTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> StatusLogIntTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogIntT::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_times(&mut self, times: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogIntT::VT_TIMES, times);
+  }
+  #[inline]
+  pub fn add_values(&mut self, values: flatbuffers::WIPOffset<flatbuffers::Vector<'b , i64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogIntT::VT_VALUES, values);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> StatusLogIntTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    StatusLogIntTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<StatusLogIntT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for StatusLogIntT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("StatusLogIntT");
+      ds.field("name", &self.name());
+      ds.field("times", &self.times());
+      ds.field("values", &self.values());
+      ds.finish()
+  }
+}
+pub enum StatusLogStringTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct StatusLogStringT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for StatusLogStringT<'a> {
+  type Inner = StatusLogStringT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> StatusLogStringT<'a> {
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_TIMES: flatbuffers::VOffsetT = 6;
+  pub const VT_VALUES: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    StatusLogStringT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args StatusLogStringTArgs<'args>
+  ) -> flatbuffers::WIPOffset<StatusLogStringT<'bldr>> {
+    let mut builder = StatusLogStringTBuilder::new(_fbb);
+    if let Some(x) = args.values { builder.add_values(x); }
+    if let Some(x) = args.times { builder.add_times(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(StatusLogStringT::VT_NAME, None)}
+  }
+  #[inline]
+  pub fn times(&self) -> Option<flatbuffers::Vector<'a, f64>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(StatusLogStringT::VT_TIMES, None)}
+  }
+  #[inline]
+  pub fn values(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(StatusLogStringT::VT_VALUES, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for StatusLogStringT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("times", Self::VT_TIMES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("values", Self::VT_VALUES, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct StatusLogStringTArgs<'a> {
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub times: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
+    pub values: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+}
+impl<'a> Default for StatusLogStringTArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    StatusLogStringTArgs {
+      name: None,
+      times: None,
+      values: None,
+    }
+  }
+}
+
+pub struct StatusLogStringTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> StatusLogStringTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogStringT::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_times(&mut self, times: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogStringT::VT_TIMES, times);
+  }
+  #[inline]
+  pub fn add_values(&mut self, values: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogStringT::VT_VALUES, values);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> StatusLogStringTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    StatusLogStringTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<StatusLogStringT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for StatusLogStringT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("StatusLogStringT");
+      ds.field("name", &self.name());
+      ds.field("times", &self.times());
+      ds.field("values", &self.values());
+      ds.finish()
+  }
+}
+pub enum StatusLogCollectionTOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct StatusLogCollectionT<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for StatusLogCollectionT<'a> {
+  type Inner = StatusLogCollectionT<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> StatusLogCollectionT<'a> {
+  pub const VT_FLOAT_LOGS: flatbuffers::VOffsetT = 4;
+  pub const VT_BOOL_LOGS: flatbuffers::VOffsetT = 6;
+  pub const VT_INT_LOGS: flatbuffers::VOffsetT = 8;
+  pub const VT_STRING_LOGS: flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    StatusLogCollectionT { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+    args: &'args StatusLogCollectionTArgs<'args>
+  ) -> flatbuffers::WIPOffset<StatusLogCollectionT<'bldr>> {
+    let mut builder = StatusLogCollectionTBuilder::new(_fbb);
+    if let Some(x) = args.string_logs { builder.add_string_logs(x); }
+    if let Some(x) = args.int_logs { builder.add_int_logs(x); }
+    if let Some(x) = args.bool_logs { builder.add_bool_logs(x); }
+    if let Some(x) = args.float_logs { builder.add_float_logs(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn float_logs(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogFloatT<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogFloatT>>>>(StatusLogCollectionT::VT_FLOAT_LOGS, None)}
+  }
+  #[inline]
+  pub fn bool_logs(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogBoolT<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogBoolT>>>>(StatusLogCollectionT::VT_BOOL_LOGS, None)}
+  }
+  #[inline]
+  pub fn int_logs(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogIntT<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogIntT>>>>(StatusLogCollectionT::VT_INT_LOGS, None)}
+  }
+  #[inline]
+  pub fn string_logs(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogStringT<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogStringT>>>>(StatusLogCollectionT::VT_STRING_LOGS, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for StatusLogCollectionT<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<StatusLogFloatT>>>>("float_logs", Self::VT_FLOAT_LOGS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<StatusLogBoolT>>>>("bool_logs", Self::VT_BOOL_LOGS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<StatusLogIntT>>>>("int_logs", Self::VT_INT_LOGS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<StatusLogStringT>>>>("string_logs", Self::VT_STRING_LOGS, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct StatusLogCollectionTArgs<'a> {
+    pub float_logs: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogFloatT<'a>>>>>,
+    pub bool_logs: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogBoolT<'a>>>>>,
+    pub int_logs: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogIntT<'a>>>>>,
+    pub string_logs: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<StatusLogStringT<'a>>>>>,
+}
+impl<'a> Default for StatusLogCollectionTArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    StatusLogCollectionTArgs {
+      float_logs: None,
+      bool_logs: None,
+      int_logs: None,
+      string_logs: None,
+    }
+  }
+}
+
+pub struct StatusLogCollectionTBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> StatusLogCollectionTBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_float_logs(&mut self, float_logs: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<StatusLogFloatT<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogCollectionT::VT_FLOAT_LOGS, float_logs);
+  }
+  #[inline]
+  pub fn add_bool_logs(&mut self, bool_logs: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<StatusLogBoolT<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogCollectionT::VT_BOOL_LOGS, bool_logs);
+  }
+  #[inline]
+  pub fn add_int_logs(&mut self, int_logs: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<StatusLogIntT<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogCollectionT::VT_INT_LOGS, int_logs);
+  }
+  #[inline]
+  pub fn add_string_logs(&mut self, string_logs: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<StatusLogStringT<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(StatusLogCollectionT::VT_STRING_LOGS, string_logs);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> StatusLogCollectionTBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    StatusLogCollectionTBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<StatusLogCollectionT<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for StatusLogCollectionT<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("StatusLogCollectionT");
+      ds.field("float_logs", &self.float_logs());
+      ds.field("bool_logs", &self.bool_logs());
+      ds.field("int_logs", &self.int_logs());
+      ds.field("string_logs", &self.string_logs());
+      ds.finish()
+  }
+}
 pub enum BaselineNoiseDataTOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
