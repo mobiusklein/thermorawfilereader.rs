@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
+## [0.4.0] - 2024-12-15
+
+### Added
+
+- Add `ThermoFisher.CommonCore.RandomAccessReaderPlugin`
+- Add more sample descriptors to `FileDescriptionT`
+- Add status log reading API
+
+### Changed
+
+- Trim trailing ':' from `TrailerValue` labels
+
 ## [0.3.0] - 2024-09-25
 
 ### Added
@@ -95,7 +107,8 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.9...v0.3.0
 [0.2.9]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.7...v0.2.8
