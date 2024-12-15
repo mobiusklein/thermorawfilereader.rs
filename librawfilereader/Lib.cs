@@ -778,7 +778,9 @@ namespace librawfilereader
             var trailerOffsets = new Offset<TrailerValueT>[trailers.Length];
 
             for(var i = 0; i < trailers.Length; i++) {
-                var labelOffset = builder.CreateString(trailers.Labels[i]);
+                var label = trailers.Labels[i];
+                var trimmed = label.Substring(0, label.Length - 1);
+                var labelOffset = builder.CreateString(trimmed);
                 var valueOffset = builder.CreateString(trailers.Values[i]);
                 var trailerOffset = TrailerValueT.CreateTrailerValueT(builder, labelOffset, valueOffset);
                 trailerOffsets[i] = trailerOffset;

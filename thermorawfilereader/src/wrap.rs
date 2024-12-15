@@ -1255,6 +1255,7 @@ mod test {
         assert_eq!(handle.len(), 48);
 
         let trailers = handle.get_raw_trailers_for(5).unwrap();
+        assert!(trailers.iter().all(|kv| !kv.label.ends_with(':')));
         assert_eq!(trailers.len(), 26);
 
         Ok(())
