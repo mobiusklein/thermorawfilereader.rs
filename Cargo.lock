@@ -372,7 +372,7 @@ dependencies = [
 
 [[package]]
 name = "dotnetrawfilereader-sys"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "include_dir",
  "netcorehost",

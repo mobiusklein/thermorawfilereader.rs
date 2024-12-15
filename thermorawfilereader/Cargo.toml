@@ -36,7 +36,7 @@ netcorehost = { version = "0.17.0", default-features = false, features = [
     "nethost"
 ]}
 
-dotnetrawfilereader-sys = { version = "0.3.1", path = "../dotnetrawfilereader-sys/", default-features = false}
+dotnetrawfilereader-sys = { version = "0.4.0", path = "../dotnetrawfilereader-sys/", default-features = false}
 bytemuck = "1.18.0"
 
 [dev-dependencies]
