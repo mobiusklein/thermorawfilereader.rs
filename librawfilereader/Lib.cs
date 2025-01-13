@@ -737,32 +737,40 @@ namespace librawfilereader
         public ByteBuffer GetAdvancedPacketData(int scanNumber) {
             var accessor = GetHandle();
             var packetData = accessor.GetAdvancedPacketData(scanNumber);
-            var noiseData = packetData.NoiseData;
+            var peakData = packetData.CentroidData;
+
             FlatBufferBuilder builder = new FlatBufferBuilder(1024);
-            BaselineNoiseDataT.StartNoiseVector(builder, noiseData.Length);
-            foreach(var b in noiseData.Reverse()) {
-                builder.AddFloat(b.Noise);
+            BaselineNoiseDataT.StartNoiseVector(builder, peakData.Noises.Length);
+            foreach(var b in peakData.Noises.Reverse()) {
+                builder.AddFloat((float)b);
             }
             var noiseOffset = builder.EndVector();
 
-            BaselineNoiseDataT.StartBaselineVector(builder, noiseData.Length);
-            foreach (var b in noiseData.Reverse())
+            BaselineNoiseDataT.StartBaselineVector(builder, peakData.Baselines.Length);
+            foreach (var b in peakData.Baselines.Reverse())
             {
-                builder.AddFloat(b.Baseline);
+                builder.AddFloat((float)b);
             }
             var baselineOffset = builder.EndVector();
 
-            BaselineNoiseDataT.StartMassVector(builder, noiseData.Length);
-            foreach (var b in noiseData.Reverse())
+            BaselineNoiseDataT.StartMassVector(builder, peakData.Masses.Length);
+            foreach (var b in peakData.Masses.Reverse())
             {
-                builder.AddDouble(b.Mass);
+                builder.AddDouble(b);
             }
             var massOffset = builder.EndVector();
+
+            BaselineNoiseDataT.StartChargeVector(builder, peakData.Charges.Length);
+            foreach (var b in peakData.Charges.Reverse()) {
+                builder.AddFloat((float)b);
+            }
+            var chargeOffset = builder.EndVector();
 
             BaselineNoiseDataT.StartBaselineNoiseDataT(builder);
             BaselineNoiseDataT.AddNoise(builder, noiseOffset);
             BaselineNoiseDataT.AddBaseline(builder, baselineOffset);
             BaselineNoiseDataT.AddMass(builder, massOffset);
+            BaselineNoiseDataT.AddCharge(builder, chargeOffset);
 
             var offset = BaselineNoiseDataT.EndBaselineNoiseDataT(builder);
             builder.Finish(offset.Value);

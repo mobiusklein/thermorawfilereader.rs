@@ -43,19 +43,29 @@ public struct BaselineNoiseDataT : IFlatbufferObject
   public ArraySegment<byte>? GetBaselineBytes() { return __p.__vector_as_arraysegment(8); }
 #endif
   public float[] GetBaselineArray() { return __p.__vector_as_array<float>(8); }
+  public float Charge(int j) { int o = __p.__offset(10); return o != 0 ? __p.bb.GetFloat(__p.__vector(o) + j * 4) : (float)0; }
+  public int ChargeLength { get { int o = __p.__offset(10); return o != 0 ? __p.__vector_len(o) : 0; } }
+#if ENABLE_SPAN_T
+  public Span<float> GetChargeBytes() { return __p.__vector_as_span<float>(10, 4); }
+#else
+  public ArraySegment<byte>? GetChargeBytes() { return __p.__vector_as_arraysegment(10); }
+#endif
+  public float[] GetChargeArray() { return __p.__vector_as_array<float>(10); }
 
   public static Offset<librawfilereader.BaselineNoiseDataT> CreateBaselineNoiseDataT(FlatBufferBuilder builder,
       VectorOffset massOffset = default(VectorOffset),
       VectorOffset noiseOffset = default(VectorOffset),
-      VectorOffset baselineOffset = default(VectorOffset)) {
-    builder.StartTable(3);
+      VectorOffset baselineOffset = default(VectorOffset),
+      VectorOffset chargeOffset = default(VectorOffset)) {
+    builder.StartTable(4);
+    BaselineNoiseDataT.AddCharge(builder, chargeOffset);
     BaselineNoiseDataT.AddBaseline(builder, baselineOffset);
     BaselineNoiseDataT.AddNoise(builder, noiseOffset);
     BaselineNoiseDataT.AddMass(builder, massOffset);
     return BaselineNoiseDataT.EndBaselineNoiseDataT(builder);
   }
 
-  public static void StartBaselineNoiseDataT(FlatBufferBuilder builder) { builder.StartTable(3); }
+  public static void StartBaselineNoiseDataT(FlatBufferBuilder builder) { builder.StartTable(4); }
   public static void AddMass(FlatBufferBuilder builder, VectorOffset massOffset) { builder.AddOffset(0, massOffset.Value, 0); }
   public static VectorOffset CreateMassVector(FlatBufferBuilder builder, double[] data) { builder.StartVector(8, data.Length, 8); for (int i = data.Length - 1; i >= 0; i--) builder.AddDouble(data[i]); return builder.EndVector(); }
   public static VectorOffset CreateMassVectorBlock(FlatBufferBuilder builder, double[] data) { builder.StartVector(8, data.Length, 8); builder.Add(data); return builder.EndVector(); }
@@ -74,6 +84,12 @@ public struct BaselineNoiseDataT : IFlatbufferObject
   public static VectorOffset CreateBaselineVectorBlock(FlatBufferBuilder builder, ArraySegment<float> data) { builder.StartVector(4, data.Count, 4); builder.Add(data); return builder.EndVector(); }
   public static VectorOffset CreateBaselineVectorBlock(FlatBufferBuilder builder, IntPtr dataPtr, int sizeInBytes) { builder.StartVector(1, sizeInBytes, 1); builder.Add<float>(dataPtr, sizeInBytes); return builder.EndVector(); }
   public static void StartBaselineVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
+  public static void AddCharge(FlatBufferBuilder builder, VectorOffset chargeOffset) { builder.AddOffset(3, chargeOffset.Value, 0); }
+  public static VectorOffset CreateChargeVector(FlatBufferBuilder builder, float[] data) { builder.StartVector(4, data.Length, 4); for (int i = data.Length - 1; i >= 0; i--) builder.AddFloat(data[i]); return builder.EndVector(); }
+  public static VectorOffset CreateChargeVectorBlock(FlatBufferBuilder builder, float[] data) { builder.StartVector(4, data.Length, 4); builder.Add(data); return builder.EndVector(); }
+  public static VectorOffset CreateChargeVectorBlock(FlatBufferBuilder builder, ArraySegment<float> data) { builder.StartVector(4, data.Count, 4); builder.Add(data); return builder.EndVector(); }
+  public static VectorOffset CreateChargeVectorBlock(FlatBufferBuilder builder, IntPtr dataPtr, int sizeInBytes) { builder.StartVector(1, sizeInBytes, 1); builder.Add<float>(dataPtr, sizeInBytes); return builder.EndVector(); }
+  public static void StartChargeVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
   public static Offset<librawfilereader.BaselineNoiseDataT> EndBaselineNoiseDataT(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<librawfilereader.BaselineNoiseDataT>(o);
@@ -89,6 +105,7 @@ static public class BaselineNoiseDataTVerify
       && verifier.VerifyVectorOfData(tablePos, 4 /*Mass*/, 8 /*double*/, false)
       && verifier.VerifyVectorOfData(tablePos, 6 /*Noise*/, 4 /*float*/, false)
       && verifier.VerifyVectorOfData(tablePos, 8 /*Baseline*/, 4 /*float*/, false)
+      && verifier.VerifyVectorOfData(tablePos, 10 /*Charge*/, 4 /*float*/, false)
       && verifier.VerifyTableEnd(tablePos);
   }
 }

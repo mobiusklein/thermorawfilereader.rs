@@ -194,6 +194,7 @@ table BaselineNoiseDataT {
     mass: [float64];
     noise: [float32];
     baseline: [float32];
+    charge: [float32];
 }
 
 table TrailerValueT {

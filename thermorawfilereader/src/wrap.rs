@@ -17,6 +17,32 @@ use crate::schema::{
     root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT, BaselineNoiseDataT, ChromatogramDescription as ChromatogramDescriptionT, FileDescriptionT, InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT, SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode, StatusLogCollectionT, TrailerValuesT
 };
 
+macro_rules! view_proxy {
+    ($meth:ident) => {
+        pub fn $meth(&self) -> Option<&str> {
+            self.view().$meth()
+        }
+    };
+    ($meth:ident, $descr:literal) => {
+        #[doc=$descr]
+        pub fn $meth(&self) -> Option<&str> {
+            self.view().$meth()
+        }
+    };
+    ($meth:ident, $descr:literal, $ret:ty) => {
+        #[doc=$descr]
+        pub fn $meth(&self) -> $ret {
+            self.view().$meth()
+        }
+    };
+    ($meth:ident, $ret:ty) => {
+        pub fn $meth(&self) -> $ret {
+            self.view().$meth()
+        }
+    }
+}
+
+
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// A set of error codes to describe how creating and using a `RawFileReader` might fail (or not).
@@ -250,12 +276,12 @@ impl TrailerValues {
         Self { data }
     }
 
-    /// Check that the buffer is a valid `BaselineNoiseData`
+    /// Check that the buffer is a valid `TrailerValuesT`
     pub fn check(&self) -> bool {
         root::<TrailerValuesT>(&self.data).is_ok()
     }
 
-    /// View the underlying buffer as a `BaselineNoiseData`
+    /// View the underlying buffer as a `TrailerValuesT`
     pub fn view(&self) -> TrailerValuesT {
         unsafe { root_unchecked::<TrailerValuesT>(&self.data) }
     }
@@ -324,17 +350,10 @@ impl BaselineNoiseData {
         unsafe { root_unchecked::<BaselineNoiseDataT>(&self.data) }
     }
 
-    pub fn noise(&self) -> Vector<'_, f32> {
-        self.view().noise().unwrap()
-    }
-
-    pub fn baseline(&self) -> Vector<'_, f32> {
-        self.view().baseline().unwrap()
-    }
-
-    pub fn mass(&self) -> Vector<'_, f64> {
-        self.view().mass().unwrap()
-    }
+    view_proxy!(noise, "Access the peak-local noise array, if available", Option<Vector<'_, f32>>);
+    view_proxy!(baseline, "Access the baseline signal array, if available", Option<Vector<'_, f32>>);
+    view_proxy!(mass, "Access the peak neutral mass array, if available", Option<Vector<'_, f64>>);
+    view_proxy!(charge, "Access the peak charge array, if available", Option<Vector<'_, f32>>);
 }
 
 /// The signal trace of a chromatogram
@@ -481,20 +500,6 @@ pub struct FileDescription {
     data: RawVec<u8>,
 }
 
-
-macro_rules! view_proxy {
-    ($meth:ident) => {
-        pub fn $meth(&self) -> Option<&str> {
-            self.view().$meth()
-        }
-    };
-    ($meth:ident, $descr:literal) => {
-        #[doc=$descr]
-        pub fn $meth(&self) -> Option<&str> {
-            self.view().$meth()
-        }
-    }
-}
 
 
 impl FileDescription {

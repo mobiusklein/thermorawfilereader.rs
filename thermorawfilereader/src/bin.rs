@@ -47,8 +47,7 @@ pub fn main() -> io::Result<()> {
         let noise = dta.noise();
         handle.set_centroid_spectra(true);
         let spec = handle.get(target as usize).unwrap();
-        println!("{} peaks, {} noise points", spec.data().unwrap().len(), noise.len());
-
+        println!("{} peaks, {} noise points", spec.data().unwrap().len(), noise.map(|x| x.len()).unwrap_or_default());
         // spec.data().unwrap().into_iter().for_each(|(mz, int)| {
         //     println!("{mz}\t{int}")
         // })

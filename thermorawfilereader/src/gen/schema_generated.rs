@@ -2685,6 +2685,7 @@ impl<'a> BaselineNoiseDataT<'a> {
   pub const VT_MASS: flatbuffers::VOffsetT = 4;
   pub const VT_NOISE: flatbuffers::VOffsetT = 6;
   pub const VT_BASELINE: flatbuffers::VOffsetT = 8;
+  pub const VT_CHARGE: flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -2696,6 +2697,7 @@ impl<'a> BaselineNoiseDataT<'a> {
     args: &'args BaselineNoiseDataTArgs<'args>
   ) -> flatbuffers::WIPOffset<BaselineNoiseDataT<'bldr>> {
     let mut builder = BaselineNoiseDataTBuilder::new(_fbb);
+    if let Some(x) = args.charge { builder.add_charge(x); }
     if let Some(x) = args.baseline { builder.add_baseline(x); }
     if let Some(x) = args.noise { builder.add_noise(x); }
     if let Some(x) = args.mass { builder.add_mass(x); }
@@ -2724,6 +2726,13 @@ impl<'a> BaselineNoiseDataT<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(BaselineNoiseDataT::VT_BASELINE, None)}
   }
+  #[inline]
+  pub fn charge(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(BaselineNoiseDataT::VT_CHARGE, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for BaselineNoiseDataT<'_> {
@@ -2736,6 +2745,7 @@ impl flatbuffers::Verifiable for BaselineNoiseDataT<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("mass", Self::VT_MASS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("noise", Self::VT_NOISE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("baseline", Self::VT_BASELINE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("charge", Self::VT_CHARGE, false)?
      .finish();
     Ok(())
   }
@@ -2744,6 +2754,7 @@ pub struct BaselineNoiseDataTArgs<'a> {
     pub mass: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
     pub noise: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
     pub baseline: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+    pub charge: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
 }
 impl<'a> Default for BaselineNoiseDataTArgs<'a> {
   #[inline]
@@ -2752,6 +2763,7 @@ impl<'a> Default for BaselineNoiseDataTArgs<'a> {
       mass: None,
       noise: None,
       baseline: None,
+      charge: None,
     }
   }
 }
@@ -2774,6 +2786,10 @@ impl<'a: 'b, 'b> BaselineNoiseDataTBuilder<'a, 'b> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BaselineNoiseDataT::VT_BASELINE, baseline);
   }
   #[inline]
+  pub fn add_charge(&mut self, charge: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BaselineNoiseDataT::VT_CHARGE, charge);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> BaselineNoiseDataTBuilder<'a, 'b> {
     let start = _fbb.start_table();
     BaselineNoiseDataTBuilder {
@@ -2794,6 +2810,7 @@ impl core::fmt::Debug for BaselineNoiseDataT<'_> {
       ds.field("mass", &self.mass());
       ds.field("noise", &self.noise());
       ds.field("baseline", &self.baseline());
+      ds.field("charge", &self.charge());
       ds.finish()
   }
 }

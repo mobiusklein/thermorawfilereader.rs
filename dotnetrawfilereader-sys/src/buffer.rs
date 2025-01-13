@@ -34,6 +34,19 @@ impl<T> RawVec<T> {
             self.data = ptr::null_mut();
         }
     }
+
+    pub fn from_vec(buf: Vec<T>) -> Self {
+        let capacity = buf.capacity();
+        let len = buf.len();
+        let data = buf.leak();
+        {
+            RawVec {
+                data: data.as_mut_ptr(),
+                len,
+                capacity,
+            }
+        }
+    }
 }
 
 /// Pretend to by a `&[T]`, a read-only view of the memory
@@ -56,15 +69,8 @@ impl<T> Drop for RawVec<T> {
 /// it to .NET via the passed pointer.
 pub(crate) extern "system" fn rust_allocate_memory(size: usize, vec: *mut RawVec<u8>) {
     let buf = vec![0; size];
-    let capacity = buf.capacity();
-    let len = buf.len();
-    let data = buf.leak();
     unsafe {
-        *vec = RawVec {
-            data: data.as_mut_ptr(),
-            len,
-            capacity,
-        }
+        *vec = RawVec::from_vec(buf)
     };
 }
 
