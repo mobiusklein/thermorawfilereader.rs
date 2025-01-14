@@ -190,11 +190,15 @@ table StatusLogCollectionT {
     string_logs: [StatusLogStringT];
 }
 
-table BaselineNoiseDataT {
+table ExtendedSpectrumDataT {
     mass: [float64];
     noise: [float32];
     baseline: [float32];
     charge: [float32];
+    resolution: [float32];
+    sampled_noise: [float32];
+    sampled_noise_baseline: [float32];
+    sampled_noise_mz: [float32];
 }
 
 table TrailerValueT {

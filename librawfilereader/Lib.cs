@@ -412,7 +412,6 @@ namespace librawfilereader
             return false;
         }
 
-
         bool GetIntTrailerExtraFor(IRawDataPlus accessor, int scanNumber, string key, out int value, int defaultValue=0)
         {
             object tmp;
@@ -734,45 +733,108 @@ namespace librawfilereader
             return offset;
         }
 
-        public ByteBuffer GetAdvancedPacketData(int scanNumber) {
+        public ByteBuffer GetAdvancedPacketData(int scanNumber, bool includeSampledNoise=true) {
             var accessor = GetHandle();
             var packetData = accessor.GetAdvancedPacketData(scanNumber);
             var peakData = packetData.CentroidData;
 
             FlatBufferBuilder builder = new FlatBufferBuilder(1024);
-            BaselineNoiseDataT.StartNoiseVector(builder, peakData.Noises.Length);
-            foreach(var b in peakData.Noises.Reverse()) {
-                builder.AddFloat((float)b);
-            }
-            var noiseOffset = builder.EndVector();
 
-            BaselineNoiseDataT.StartBaselineVector(builder, peakData.Baselines.Length);
-            foreach (var b in peakData.Baselines.Reverse())
+            VectorOffset? noiseOffset = null;
+            VectorOffset? baselineOffset = null;
+            VectorOffset? massOffset = null;
+            VectorOffset? chargeOffset = null;
+            VectorOffset? resolutionsOffset = null;
+
+            if (peakData.Noises != null) {
+                ExtendedSpectrumDataT.StartNoiseVector(builder, peakData.Noises.Length);
+                foreach (var b in peakData.Noises.Reverse())
+                {
+                    builder.AddFloat((float)b);
+                }
+                noiseOffset = builder.EndVector();
+            }
+
+            if (peakData.Baselines != null)
+            {
+                ExtendedSpectrumDataT.StartBaselineVector(builder, peakData.Baselines.Length);
+                foreach (var b in peakData.Baselines.Reverse())
             {
                 builder.AddFloat((float)b);
             }
-            var baselineOffset = builder.EndVector();
-
-            BaselineNoiseDataT.StartMassVector(builder, peakData.Masses.Length);
-            foreach (var b in peakData.Masses.Reverse())
-            {
-                builder.AddDouble(b);
+                baselineOffset = builder.EndVector();
             }
-            var massOffset = builder.EndVector();
 
-            BaselineNoiseDataT.StartChargeVector(builder, peakData.Charges.Length);
-            foreach (var b in peakData.Charges.Reverse()) {
-                builder.AddFloat((float)b);
+            if (peakData.Masses != null) {
+                ExtendedSpectrumDataT.StartMassVector(builder, peakData.Masses.Length);
+                foreach (var b in peakData.Masses.Reverse())
+                {
+                    builder.AddDouble(b);
+                }
+                massOffset = builder.EndVector();
             }
-            var chargeOffset = builder.EndVector();
 
-            BaselineNoiseDataT.StartBaselineNoiseDataT(builder);
-            BaselineNoiseDataT.AddNoise(builder, noiseOffset);
-            BaselineNoiseDataT.AddBaseline(builder, baselineOffset);
-            BaselineNoiseDataT.AddMass(builder, massOffset);
-            BaselineNoiseDataT.AddCharge(builder, chargeOffset);
+            if (peakData.Charges != null) {
+                ExtendedSpectrumDataT.StartChargeVector(builder, peakData.Charges.Length);
+                foreach (var b in peakData.Charges.Reverse()) {
+                    builder.AddFloat((float)b);
+                }
+                chargeOffset = builder.EndVector();
+            }
 
-            var offset = BaselineNoiseDataT.EndBaselineNoiseDataT(builder);
+
+            if (peakData.Resolutions != null)  {
+                ExtendedSpectrumDataT.StartResolutionVector(builder, peakData.Resolutions.Length);
+                foreach (var b in peakData.Resolutions.Reverse())
+                {
+                    builder.AddFloat((float)b);
+                }
+                resolutionsOffset = builder.EndVector();
+            }
+
+            VectorOffset? noiseBaselineOffset = null;
+            VectorOffset? noiseMzOffset = null;
+            VectorOffset? sampledNoiseOffset = null;
+            if (includeSampledNoise) {
+                var noiseData = packetData.NoiseData;
+                ExtendedSpectrumDataT.StartSampledNoiseBaselineVector(builder, noiseData.Length);
+                foreach (var b in noiseData.Reverse()) {
+                    builder.AddFloat(b.Baseline);
+                }
+                noiseBaselineOffset = builder.EndVector();
+
+                ExtendedSpectrumDataT.StartSampledNoiseMzVector(builder, noiseData.Length);
+                foreach (var b in noiseData.Reverse())
+                {
+                    builder.AddFloat(b.Mass);
+                }
+                noiseMzOffset = builder.EndVector();
+
+                ExtendedSpectrumDataT.StartSampledNoiseVector(builder, noiseData.Length);
+                foreach (var b in noiseData.Reverse())
+                {
+                    builder.AddFloat(b.Noise);
+                }
+                sampledNoiseOffset = builder.EndVector();
+            }
+
+            ExtendedSpectrumDataT.StartExtendedSpectrumDataT(builder);
+            if (noiseOffset.HasValue) ExtendedSpectrumDataT.AddNoise(builder, noiseOffset.Value);
+            if (baselineOffset.HasValue) ExtendedSpectrumDataT.AddBaseline(builder, baselineOffset.Value);
+            if (massOffset.HasValue) ExtendedSpectrumDataT.AddMass(builder, massOffset.Value);
+            if (chargeOffset.HasValue) ExtendedSpectrumDataT.AddCharge(builder, chargeOffset.Value);
+            if (resolutionsOffset.HasValue) ExtendedSpectrumDataT.AddResolution(builder, resolutionsOffset.Value);
+
+            if (includeSampledNoise) {
+                if (noiseBaselineOffset.HasValue)
+                    ExtendedSpectrumDataT.AddSampledNoiseBaseline(builder, noiseBaselineOffset.Value);
+                if (noiseMzOffset.HasValue)
+                    ExtendedSpectrumDataT.AddSampledNoiseMz(builder, noiseMzOffset.Value);
+                if (sampledNoiseOffset.HasValue)
+                    ExtendedSpectrumDataT.AddSampledNoise(builder, sampledNoiseOffset.Value);
+            }
+
+            var offset = ExtendedSpectrumDataT.EndExtendedSpectrumDataT(builder);
             builder.Finish(offset.Value);
             return builder.DataBuffer;
         }
@@ -1469,9 +1531,9 @@ namespace librawfilereader
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_advanced_packet_data_for")]
-        public static unsafe RawVec AdvancedPacketDataFor(IntPtr handleToken, int scanNumber) {
+        public static unsafe RawVec AdvancedPacketDataFor(IntPtr handleToken, int scanNumber, int includeSampledNoise) {
             RawFileReader reader = GetHandleForToken(handleToken);
-            var buffer = reader.GetAdvancedPacketData(scanNumber);
+            var buffer = reader.GetAdvancedPacketData(scanNumber, includeSampledNoise != 0);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
             return MemoryToRustVec(bytes, (nuint)size);

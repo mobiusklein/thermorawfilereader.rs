@@ -14,7 +14,10 @@ use dotnetrawfilereader_sys::{try_get_runtime, RawVec};
 
 use crate::constants::{IonizationMode, MassAnalyzer, TraceType};
 use crate::schema::{
-    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT, BaselineNoiseDataT, ChromatogramDescription as ChromatogramDescriptionT, FileDescriptionT, InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT, SpectrumData as SpectrumDataT, SpectrumDescription, SpectrumMode, StatusLogCollectionT, TrailerValuesT
+    root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
+    ChromatogramDescription as ChromatogramDescriptionT, ExtendedSpectrumDataT, FileDescriptionT,
+    InstrumentMethodT, InstrumentModelT, Polarity, PrecursorT, SpectrumData as SpectrumDataT,
+    SpectrumDescription, SpectrumMode, StatusLogCollectionT, TrailerValuesT,
 };
 
 macro_rules! view_proxy {
@@ -39,9 +42,8 @@ macro_rules! view_proxy {
         pub fn $meth(&self) -> $ret {
             self.view().$meth()
         }
-    }
+    };
 }
-
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -331,29 +333,45 @@ impl TrailerValues {
     }
 }
 
-pub struct BaselineNoiseData {
+pub struct ExtendedSpectrumData {
     data: RawVec<u8>,
 }
 
-impl BaselineNoiseData {
+impl ExtendedSpectrumData {
     pub fn new(data: RawVec<u8>) -> Self {
         Self { data }
     }
 
-    /// Check that the buffer is a valid `BaselineNoiseData`
+    /// Check that the buffer is a valid `ExtendedSpectrumData`
     pub fn check(&self) -> bool {
-        root::<BaselineNoiseDataT>(&self.data).is_ok()
+        root::<ExtendedSpectrumDataT>(&self.data).is_ok()
     }
 
-    /// View the underlying buffer as a `BaselineNoiseData`
-    pub fn view(&self) -> BaselineNoiseDataT {
-        unsafe { root_unchecked::<BaselineNoiseDataT>(&self.data) }
+    /// View the underlying buffer as a `ExtendedSpectrumData`
+    pub fn view(&self) -> ExtendedSpectrumDataT {
+        unsafe { root_unchecked::<ExtendedSpectrumDataT>(&self.data) }
     }
 
-    view_proxy!(noise, "Access the peak-local noise array, if available", Option<Vector<'_, f32>>);
-    view_proxy!(baseline, "Access the baseline signal array, if available", Option<Vector<'_, f32>>);
-    view_proxy!(mass, "Access the peak neutral mass array, if available", Option<Vector<'_, f64>>);
-    view_proxy!(charge, "Access the peak charge array, if available", Option<Vector<'_, f32>>);
+    view_proxy!(
+        noise,
+        "Access the peak-local noise array, if available",
+        Option<Vector<'_, f32>>
+    );
+    view_proxy!(
+        baseline,
+        "Access the baseline signal array, if available",
+        Option<Vector<'_, f32>>
+    );
+    view_proxy!(
+        mass,
+        "Access the peak neutral mass array, if available",
+        Option<Vector<'_, f64>>
+    );
+    view_proxy!(
+        charge,
+        "Access the peak charge array, if available",
+        Option<Vector<'_, f32>>
+    );
 }
 
 /// The signal trace of a chromatogram
@@ -500,8 +518,6 @@ pub struct FileDescription {
     data: RawVec<u8>,
 }
 
-
-
 impl FileDescription {
     pub fn new(data: RawVec<u8>) -> Self {
         Self { data }
@@ -517,12 +533,30 @@ impl FileDescription {
         root::<FileDescriptionT>(&self.data).unwrap()
     }
 
-    view_proxy!(sample_id, "The sample identifier provided by the user, if one is present");
-    view_proxy!(sample_vial, "The sample vial name provided by the user or sample handling system, if present");
-    view_proxy!(sample_comment, "The comment describing the sample as provided by the user, if present");
-    view_proxy!(sample_name, "The sample name provided by the user, if one is present");
-    view_proxy!(source_file, "The name of the RAW file being described, as it was recorded by the control software");
-    view_proxy!(creation_date, "The date the RAW file was created, or that the instrument run was performed");
+    view_proxy!(
+        sample_id,
+        "The sample identifier provided by the user, if one is present"
+    );
+    view_proxy!(
+        sample_vial,
+        "The sample vial name provided by the user or sample handling system, if present"
+    );
+    view_proxy!(
+        sample_comment,
+        "The comment describing the sample as provided by the user, if present"
+    );
+    view_proxy!(
+        sample_name,
+        "The sample name provided by the user, if one is present"
+    );
+    view_proxy!(
+        source_file,
+        "The name of the RAW file being described, as it was recorded by the control software"
+    );
+    view_proxy!(
+        creation_date,
+        "The date the RAW file was created, or that the instrument run was performed"
+    );
 
     /// The number of spectra at MS levels 1-10.
     ///
@@ -682,7 +716,7 @@ impl<'a> Acquisition<'a> {
 }
 
 pub struct StatusLogCollection {
-    data: RawVec<u8>
+    data: RawVec<u8>,
 }
 
 impl StatusLogCollection {
@@ -700,9 +734,6 @@ impl StatusLogCollection {
         root::<StatusLogCollectionT>(&self.data).unwrap()
     }
 }
-
-
-
 
 /// A wrapper around a .NET `RawFileReader` instance. It carries a reference to a
 /// .NET runtime and a FFI pointer to access data through. The dotnet runtime is
@@ -747,13 +778,17 @@ impl RawFileReader {
     /// Open a ThermoFisher RAW file from a path. This may also create the .NET runtime
     /// if this is the first time it was called.
     pub fn open<P: Into<PathBuf>>(path: P) -> io::Result<Self> {
-        let context = try_get_runtime().map_err(|e| {
-            match e {
-                dotnetrawfilereader_sys::DotNetRuntimeCreationError::FailedToWriteDLLBundle(r) => io::Error::new(io::ErrorKind::Other, r),
-                dotnetrawfilereader_sys::DotNetRuntimeCreationError::LoadHostfxrError(r) => io::Error::new(io::ErrorKind::Other, r),
-                dotnetrawfilereader_sys::DotNetRuntimeCreationError::HostingError(r) => io::Error::new(io::ErrorKind::Other, r),
-                dotnetrawfilereader_sys::DotNetRuntimeCreationError::IOError(r) => r,
+        let context = try_get_runtime().map_err(|e| match e {
+            dotnetrawfilereader_sys::DotNetRuntimeCreationError::FailedToWriteDLLBundle(r) => {
+                io::Error::new(io::ErrorKind::Other, r)
             }
+            dotnetrawfilereader_sys::DotNetRuntimeCreationError::LoadHostfxrError(r) => {
+                io::Error::new(io::ErrorKind::Other, r)
+            }
+            dotnetrawfilereader_sys::DotNetRuntimeCreationError::HostingError(r) => {
+                io::Error::new(io::ErrorKind::Other, r)
+            }
+            dotnetrawfilereader_sys::DotNetRuntimeCreationError::IOError(r) => r,
         })?;
         let open_fn = context.get_function_with_unmanaged_callers_only::<fn(text_ptr: *const u8, text_length: i32) -> *mut c_void>(
             pdcstr!("librawfilereader.Exports, librawfilereader"),
@@ -787,13 +822,19 @@ impl RawFileReader {
             RawFileReaderError::InvalidFormat => {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
-                    format!("File does not appear to be a valid RAW file. {}", handle.error_message().unwrap_or_default()),
+                    format!(
+                        "File does not appear to be a valid RAW file. {}",
+                        handle.error_message().unwrap_or_default()
+                    ),
                 ))
             }
             RawFileReaderError::Error | RawFileReaderError::HandleNotFound => {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
-                    format!("An unknown error occured {}", handle.error_message().unwrap_or_default())
+                    format!(
+                        "An unknown error occured {}",
+                        handle.error_message().unwrap_or_default()
+                    ),
                 ))
             }
         }
@@ -1013,11 +1054,12 @@ impl RawFileReader {
         Some(RawSpectrum::new(buffer))
     }
 
-    /// Retrieve the baseline and noise supplemental arrays for a spectrum.
+    /// Retrieve extra signal information like the baseline, charge and noise
+    /// supplemental arrays for a spectrum.
     ///
     /// ## Note
     /// This method is experimental and may not work reliably.
-    pub fn get_baseline_noise(&self, index: usize) -> Option<BaselineNoiseData> {
+    pub fn get_extended_spectrum_data(&self, index: usize, include_sampled_noise: bool) -> Option<ExtendedSpectrumData> {
         if index >= self.len() {
             return None;
         }
@@ -1025,14 +1067,14 @@ impl RawFileReader {
 
         let buffer_fn = self
             .context
-            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32) -> RawVec<u8>>(
+            .get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32, i32) -> RawVec<u8>>(
                 pdcstr!("librawfilereader.Exports, librawfilereader"),
                 pdcstr!("AdvancedPacketDataFor"),
             )
             .unwrap();
 
-        let buff = buffer_fn(self.raw_file_reader, (index as i32) + 1);
-        Some(BaselineNoiseData::new(buff))
+        let buff = buffer_fn(self.raw_file_reader, (index as i32) + 1, include_sampled_noise as i32);
+        Some(ExtendedSpectrumData::new(buff))
     }
 
     /// Get the trailer extra values for scan at `index`.
@@ -1142,9 +1184,10 @@ impl RawFileReader {
             .unwrap();
         let result = status_fn(self.raw_file_reader);
         if result.len() == 0 || result.len() == 1 && result[0] == 0 {
-            return None
+            return None;
         }
-        let message = String::from_utf8(result.to_vec()).expect("Failed to decode message, invalid UTF8");
+        let message =
+            String::from_utf8(result.to_vec()).expect("Failed to decode message, invalid UTF8");
         Some(message)
     }
 }

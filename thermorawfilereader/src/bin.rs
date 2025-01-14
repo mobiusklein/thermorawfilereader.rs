@@ -43,7 +43,7 @@ pub fn main() -> io::Result<()> {
         println!("Found {data_points} points");
     } else {
         handle.describe(target as usize);
-        let dta = handle.get_baseline_noise(target as usize).unwrap();
+        let dta = handle.get_extended_spectrum_data(target as usize, false).unwrap();
         let noise = dta.noise();
         handle.set_centroid_spectra(true);
         let spec = handle.get(target as usize).unwrap();

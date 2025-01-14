@@ -2666,37 +2666,45 @@ impl core::fmt::Debug for StatusLogCollectionT<'_> {
       ds.finish()
   }
 }
-pub enum BaselineNoiseDataTOffset {}
+pub enum ExtendedSpectrumDataTOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct BaselineNoiseDataT<'a> {
+pub struct ExtendedSpectrumDataT<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for BaselineNoiseDataT<'a> {
-  type Inner = BaselineNoiseDataT<'a>;
+impl<'a> flatbuffers::Follow<'a> for ExtendedSpectrumDataT<'a> {
+  type Inner = ExtendedSpectrumDataT<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: flatbuffers::Table::new(buf, loc) }
   }
 }
 
-impl<'a> BaselineNoiseDataT<'a> {
+impl<'a> ExtendedSpectrumDataT<'a> {
   pub const VT_MASS: flatbuffers::VOffsetT = 4;
   pub const VT_NOISE: flatbuffers::VOffsetT = 6;
   pub const VT_BASELINE: flatbuffers::VOffsetT = 8;
   pub const VT_CHARGE: flatbuffers::VOffsetT = 10;
+  pub const VT_RESOLUTION: flatbuffers::VOffsetT = 12;
+  pub const VT_SAMPLED_NOISE: flatbuffers::VOffsetT = 14;
+  pub const VT_SAMPLED_NOISE_BASELINE: flatbuffers::VOffsetT = 16;
+  pub const VT_SAMPLED_NOISE_MZ: flatbuffers::VOffsetT = 18;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    BaselineNoiseDataT { _tab: table }
+    ExtendedSpectrumDataT { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
-    args: &'args BaselineNoiseDataTArgs<'args>
-  ) -> flatbuffers::WIPOffset<BaselineNoiseDataT<'bldr>> {
-    let mut builder = BaselineNoiseDataTBuilder::new(_fbb);
+    args: &'args ExtendedSpectrumDataTArgs<'args>
+  ) -> flatbuffers::WIPOffset<ExtendedSpectrumDataT<'bldr>> {
+    let mut builder = ExtendedSpectrumDataTBuilder::new(_fbb);
+    if let Some(x) = args.sampled_noise_mz { builder.add_sampled_noise_mz(x); }
+    if let Some(x) = args.sampled_noise_baseline { builder.add_sampled_noise_baseline(x); }
+    if let Some(x) = args.sampled_noise { builder.add_sampled_noise(x); }
+    if let Some(x) = args.resolution { builder.add_resolution(x); }
     if let Some(x) = args.charge { builder.add_charge(x); }
     if let Some(x) = args.baseline { builder.add_baseline(x); }
     if let Some(x) = args.noise { builder.add_noise(x); }
@@ -2710,32 +2718,60 @@ impl<'a> BaselineNoiseDataT<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(BaselineNoiseDataT::VT_MASS, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(ExtendedSpectrumDataT::VT_MASS, None)}
   }
   #[inline]
   pub fn noise(&self) -> Option<flatbuffers::Vector<'a, f32>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(BaselineNoiseDataT::VT_NOISE, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(ExtendedSpectrumDataT::VT_NOISE, None)}
   }
   #[inline]
   pub fn baseline(&self) -> Option<flatbuffers::Vector<'a, f32>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(BaselineNoiseDataT::VT_BASELINE, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(ExtendedSpectrumDataT::VT_BASELINE, None)}
   }
   #[inline]
   pub fn charge(&self) -> Option<flatbuffers::Vector<'a, f32>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(BaselineNoiseDataT::VT_CHARGE, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(ExtendedSpectrumDataT::VT_CHARGE, None)}
+  }
+  #[inline]
+  pub fn resolution(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(ExtendedSpectrumDataT::VT_RESOLUTION, None)}
+  }
+  #[inline]
+  pub fn sampled_noise(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(ExtendedSpectrumDataT::VT_SAMPLED_NOISE, None)}
+  }
+  #[inline]
+  pub fn sampled_noise_baseline(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(ExtendedSpectrumDataT::VT_SAMPLED_NOISE_BASELINE, None)}
+  }
+  #[inline]
+  pub fn sampled_noise_mz(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(ExtendedSpectrumDataT::VT_SAMPLED_NOISE_MZ, None)}
   }
 }
 
-impl flatbuffers::Verifiable for BaselineNoiseDataT<'_> {
+impl flatbuffers::Verifiable for ExtendedSpectrumDataT<'_> {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
@@ -2746,71 +2782,103 @@ impl flatbuffers::Verifiable for BaselineNoiseDataT<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("noise", Self::VT_NOISE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("baseline", Self::VT_BASELINE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("charge", Self::VT_CHARGE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("resolution", Self::VT_RESOLUTION, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("sampled_noise", Self::VT_SAMPLED_NOISE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("sampled_noise_baseline", Self::VT_SAMPLED_NOISE_BASELINE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("sampled_noise_mz", Self::VT_SAMPLED_NOISE_MZ, false)?
      .finish();
     Ok(())
   }
 }
-pub struct BaselineNoiseDataTArgs<'a> {
+pub struct ExtendedSpectrumDataTArgs<'a> {
     pub mass: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
     pub noise: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
     pub baseline: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
     pub charge: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+    pub resolution: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+    pub sampled_noise: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+    pub sampled_noise_baseline: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+    pub sampled_noise_mz: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
 }
-impl<'a> Default for BaselineNoiseDataTArgs<'a> {
+impl<'a> Default for ExtendedSpectrumDataTArgs<'a> {
   #[inline]
   fn default() -> Self {
-    BaselineNoiseDataTArgs {
+    ExtendedSpectrumDataTArgs {
       mass: None,
       noise: None,
       baseline: None,
       charge: None,
+      resolution: None,
+      sampled_noise: None,
+      sampled_noise_baseline: None,
+      sampled_noise_mz: None,
     }
   }
 }
 
-pub struct BaselineNoiseDataTBuilder<'a: 'b, 'b> {
+pub struct ExtendedSpectrumDataTBuilder<'a: 'b, 'b> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b> BaselineNoiseDataTBuilder<'a, 'b> {
+impl<'a: 'b, 'b> ExtendedSpectrumDataTBuilder<'a, 'b> {
   #[inline]
   pub fn add_mass(&mut self, mass: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BaselineNoiseDataT::VT_MASS, mass);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExtendedSpectrumDataT::VT_MASS, mass);
   }
   #[inline]
   pub fn add_noise(&mut self, noise: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BaselineNoiseDataT::VT_NOISE, noise);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExtendedSpectrumDataT::VT_NOISE, noise);
   }
   #[inline]
   pub fn add_baseline(&mut self, baseline: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BaselineNoiseDataT::VT_BASELINE, baseline);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExtendedSpectrumDataT::VT_BASELINE, baseline);
   }
   #[inline]
   pub fn add_charge(&mut self, charge: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BaselineNoiseDataT::VT_CHARGE, charge);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExtendedSpectrumDataT::VT_CHARGE, charge);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> BaselineNoiseDataTBuilder<'a, 'b> {
+  pub fn add_resolution(&mut self, resolution: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExtendedSpectrumDataT::VT_RESOLUTION, resolution);
+  }
+  #[inline]
+  pub fn add_sampled_noise(&mut self, sampled_noise: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExtendedSpectrumDataT::VT_SAMPLED_NOISE, sampled_noise);
+  }
+  #[inline]
+  pub fn add_sampled_noise_baseline(&mut self, sampled_noise_baseline: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExtendedSpectrumDataT::VT_SAMPLED_NOISE_BASELINE, sampled_noise_baseline);
+  }
+  #[inline]
+  pub fn add_sampled_noise_mz(&mut self, sampled_noise_mz: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExtendedSpectrumDataT::VT_SAMPLED_NOISE_MZ, sampled_noise_mz);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> ExtendedSpectrumDataTBuilder<'a, 'b> {
     let start = _fbb.start_table();
-    BaselineNoiseDataTBuilder {
+    ExtendedSpectrumDataTBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<BaselineNoiseDataT<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<ExtendedSpectrumDataT<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl core::fmt::Debug for BaselineNoiseDataT<'_> {
+impl core::fmt::Debug for ExtendedSpectrumDataT<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("BaselineNoiseDataT");
+    let mut ds = f.debug_struct("ExtendedSpectrumDataT");
       ds.field("mass", &self.mass());
       ds.field("noise", &self.noise());
       ds.field("baseline", &self.baseline());
       ds.field("charge", &self.charge());
+      ds.field("resolution", &self.resolution());
+      ds.field("sampled_noise", &self.sampled_noise());
+      ds.field("sampled_noise_baseline", &self.sampled_noise_baseline());
+      ds.field("sampled_noise_mz", &self.sampled_noise_mz());
       ds.finish()
   }
 }
