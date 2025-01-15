@@ -1,6 +1,6 @@
 [package]
 name = "dotnetrawfilereader-sys"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 
 description = "A low-level interface to a in-process dotnet runtime for Thermo Fisher's RawFileReader library"
