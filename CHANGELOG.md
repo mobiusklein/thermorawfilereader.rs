@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
+## [0.5.0] - 2025-01-15
+
+### Added
+
+- Add charge state to baseline+noise extra packet data, align it with peaks instead of noise
+
+### Changed
+
+- Change `BaselineNoiseData` to `ExtendedSpectrumData` and populate it with all available `AdvancedPacketData` features
+
 ## [0.4.0] - 2024-12-15
 
 ### Added
@@ -107,7 +117,8 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.9...v0.3.0
 [0.2.9]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.8...v0.2.9
