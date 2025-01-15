@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
+## [0.5.1] - 2025-01-15
+
+### Added
+
+- Add `ExtendedSpectrumData`, `StatusLogCollection`, `TrailerValues`, and related types to public API
+
 ## [0.5.0] - 2025-01-15
 
 ### Added
@@ -117,7 +123,8 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.0...HEAD
+[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.2.9...v0.3.0
