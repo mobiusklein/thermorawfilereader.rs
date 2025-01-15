@@ -840,6 +840,10 @@ impl<'a, T> StatusLog<'a, T> {
         Self { name, times: time, values }
     }
 
+    pub fn raw_values(&self) -> &Vector<'_, T> {
+        &self.values
+    }
+
     pub fn times(&self) -> Cow<'_, [f64]> {
         let data = &self.times;
         #[cfg(target_endian = "big")]
@@ -857,6 +861,18 @@ impl<'a> StatusLog<'a, flatbuffers::ForwardsUOffset<&str>> {
     pub fn iter_strings(&self) -> impl Iterator<Item=(f64, &str)> {
         self.times.iter().zip(
             self.strings().iter()
+        )
+    }
+}
+
+impl<'a> StatusLog<'a, bool> {
+    pub fn flags(&self) -> &Vector<'_, bool> {
+        &self.values
+    }
+
+    pub fn iter_flags(&self) -> impl Iterator<Item=(f64, bool)> + '_ {
+        self.times.iter().zip(
+            self.flags().iter()
         )
     }
 }
