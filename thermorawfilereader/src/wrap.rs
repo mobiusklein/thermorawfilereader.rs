@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::ffi::c_void;
 use std::fmt::{Debug, Display};
+use std::iter::{FusedIterator, ExactSizeIterator};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::{io, ptr};
@@ -41,6 +42,26 @@ macro_rules! view_proxy {
     ($meth:ident, $ret:ty) => {
         pub fn $meth(&self) -> $ret {
             self.view().$meth()
+        }
+    };
+    ($meth:ident, $descr:literal, $ret:ty, cast) => {
+        #[doc=$descr]
+        pub fn $meth(&self) -> $ret {
+            let data = self.view().$meth();
+            #[cfg(target_endian = "big")]
+            return Cow::Owned(data.iter().copied().collect());
+            #[cfg(target_endian = "little")]
+            return Cow::Borrowed(bytemuck::cast_slice(data.bytes()))
+        }
+    };
+    ($meth:ident, $descr:literal, $ret:ty, optcast) => {
+        #[doc=$descr]
+        pub fn $meth(&self) -> $ret {
+            let data = self.view().$meth();
+            #[cfg(target_endian = "big")]
+            return data.map(|data| Cow::Owned(data.iter().copied().collect()));
+            #[cfg(target_endian = "little")]
+            return data.map(|data| Cow::Borrowed(bytemuck::cast_slice(data.bytes())));
         }
     };
 }
@@ -355,22 +376,50 @@ impl ExtendedSpectrumData {
     view_proxy!(
         noise,
         "Access the peak-local noise array, if available",
-        Option<Vector<'_, f32>>
+        Option<Cow<'_, [f32]>>,
+        optcast
     );
+
     view_proxy!(
         baseline,
         "Access the baseline signal array, if available",
-        Option<Vector<'_, f32>>
+        Option<Cow<'_, [f32]>>,
+        optcast
     );
-    view_proxy!(
-        mass,
-        "Access the peak neutral mass array, if available",
-        Option<Vector<'_, f64>>
-    );
+
     view_proxy!(
         charge,
         "Access the peak charge array, if available",
-        Option<Vector<'_, f32>>
+        Option<Cow<'_, [f32]>>,
+        optcast
+    );
+
+    view_proxy!(
+        resolution,
+        "Access the peak resolution array, if available",
+        Option<Cow<'_, [f32]>>,
+        optcast
+    );
+
+    view_proxy!(
+        sampled_noise,
+        "Access the sampled noise array, if available",
+        Option<Cow<'_, [f32]>>,
+        optcast
+    );
+
+    view_proxy!(
+        sampled_noise_baseline,
+        "Access the sampled noise baseline array, if available",
+        Option<Cow<'_, [f32]>>,
+        optcast
+    );
+
+    view_proxy!(
+        sampled_noise_mz,
+        "Access the sampled noise m/z array, if available",
+        Option<Cow<'_, [f32]>>,
+        optcast
     );
 }
 
@@ -715,6 +764,7 @@ impl<'a> Acquisition<'a> {
     }
 }
 
+/// A collection of time series information describing the instrument run
 pub struct StatusLogCollection {
     data: RawVec<u8>,
 }
@@ -732,6 +782,96 @@ impl StatusLogCollection {
     /// View the underlying buffer as a `StatusLogCollectionT`
     pub fn view(&self) -> StatusLogCollectionT {
         root::<StatusLogCollectionT>(&self.data).unwrap()
+    }
+
+    pub fn str_logs(&self) -> impl Iterator<Item=StatusLog<'_, flatbuffers::ForwardsUOffset<&'_ str>>> {
+        self.view().string_logs().into_iter().flatten().map(|log| {
+            let name= log.name().map(|name| name.to_string()).unwrap_or_default();
+            let time = log.times().unwrap_or_default();
+            let values: Vector<'_, flatbuffers::ForwardsUOffset<&str>> = log.values().unwrap_or_default();
+            StatusLog {
+                name, times: time, values
+            }
+        })
+    }
+
+    pub fn int_logs(&self) -> impl Iterator<Item=StatusLog<'_, i64>> {
+        self.view().int_logs().into_iter().flatten().map(|log| {
+            let name= log.name().map(|name| name.to_string()).unwrap_or_default();
+            let time = log.times().unwrap_or_default();
+            let values = log.values().unwrap_or_default();
+            StatusLog {
+                name, times: time, values
+            }
+        })
+    }
+
+    pub fn float_logs(&self) -> impl Iterator<Item=StatusLog<'_, f64>> {
+        self.view().float_logs().into_iter().flatten().map(|log| {
+            let name= log.name().map(|name| name.to_string()).unwrap_or_default();
+            let time = log.times().unwrap_or_default();
+            let values = log.values().unwrap_or_default();
+            StatusLog {
+                name, times: time, values
+            }
+        })
+    }
+
+    pub fn bool_logs(&self) -> impl Iterator<Item=StatusLog<'_, bool>> {
+        self.view().bool_logs().into_iter().flatten().map(|log| {
+            let name= log.name().map(|name| name.to_string()).unwrap_or_default();
+            let time = log.times().unwrap_or_default();
+            let values = log.values().unwrap_or_default();
+            StatusLog {
+                name, times: time, values
+            }
+        })
+    }
+}
+
+pub struct StatusLog<'a, T> {
+    pub name: String,
+    times: Vector<'a, f64>,
+    values: Vector<'a, T>
+}
+
+impl<'a, T> StatusLog<'a, T> {
+    pub fn new(name: String, time: Vector<'a, f64>, values: Vector<'a, T>) -> Self {
+        Self { name, times: time, values }
+    }
+
+    pub fn times(&self) -> Cow<'_, [f64]> {
+        let data = &self.times;
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(data.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));
+    }
+}
+
+impl<'a> StatusLog<'a, flatbuffers::ForwardsUOffset<&str>> {
+    pub fn strings(&self) -> &Vector<'_, flatbuffers::ForwardsUOffset<&str>> {
+        &self.values
+    }
+
+    pub fn iter_strings(&self) -> impl Iterator<Item=(f64, &str)> {
+        self.times.iter().zip(
+            self.strings().iter()
+        )
+    }
+}
+
+impl<'a, T: bytemuck::Pod> StatusLog<'a, T> {
+    pub fn values(&self) -> Cow<'a, [T]> {
+        let data = &self.values;
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(data.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item=(f64, T)> + '_ where for<'t> T: flatbuffers::Follow<'t, Inner=T> {
+        self.times.iter().zip(self.values.iter())
     }
 }
 
@@ -1192,6 +1332,7 @@ impl RawFileReader {
     }
 }
 
+/// Iterator for [`RawFileReader`]
 #[derive(Debug)]
 pub struct RawFileReaderIter<'a> {
     handle: &'a RawFileReader,
@@ -1226,6 +1367,8 @@ impl<'a> Iterator for RawFileReaderIter<'a> {
     }
 }
 
+
+/// IntoIterator for [`RawFileReader`]
 #[derive(Debug)]
 pub struct RawFileReaderIntoIter {
     handle: RawFileReader,
@@ -1277,6 +1420,23 @@ impl<'a> IntoIterator for &'a RawFileReader {
         self.iter()
     }
 }
+
+impl<'a> FusedIterator for RawFileReaderIter<'a> {}
+
+impl<'a> ExactSizeIterator for RawFileReaderIter<'a> {
+    fn len(&self) -> usize {
+        self.size
+    }
+}
+
+impl FusedIterator for RawFileReaderIntoIter {}
+
+impl ExactSizeIterator for RawFileReaderIntoIter {
+    fn len(&self) -> usize {
+        self.size
+    }
+}
+
 
 #[cfg(test)]
 mod test {
