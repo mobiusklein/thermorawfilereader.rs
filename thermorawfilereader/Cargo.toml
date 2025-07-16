@@ -31,7 +31,7 @@ netcorehost-latest = ["netcorehost/latest", "dotnetrawfilereader-sys/netcorehost
 
 
 [dependencies]
-flatbuffers = "23.5.26"
+flatbuffers = "25.2.10"
 netcorehost = { version = "0.18.0", default-features = false, features = [
     "nethost"
 ]}

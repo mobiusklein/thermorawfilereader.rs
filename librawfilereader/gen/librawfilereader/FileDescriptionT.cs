@@ -13,7 +13,7 @@ public struct FileDescriptionT : IFlatbufferObject
 {
   private Table __p;
   public ByteBuffer ByteBuffer { get { return __p.bb; } }
-  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_23_5_26(); }
+  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_25_2_10(); }
   public static FileDescriptionT GetRootAsFileDescriptionT(ByteBuffer _bb) { return GetRootAsFileDescriptionT(_bb, new FileDescriptionT()); }
   public static FileDescriptionT GetRootAsFileDescriptionT(ByteBuffer _bb, FileDescriptionT obj) { return (obj.__assign(_bb.GetInt(_bb.Position) + _bb.Position, _bb)); }
   public void __init(int _i, ByteBuffer _bb) { __p = new Table(_i, _bb); }

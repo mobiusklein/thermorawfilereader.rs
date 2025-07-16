@@ -13,7 +13,7 @@ public struct StatusLogStringT : IFlatbufferObject
 {
   private Table __p;
   public ByteBuffer ByteBuffer { get { return __p.bb; } }
-  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_23_5_26(); }
+  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_25_2_10(); }
   public static StatusLogStringT GetRootAsStatusLogStringT(ByteBuffer _bb) { return GetRootAsStatusLogStringT(_bb, new StatusLogStringT()); }
   public static StatusLogStringT GetRootAsStatusLogStringT(ByteBuffer _bb, StatusLogStringT obj) { return (obj.__assign(_bb.GetInt(_bb.Position) + _bb.Position, _bb)); }
   public void __init(int _i, ByteBuffer _bb) { __p = new Table(_i, _bb); }
