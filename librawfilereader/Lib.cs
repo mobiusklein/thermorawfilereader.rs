@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 
 namespace librawfilereader
 {
@@ -907,13 +908,17 @@ namespace librawfilereader
 
         Offset<AcquisitionT> StoreAcquisition(FlatBufferBuilder builder, AcquisitionProperties acquisitionProperties, IScanFilter filter)
         {
-            AcquisitionT.StartAcquisitionT(builder);
-            AcquisitionT.AddInjectionTime(builder, (float)acquisitionProperties.InjectionTime);
+            VectorOffset voltagesOffset = default;
             if (acquisitionProperties.CompensationVoltage.Count > 0)
             {
                 // Convert List<double> to float[] for FlatBuffer
                 float[] voltageArray = acquisitionProperties.CompensationVoltage.Select(v => (float)v).ToArray();
-                var voltagesOffset = AcquisitionT.CreateCompensationVoltagesVector(builder, voltageArray);
+                voltagesOffset = AcquisitionT.CreateCompensationVoltagesVector(builder, voltageArray);
+            }
+            AcquisitionT.StartAcquisitionT(builder);
+            AcquisitionT.AddInjectionTime(builder, (float)acquisitionProperties.InjectionTime);
+            if (acquisitionProperties.CompensationVoltage.Count > 0)
+            {
                 AcquisitionT.AddCompensationVoltages(builder, voltagesOffset);
             }
             AcquisitionT.AddLowMz(builder, acquisitionProperties.LowMZ);
