@@ -48,15 +48,20 @@ macro_rules! view_proxy {
         #[doc=$descr]
         pub fn $meth(&self) -> $ret {
             let data = self.view().$meth();
-            Cow::Owned(data.iter().collect())
+           #[cfg(target_endian = "big")]
+            return Cow::Owned(data.iter().copied().collect());
+            #[cfg(target_endian = "little")]
+            return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));
         }
     };
     ($meth:ident, $descr:literal, $ret:ty, optcast) => {
         #[doc=$descr]
         pub fn $meth(&self) -> $ret {
             let data = self.view().$meth();
-            data.map(|data| Cow::Owned(data.iter().collect()))
-        }
+            #[cfg(target_endian = "big")]
+            return data.map(|data| Cow::Owned(data.iter().copied().collect()));
+            #[cfg(target_endian = "little")]
+            return data.map(|data| Cow::Borrowed(bytemuck::cast_slice(data.bytes())));        }
     };
 }
 
@@ -222,12 +227,18 @@ pub struct SpectrumData<'a> {
 impl<'a> SpectrumData<'a> {
     /// The m/z array of the spectrum
     pub fn mz(&self) -> Cow<'a, [f64]> {
-        Cow::Owned(self.mz.iter().collect())
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.mz.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.mz.bytes()))
     }
 
     /// The intensity array of the spectrum
     pub fn intensity(&self) -> Cow<'a, [f32]> {
-        Cow::Owned(self.intensity.iter().collect())
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.intensity.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.intensity.bytes()))
     }
 
     pub fn iter(
@@ -420,12 +431,18 @@ pub struct ChromatogramData<'a> {
 impl<'a> ChromatogramData<'a> {
     /// The time array of the spectrum, in minutes
     pub fn time(&self) -> Cow<'a, [f64]> {
-        Cow::Owned(self.time.iter().collect())
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.time.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.time.bytes()))
     }
 
     /// The intensity array of the spectrum
     pub fn intensity(&self) -> Cow<'a, [f32]> {
-        Cow::Owned(self.intensity.iter().collect())
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(self.intensity.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        Cow::Borrowed(bytemuck::cast_slice(self.intensity.bytes()))
     }
 
     /// Iterate over time-intensity pairs
@@ -828,8 +845,10 @@ impl<'a, T> StatusLog<'a, T> {
 
     pub fn times(&self) -> Cow<'_, [f64]> {
         let data = &self.times;
-        Cow::Owned(data.iter().collect())
-    }
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(data.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));    }
 }
 
 impl<'a> StatusLog<'a, flatbuffers::ForwardsUOffset<&str>> {
@@ -856,17 +875,16 @@ impl<'a> StatusLog<'a, bool> {
     }
 }
 
-impl<'a, T> StatusLog<'a, T>
-where
-    for<'t> T: flatbuffers::Follow<'t, Inner=T>
-{
-    pub fn values(&self) -> Vec<T> {
+impl<'a, T: bytemuck::Pod> StatusLog<'a, T> {
+    pub fn values(&self) -> Cow<'a, [T]> {
         let data = &self.values;
-        (0..data.len()).map(|i| data.get(i)).collect()
-    }
+        #[cfg(target_endian = "big")]
+        return Cow::Owned(data.iter().copied().collect());
+        #[cfg(target_endian = "little")]
+        return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));    }
 
-    pub fn iter(&self) -> impl Iterator<Item=(f64, T)> + '_ {
-        (0..self.times.len()).map(move |i| (self.times.get(i), self.values.get(i)))
+    pub fn iter(&self) -> impl Iterator<Item=(f64, T)> + '_ where for<'t> T: flatbuffers::Follow<'t, Inner=T> {
+        self.times.iter().zip(self.values.iter())
     }
 }
 
