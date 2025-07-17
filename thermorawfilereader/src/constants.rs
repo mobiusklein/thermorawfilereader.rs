@@ -1,4 +1,4 @@
-use crate::gen::schema_generated::librawfilereader::TraceTypeT;
+use crate::r#gen::schema_generated::librawfilereader::TraceTypeT;
 
 /// This enum mirrors the different types of traces covered in Thermo's RawFileReader library.
 ///
