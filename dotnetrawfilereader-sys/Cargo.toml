@@ -1,7 +1,7 @@
 [package]
 name = "dotnetrawfilereader-sys"
-version = "0.5.2"
-edition = "2021"
+version = "0.5.3"
+edition = "2024"
 
 description = "A low-level interface to a in-process dotnet runtime for Thermo Fisher's RawFileReader library"
 license = "Apache-2.0"
@@ -23,7 +23,7 @@ netcorehost-latest = ["netcorehost/latest"]
 
 [dependencies]
 include_dir = "0.7.3"
-netcorehost = { version = "0.17.0", default-features = false, features = [
+netcorehost = { version = "0.18.0", default-features = false, features = [
     "nethost"
 ]}
 tempfile = "3.10.1"

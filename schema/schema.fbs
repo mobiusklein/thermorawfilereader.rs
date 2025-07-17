@@ -234,8 +234,8 @@ table AcquisitionT {
     high_mz: float64;
     // The injection time in milliseconds
     injection_time: float32;
-    // The ion mobility measure recorded when a FAIMS device is present
-    compensation_voltage: float32 = null;
+    // The ion mobility measures recorded when a FAIMS device is present
+    compensation_voltages: [float32];
     mass_analyzer: MassAnalyzer = FTMS;
     // The scan event corresponding to a preset scan configuration defined in the
     // instrument method

@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 
 namespace librawfilereader
 {
@@ -49,7 +50,7 @@ namespace librawfilereader
     public struct AcquisitionProperties
     {
         public double InjectionTime;
-        public double? CompensationVoltage = null;
+        public List<double> CompensationVoltage = new List<double>();
         public MassAnalyzer Analyzer;
         public IonizationMode Ionization;
         public double LowMZ;
@@ -101,10 +102,10 @@ namespace librawfilereader
             return (IonizationMode)value;
         }
 
-        public AcquisitionProperties(double injectionTime, double? compensationVoltage, MassAnalyzerType analyzer, double lowMZ, double highMZ, int scanEventNumber, float? resolution)
+        public AcquisitionProperties(double injectionTime, List<double> compensationVoltage, MassAnalyzerType analyzer, double lowMZ, double highMZ, int scanEventNumber, float? resolution)
         {
             InjectionTime = injectionTime;
-            CompensationVoltage = compensationVoltage;
+            CompensationVoltage = compensationVoltage ?? new List<double>();
             Analyzer = CastMassAnalyzer(analyzer);
             LowMZ = lowMZ;
             HighMZ = highMZ;
@@ -534,11 +535,14 @@ namespace librawfilereader
             };
             resolution_opt = resolution == 0.0 ? null : (float)resolution;
 
-            AcquisitionProperties acquisitionProperties = new AcquisitionProperties(injectionTime, null, filter.MassAnalyzer, stats.LowMass, stats.HighMass, scanEventNum, resolution_opt);
+            AcquisitionProperties acquisitionProperties = new AcquisitionProperties(injectionTime, new List<double>(), filter.MassAnalyzer, stats.LowMass, stats.HighMass, scanEventNum, resolution_opt);
 
             if (filter.CompensationVoltage == TriState.On)
             {
-                acquisitionProperties.CompensationVoltage = filter.CompensationVoltageValue(msLevel - 1);
+                for (int i = 0; i < filter.CompensationVoltageCount; i++)
+                {
+                    acquisitionProperties.CompensationVoltage.Add(filter.CompensationVoltageValue(i));
+                }
             }
 
             if (msLevel > 1 && isolationWidth == 0.0)
@@ -904,11 +908,18 @@ namespace librawfilereader
 
         Offset<AcquisitionT> StoreAcquisition(FlatBufferBuilder builder, AcquisitionProperties acquisitionProperties, IScanFilter filter)
         {
+            VectorOffset voltagesOffset = default;
+            if (acquisitionProperties.CompensationVoltage.Count > 0)
+            {
+                // Convert List<double> to float[] for FlatBuffer
+                float[] voltageArray = acquisitionProperties.CompensationVoltage.Select(v => (float)v).ToArray();
+                voltagesOffset = AcquisitionT.CreateCompensationVoltagesVector(builder, voltageArray);
+            }
             AcquisitionT.StartAcquisitionT(builder);
             AcquisitionT.AddInjectionTime(builder, (float)acquisitionProperties.InjectionTime);
-            if (acquisitionProperties.CompensationVoltage.HasValue)
+            if (acquisitionProperties.CompensationVoltage.Count > 0)
             {
-                AcquisitionT.AddCompensationVoltage(builder, (float)acquisitionProperties.CompensationVoltage.Value);
+                AcquisitionT.AddCompensationVoltages(builder, voltagesOffset);
             }
             AcquisitionT.AddLowMz(builder, acquisitionProperties.LowMZ);
             AcquisitionT.AddHighMz(builder, acquisitionProperties.HighMZ);

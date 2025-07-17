@@ -13,7 +13,7 @@ public struct AcquisitionT : IFlatbufferObject
 {
   private Table __p;
   public ByteBuffer ByteBuffer { get { return __p.bb; } }
-  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_23_5_26(); }
+  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_25_2_10(); }
   public static AcquisitionT GetRootAsAcquisitionT(ByteBuffer _bb) { return GetRootAsAcquisitionT(_bb, new AcquisitionT()); }
   public static AcquisitionT GetRootAsAcquisitionT(ByteBuffer _bb, AcquisitionT obj) { return (obj.__assign(_bb.GetInt(_bb.Position) + _bb.Position, _bb)); }
   public void __init(int _i, ByteBuffer _bb) { __p = new Table(_i, _bb); }
@@ -22,7 +22,14 @@ public struct AcquisitionT : IFlatbufferObject
   public double LowMz { get { int o = __p.__offset(4); return o != 0 ? __p.bb.GetDouble(o + __p.bb_pos) : (double)0.0; } }
   public double HighMz { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetDouble(o + __p.bb_pos) : (double)0.0; } }
   public float InjectionTime { get { int o = __p.__offset(8); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
-  public float? CompensationVoltage { get { int o = __p.__offset(10); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float?)null; } }
+  public float CompensationVoltages(int j) { int o = __p.__offset(10); return o != 0 ? __p.bb.GetFloat(__p.__vector(o) + j * 4) : (float)0; }
+  public int CompensationVoltagesLength { get { int o = __p.__offset(10); return o != 0 ? __p.__vector_len(o) : 0; } }
+#if ENABLE_SPAN_T
+  public Span<float> GetCompensationVoltagesBytes() { return __p.__vector_as_span<float>(10, 4); }
+#else
+  public ArraySegment<byte>? GetCompensationVoltagesBytes() { return __p.__vector_as_arraysegment(10); }
+#endif
+  public float[] GetCompensationVoltagesArray() { return __p.__vector_as_array<float>(10); }
   public librawfilereader.MassAnalyzer MassAnalyzer { get { int o = __p.__offset(12); return o != 0 ? (librawfilereader.MassAnalyzer)__p.bb.Get(o + __p.bb_pos) : librawfilereader.MassAnalyzer.FTMS; } }
   public int ScanEvent { get { int o = __p.__offset(14); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)1; } }
   public librawfilereader.IonizationMode IonizationMode { get { int o = __p.__offset(16); return o != 0 ? (librawfilereader.IonizationMode)__p.bb.Get(o + __p.bb_pos) : librawfilereader.IonizationMode.NanoSpray; } }
@@ -32,7 +39,7 @@ public struct AcquisitionT : IFlatbufferObject
       double low_mz = 0.0,
       double high_mz = 0.0,
       float injection_time = 0.0f,
-      float? compensation_voltage = null,
+      VectorOffset compensation_voltagesOffset = default(VectorOffset),
       librawfilereader.MassAnalyzer mass_analyzer = librawfilereader.MassAnalyzer.FTMS,
       int scan_event = 1,
       librawfilereader.IonizationMode ionization_mode = librawfilereader.IonizationMode.NanoSpray,
@@ -42,7 +49,7 @@ public struct AcquisitionT : IFlatbufferObject
     AcquisitionT.AddLowMz(builder, low_mz);
     AcquisitionT.AddResolution(builder, resolution);
     AcquisitionT.AddScanEvent(builder, scan_event);
-    AcquisitionT.AddCompensationVoltage(builder, compensation_voltage);
+    AcquisitionT.AddCompensationVoltages(builder, compensation_voltagesOffset);
     AcquisitionT.AddInjectionTime(builder, injection_time);
     AcquisitionT.AddIonizationMode(builder, ionization_mode);
     AcquisitionT.AddMassAnalyzer(builder, mass_analyzer);
@@ -53,7 +60,12 @@ public struct AcquisitionT : IFlatbufferObject
   public static void AddLowMz(FlatBufferBuilder builder, double lowMz) { builder.AddDouble(0, lowMz, 0.0); }
   public static void AddHighMz(FlatBufferBuilder builder, double highMz) { builder.AddDouble(1, highMz, 0.0); }
   public static void AddInjectionTime(FlatBufferBuilder builder, float injectionTime) { builder.AddFloat(2, injectionTime, 0.0f); }
-  public static void AddCompensationVoltage(FlatBufferBuilder builder, float? compensationVoltage) { builder.AddFloat(3, compensationVoltage); }
+  public static void AddCompensationVoltages(FlatBufferBuilder builder, VectorOffset compensationVoltagesOffset) { builder.AddOffset(3, compensationVoltagesOffset.Value, 0); }
+  public static VectorOffset CreateCompensationVoltagesVector(FlatBufferBuilder builder, float[] data) { builder.StartVector(4, data.Length, 4); for (int i = data.Length - 1; i >= 0; i--) builder.AddFloat(data[i]); return builder.EndVector(); }
+  public static VectorOffset CreateCompensationVoltagesVectorBlock(FlatBufferBuilder builder, float[] data) { builder.StartVector(4, data.Length, 4); builder.Add(data); return builder.EndVector(); }
+  public static VectorOffset CreateCompensationVoltagesVectorBlock(FlatBufferBuilder builder, ArraySegment<float> data) { builder.StartVector(4, data.Count, 4); builder.Add(data); return builder.EndVector(); }
+  public static VectorOffset CreateCompensationVoltagesVectorBlock(FlatBufferBuilder builder, IntPtr dataPtr, int sizeInBytes) { builder.StartVector(1, sizeInBytes, 1); builder.Add<float>(dataPtr, sizeInBytes); return builder.EndVector(); }
+  public static void StartCompensationVoltagesVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
   public static void AddMassAnalyzer(FlatBufferBuilder builder, librawfilereader.MassAnalyzer massAnalyzer) { builder.AddByte(4, (byte)massAnalyzer, 5); }
   public static void AddScanEvent(FlatBufferBuilder builder, int scanEvent) { builder.AddInt(5, scanEvent, 1); }
   public static void AddIonizationMode(FlatBufferBuilder builder, librawfilereader.IonizationMode ionizationMode) { builder.AddByte(6, (byte)ionizationMode, 5); }
@@ -73,7 +85,7 @@ static public class AcquisitionTVerify
       && verifier.VerifyField(tablePos, 4 /*LowMz*/, 8 /*double*/, 8, false)
       && verifier.VerifyField(tablePos, 6 /*HighMz*/, 8 /*double*/, 8, false)
       && verifier.VerifyField(tablePos, 8 /*InjectionTime*/, 4 /*float*/, 4, false)
-      && verifier.VerifyField(tablePos, 10 /*CompensationVoltage*/, 4 /*float*/, 4, false)
+      && verifier.VerifyVectorOfData(tablePos, 10 /*CompensationVoltages*/, 4 /*float*/, false)
       && verifier.VerifyField(tablePos, 12 /*MassAnalyzer*/, 1 /*librawfilereader.MassAnalyzer*/, 1, false)
       && verifier.VerifyField(tablePos, 14 /*ScanEvent*/, 4 /*int*/, 4, false)
       && verifier.VerifyField(tablePos, 16 /*IonizationMode*/, 1 /*librawfilereader.IonizationMode*/, 1, false)

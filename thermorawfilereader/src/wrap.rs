@@ -51,7 +51,7 @@ macro_rules! view_proxy {
             #[cfg(target_endian = "big")]
             return Cow::Owned(data.iter().copied().collect());
             #[cfg(target_endian = "little")]
-            return Cow::Borrowed(bytemuck::cast_slice(data.bytes()))
+            return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));
         }
     };
     ($meth:ident, $descr:literal, $ret:ty, optcast) => {
@@ -739,8 +739,8 @@ impl<'a> Acquisition<'a> {
     }
 
     #[inline(always)]
-    pub fn compensation_voltage(&self) -> Option<f32> {
-        self.data.compensation_voltage()
+    pub fn compensation_voltages(&self) -> Option<Vec<f32>> {
+        self.data.compensation_voltages().map(|v| v.iter().collect())
     }
 
     #[inline(always)]
