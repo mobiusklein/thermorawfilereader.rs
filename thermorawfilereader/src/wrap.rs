@@ -48,7 +48,7 @@ macro_rules! view_proxy {
         #[doc=$descr]
         pub fn $meth(&self) -> $ret {
             let data = self.view().$meth();
-           #[cfg(target_endian = "big")]
+            #[cfg(target_endian = "big")]
             return Cow::Owned(data.iter().copied().collect());
             #[cfg(target_endian = "little")]
             return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));
@@ -61,7 +61,8 @@ macro_rules! view_proxy {
             #[cfg(target_endian = "big")]
             return data.map(|data| Cow::Owned(data.iter().copied().collect()));
             #[cfg(target_endian = "little")]
-            return data.map(|data| Cow::Borrowed(bytemuck::cast_slice(data.bytes())));        }
+            return data.map(|data| Cow::Borrowed(bytemuck::cast_slice(data.bytes())));
+        }
     };
 }
 
@@ -848,7 +849,8 @@ impl<'a, T> StatusLog<'a, T> {
         #[cfg(target_endian = "big")]
         return Cow::Owned(data.iter().copied().collect());
         #[cfg(target_endian = "little")]
-        return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));    }
+        return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));
+    }
 }
 
 impl<'a> StatusLog<'a, flatbuffers::ForwardsUOffset<&str>> {
@@ -881,7 +883,8 @@ impl<'a, T: bytemuck::Pod> StatusLog<'a, T> {
         #[cfg(target_endian = "big")]
         return Cow::Owned(data.iter().copied().collect());
         #[cfg(target_endian = "little")]
-        return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));    }
+        return Cow::Borrowed(bytemuck::cast_slice(data.bytes()));
+    }
 
     pub fn iter(&self) -> impl Iterator<Item=(f64, T)> + '_ where for<'t> T: flatbuffers::Follow<'t, Inner=T> {
         self.times.iter().zip(self.values.iter())
