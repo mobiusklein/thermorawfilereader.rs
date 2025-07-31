@@ -1004,6 +1004,39 @@ namespace librawfilereader
             return SpectrumDescriptionFor(scanNumber, IncludeSignal, CentroidSpectra);
         }
 
+        public ByteBuffer SpectrumDataFor(int scanNumber, bool centroidSpectra)
+        {
+            var accessor = GetHandle();
+            var stats = accessor.GetScanStatsForScanNumber(scanNumber);
+            SpectrumMode mode;
+            if (centroidSpectra)
+            {
+                mode = SpectrumMode.Centroid;
+            }
+            else
+            {
+                mode = stats.IsCentroidScan ? SpectrumMode.Centroid : SpectrumMode.Profile;
+            }
+
+            // Centroid spectra are usually compact, but profile spectra are much bigger
+            var builder = new FlatBufferBuilder(mode == SpectrumMode.Centroid ? 8192 : 262144);
+            Offset<SpectrumData> dataOffset;
+            if (mode == SpectrumMode.Centroid && !centroidSpectra)
+            {
+                SpectrumData.StartMzVector(builder, 0);
+                var mzOffset = builder.EndVector();
+                SpectrumData.StartIntensityVector(builder, 0);
+                var intOffset = builder.EndVector();
+                dataOffset = SpectrumData.CreateSpectrumData(builder, mzOffset, intOffset);
+            }
+            else
+            {
+                dataOffset = StoreSpectrumData(scanNumber, stats, builder, accessor, centroidSpectra);
+            }
+            builder.Finish(dataOffset.Value);
+            return builder.DataBuffer;
+        }
+
         public ByteBuffer SpectrumDescriptionFor(int scanNumber, bool includeSignal, bool centroidSpectra)
         {
             var accessor = GetHandle();
@@ -1536,6 +1569,24 @@ namespace librawfilereader
         {
             RawFileReader reader = GetHandleForToken(handleToken);
             var buffer = reader.SpectrumDescriptionFor(scanNumber, includeSignal != 0, centroidSpectra != 0);
+            var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
+            var size = bytes.Length;
+            return MemoryToRustVec(bytes, (nuint)size);
+        }
+
+        /// <summary>
+        /// Get a `SpectrumData` FlatBuffer message for a specific spectrum from a RAW file. May be empty if
+        /// a profile spectrum is requested and profile data is not available.
+        /// </summary>
+        /// <param name="handleToken">The token corresponding to the `RawFileReader` handle</param>
+        /// <param name="scanNumber">The scan number of the spectrum to retrieve</param>
+        /// <param name="centroidSpectra">Whether or not to retrieve the centroided spectrum signal</param>
+        /// <returns>A `RawVec` representing Rust-allocated memory that holds the FlatBuffer message</returns>
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_spectrum_data_for")]
+        public static unsafe RawVec SpectrumDataFor(IntPtr handleToken, int scanNumber, int centroidSpectra)
+        {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            var buffer = reader.SpectrumDataFor(scanNumber, centroidSpectra != 0);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
             return MemoryToRustVec(bytes, (nuint)size);

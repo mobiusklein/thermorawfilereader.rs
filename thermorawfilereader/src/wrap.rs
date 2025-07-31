@@ -216,6 +216,79 @@ impl RawSpectrum {
     }
 }
 
+
+pub struct OwnedSpectrumData {
+    data: RawVec<u8>,
+}
+
+impl OwnedSpectrumData {
+    pub fn new(data: RawVec<u8>) -> Self {
+        Self { data }
+    }
+
+    /// Check that the buffer is a valid `SpectrumDescription`
+    pub fn check(&self) -> bool {
+        root::<SpectrumDataT>(&self.data).is_ok()
+    }
+
+    /// View the underlying buffer as a `SpectrumDescription`
+    pub fn raw_view(&self) -> SpectrumDataT {
+        unsafe { root_unchecked::<SpectrumDataT>(&self.data) }
+    }
+
+    pub fn view(&self) -> SpectrumData {
+        let view = self.raw_view();
+        let mz = view.mz().unwrap_or_default();
+        let intensity = view.intensity().unwrap_or_default();
+        SpectrumData { mz, intensity }
+    }
+
+    pub fn mz(&self) -> Cow<'_, [f64]> {
+        self.view().mz()
+    }
+
+    pub fn intensity(&self) -> Cow<'_, [f32]> {
+        self.view().intensity()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.view().is_empty()
+    }
+
+    pub fn iter(&self) -> std::iter::Zip<flatbuffers::VectorIter<'_, f64>, flatbuffers::VectorIter<'_, f32>> {
+        self.view().iter()
+    }
+
+    pub fn len(&self) -> usize {
+        self.view().len()
+    }
+}
+
+
+pub struct OwnedSpectrumDataIter {
+    inner: OwnedSpectrumData,
+    i: usize
+}
+
+impl Iterator for OwnedSpectrumDataIter {
+    type Item = (f64, f32);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let x = self.at(self.i);
+        self.i += 1;
+        x
+    }
+}
+
+impl OwnedSpectrumDataIter {
+    fn at(&self, i: usize) -> Option<(f64, f32)> {
+        let mz = self.inner.mz().get(i).copied()?;
+        let int = self.inner.intensity().get(i).copied()?;
+        Some((mz, int))
+    }
+}
+
+
 /// A sub-set of a [`RawSpectrum`] corresponding to the m/z and intensity arrays
 /// of a mass spectrum. All data is borrowed internally from the [`RawSpectrum`]'s
 /// buffer.
@@ -1233,6 +1306,21 @@ impl RawFileReader {
         Some(ExtendedSpectrumData::new(buff))
     }
 
+    /// Read spectrum signal data separately and explicitly without reading all related metadata
+    pub fn get_spectrum_data(&self, index: usize, centroid_spectra: bool) -> Option<OwnedSpectrumData> {
+        if index >= self.len() {
+            return None;
+        }
+        self.validate_impl();
+        let buffer_fn = self.context.get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32, i32) -> RawVec<u8>>(
+            pdcstr!("librawfilereader.Exports, librawfilereader"),
+            pdcstr!("SpectrumDataFor")
+        ).unwrap();
+
+        let buff = buffer_fn(self.raw_file_reader, (index as i32) + 1, centroid_spectra as i32);
+        Some(OwnedSpectrumData::new(buff))
+    }
+
     /// Get the trailer extra values for scan at `index`.
     ///
     /// The trailer extra values are key-value pairs whose exact meaning
@@ -1468,6 +1556,12 @@ mod test {
         let buf = handle.get(5).unwrap();
         let descr = buf.view();
         assert_eq!(descr.index(), 5);
+
+        assert_eq!(buf.mode(), SpectrumMode::Centroid);
+        let dat = handle.get_spectrum_data(5, false).unwrap();
+        assert_eq!(dat.len(), 0);
+        let dat = handle.get_spectrum_data(5, true).unwrap();
+        assert_eq!(dat.len(), buf.data().unwrap().len());
 
         Ok(())
     }
