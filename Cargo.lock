@@ -343,7 +343,7 @@ dependencies = [
 
 [[package]]
 name = "dotnetrawfilereader-sys"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "include_dir",
  "netcorehost",
@@ -1507,7 +1507,7 @@ dependencies = [
 
 [[package]]
 name = "thermorawfilereader"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "bytemuck",
  "dotnetrawfilereader-sys",
