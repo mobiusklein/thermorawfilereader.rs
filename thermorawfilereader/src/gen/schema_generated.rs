@@ -431,6 +431,143 @@ impl<'a> flatbuffers::Verifiable for MassAnalyzer {
 
 impl flatbuffers::SimpleToVerifyInSlice for MassAnalyzer {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_MSORDER: i16 = -3;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_MSORDER: i16 = 999;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_MSORDER: [MSOrder; 15] = [
+  MSOrder::NeutralGain,
+  MSOrder::NeutralLoss,
+  MSOrder::ParentScan,
+  MSOrder::Any,
+  MSOrder::MS,
+  MSOrder::MS2,
+  MSOrder::MS3,
+  MSOrder::MS4,
+  MSOrder::MS5,
+  MSOrder::MS6,
+  MSOrder::MS7,
+  MSOrder::MS8,
+  MSOrder::MS9,
+  MSOrder::MS10,
+  MSOrder::Unknown,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct MSOrder(pub i16);
+#[allow(non_upper_case_globals)]
+impl MSOrder {
+  pub const NeutralGain: Self = Self(-3);
+  pub const NeutralLoss: Self = Self(-2);
+  pub const ParentScan: Self = Self(-1);
+  pub const Any: Self = Self(0);
+  pub const MS: Self = Self(1);
+  pub const MS2: Self = Self(2);
+  pub const MS3: Self = Self(3);
+  pub const MS4: Self = Self(4);
+  pub const MS5: Self = Self(5);
+  pub const MS6: Self = Self(6);
+  pub const MS7: Self = Self(7);
+  pub const MS8: Self = Self(8);
+  pub const MS9: Self = Self(9);
+  pub const MS10: Self = Self(10);
+  pub const Unknown: Self = Self(999);
+
+  pub const ENUM_MIN: i16 = -3;
+  pub const ENUM_MAX: i16 = 999;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NeutralGain,
+    Self::NeutralLoss,
+    Self::ParentScan,
+    Self::Any,
+    Self::MS,
+    Self::MS2,
+    Self::MS3,
+    Self::MS4,
+    Self::MS5,
+    Self::MS6,
+    Self::MS7,
+    Self::MS8,
+    Self::MS9,
+    Self::MS10,
+    Self::Unknown,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::NeutralGain => Some("NeutralGain"),
+      Self::NeutralLoss => Some("NeutralLoss"),
+      Self::ParentScan => Some("ParentScan"),
+      Self::Any => Some("Any"),
+      Self::MS => Some("MS"),
+      Self::MS2 => Some("MS2"),
+      Self::MS3 => Some("MS3"),
+      Self::MS4 => Some("MS4"),
+      Self::MS5 => Some("MS5"),
+      Self::MS6 => Some("MS6"),
+      Self::MS7 => Some("MS7"),
+      Self::MS8 => Some("MS8"),
+      Self::MS9 => Some("MS9"),
+      Self::MS10 => Some("MS10"),
+      Self::Unknown => Some("Unknown"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for MSOrder {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for MSOrder {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<i16>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for MSOrder {
+    type Output = MSOrder;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<i16>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for MSOrder {
+  type Scalar = i16;
+  #[inline]
+  fn to_little_endian(self) -> i16 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: i16) -> Self {
+    let b = i16::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for MSOrder {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    i16::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for MSOrder {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_IONIZATION_MODE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_IONIZATION_MODE: u8 = 22;
@@ -3498,6 +3635,7 @@ impl<'a> SpectrumDescription<'a> {
   pub const VT_DATA: flatbuffers::VOffsetT = 16;
   pub const VT_FILTER_STRING: flatbuffers::VOffsetT = 18;
   pub const VT_ACQUISITION: flatbuffers::VOffsetT = 20;
+  pub const VT_MS_ORDER: flatbuffers::VOffsetT = 22;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -3515,6 +3653,7 @@ impl<'a> SpectrumDescription<'a> {
     if let Some(x) = args.data { builder.add_data(x); }
     if let Some(x) = args.precursor { builder.add_precursor(x); }
     builder.add_index(args.index);
+    builder.add_ms_order(args.ms_order);
     builder.add_mode(args.mode);
     builder.add_polarity(args.polarity);
     builder.add_ms_level(args.ms_level);
@@ -3585,6 +3724,13 @@ impl<'a> SpectrumDescription<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<AcquisitionT>>(SpectrumDescription::VT_ACQUISITION, None)}
   }
+  #[inline]
+  pub fn ms_order(&self) -> MSOrder {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<MSOrder>(SpectrumDescription::VT_MS_ORDER, Some(MSOrder::Unknown)).unwrap()}
+  }
 }
 
 impl flatbuffers::Verifiable for SpectrumDescription<'_> {
@@ -3603,6 +3749,7 @@ impl flatbuffers::Verifiable for SpectrumDescription<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<SpectrumData>>("data", Self::VT_DATA, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("filter_string", Self::VT_FILTER_STRING, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<AcquisitionT>>("acquisition", Self::VT_ACQUISITION, false)?
+     .visit_field::<MSOrder>("ms_order", Self::VT_MS_ORDER, false)?
      .finish();
     Ok(())
   }
@@ -3617,6 +3764,7 @@ pub struct SpectrumDescriptionArgs<'a> {
     pub data: Option<flatbuffers::WIPOffset<SpectrumData<'a>>>,
     pub filter_string: Option<flatbuffers::WIPOffset<&'a str>>,
     pub acquisition: Option<flatbuffers::WIPOffset<AcquisitionT<'a>>>,
+    pub ms_order: MSOrder,
 }
 impl<'a> Default for SpectrumDescriptionArgs<'a> {
   #[inline]
@@ -3631,6 +3779,7 @@ impl<'a> Default for SpectrumDescriptionArgs<'a> {
       data: None,
       filter_string: None,
       acquisition: None,
+      ms_order: MSOrder::Unknown,
     }
   }
 }
@@ -3677,6 +3826,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SpectrumDescriptionBuilder<'a, 
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<AcquisitionT>>(SpectrumDescription::VT_ACQUISITION, acquisition);
   }
   #[inline]
+  pub fn add_ms_order(&mut self, ms_order: MSOrder) {
+    self.fbb_.push_slot::<MSOrder>(SpectrumDescription::VT_MS_ORDER, ms_order, MSOrder::Unknown);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SpectrumDescriptionBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     SpectrumDescriptionBuilder {
@@ -3703,6 +3856,7 @@ impl core::fmt::Debug for SpectrumDescription<'_> {
       ds.field("data", &self.data());
       ds.field("filter_string", &self.filter_string());
       ds.field("acquisition", &self.acquisition());
+      ds.field("ms_order", &self.ms_order());
       ds.finish()
   }
 }

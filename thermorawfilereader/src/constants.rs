@@ -167,6 +167,50 @@ impl From<u8> for IonizationMode {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(i16)]
+pub enum MSOrder {
+    NeutralGain = -3,
+    NeutralLoss = -2,
+    ParentScan = -1,
+    Any = 0,
+    MS = 1,
+    MS2 = 2,
+    MS3 = 3,
+    MS4 = 4,
+    MS5 = 5,
+    MS6 = 6,
+    MS7 = 7,
+    MS8 = 8,
+    MS9 = 9,
+    MS10 = 10,
+    Unknown = 999
+}
+
+
+impl From<i16> for MSOrder {
+    fn from(value: i16) -> Self {
+        match value {
+             -3 => Self::NeutralGain,
+             -2 => Self::NeutralLoss,
+             -1 => Self::ParentScan,
+             0 => Self::Any,
+             1 => Self::MS,
+             2 => Self::MS2,
+             3 => Self::MS3,
+             4 => Self::MS4,
+             5 => Self::MS5,
+             6 => Self::MS6,
+             7 => Self::MS7,
+             8 => Self::MS8,
+             9 => Self::MS9,
+             10 => Self::MS10,
+             999 => Self::Unknown,
+            _ => Self::Unknown
+        }
+    }
+}
+
 
 /// This enum mirrors the different types of mass analyzers in Thermo's RawFileReader library
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

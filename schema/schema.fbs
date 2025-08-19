@@ -42,6 +42,25 @@ enum MassAnalyzer : uint8 {
     ASTMS = 7
 }
 
+
+enum MSOrder : int16 {
+    NeutralGain = -3,
+    NeutralLoss = -2,
+    ParentScan = -1,
+    Any = 0,
+    MS = 1,
+    MS2 = 2,
+    MS3 = 3,
+    MS4 = 4,
+    MS5 = 5,
+    MS6 = 6,
+    MS7 = 7,
+    MS8 = 8,
+    MS9 = 9,
+    MS10 = 10,
+    Unknown = 999
+}
+
 enum IonizationMode : uint8
 {
     ElectronImpact = 0,
@@ -255,6 +274,7 @@ table SpectrumDescription {
     data: SpectrumData;
     filter_string: string;
     acquisition: AcquisitionT;
+    ms_order: MSOrder = Unknown;
 }
 
 table ChromatogramData {

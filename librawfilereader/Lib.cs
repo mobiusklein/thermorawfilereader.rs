@@ -267,6 +267,9 @@ namespace librawfilereader
             {MSOrderType.Ms8, 8},
             {MSOrderType.Ms9, 9},
             {MSOrderType.Ms10, 10},
+            {MSOrderType.Ng, 2},
+            {MSOrderType.Nl, 2},
+            {MSOrderType.Par, 2},
         };
 
         /// <summary>
@@ -1082,6 +1085,7 @@ namespace librawfilereader
             SpectrumDescription.AddTime(builder, stats.StartTime);
             SpectrumDescription.AddFilterString(builder, filterStringOffset);
             SpectrumDescription.AddAcquisition(builder, acquisitionOffset);
+            SpectrumDescription.AddMsOrder(builder, (MSOrder)filter.MSOrder);
             if (level > 1)
             {
                 var precursor = StorePrecursor(builder, (PrecursorProperties)precursorPropsOf);
