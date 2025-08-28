@@ -568,6 +568,115 @@ impl<'a> flatbuffers::Verifiable for MSOrder {
 
 impl flatbuffers::SimpleToVerifyInSlice for MSOrder {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_SCAN_MODE: u8 = 0;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_SCAN_MODE: u8 = 7;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_SCAN_MODE: [ScanMode; 8] = [
+  ScanMode::Full,
+  ScanMode::Zoom,
+  ScanMode::Sim,
+  ScanMode::Srm,
+  ScanMode::Crm,
+  ScanMode::Any,
+  ScanMode::Q1Ms,
+  ScanMode::Q3Ms,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct ScanMode(pub u8);
+#[allow(non_upper_case_globals)]
+impl ScanMode {
+  pub const Full: Self = Self(0);
+  pub const Zoom: Self = Self(1);
+  pub const Sim: Self = Self(2);
+  pub const Srm: Self = Self(3);
+  pub const Crm: Self = Self(4);
+  pub const Any: Self = Self(5);
+  pub const Q1Ms: Self = Self(6);
+  pub const Q3Ms: Self = Self(7);
+
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 7;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::Full,
+    Self::Zoom,
+    Self::Sim,
+    Self::Srm,
+    Self::Crm,
+    Self::Any,
+    Self::Q1Ms,
+    Self::Q3Ms,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::Full => Some("Full"),
+      Self::Zoom => Some("Zoom"),
+      Self::Sim => Some("Sim"),
+      Self::Srm => Some("Srm"),
+      Self::Crm => Some("Crm"),
+      Self::Any => Some("Any"),
+      Self::Q1Ms => Some("Q1Ms"),
+      Self::Q3Ms => Some("Q3Ms"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for ScanMode {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for ScanMode {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for ScanMode {
+    type Output = ScanMode;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for ScanMode {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for ScanMode {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for ScanMode {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_IONIZATION_MODE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_IONIZATION_MODE: u8 = 22;
@@ -3636,6 +3745,7 @@ impl<'a> SpectrumDescription<'a> {
   pub const VT_FILTER_STRING: flatbuffers::VOffsetT = 18;
   pub const VT_ACQUISITION: flatbuffers::VOffsetT = 20;
   pub const VT_MS_ORDER: flatbuffers::VOffsetT = 22;
+  pub const VT_SCAN_MODE: flatbuffers::VOffsetT = 24;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -3654,6 +3764,7 @@ impl<'a> SpectrumDescription<'a> {
     if let Some(x) = args.precursor { builder.add_precursor(x); }
     builder.add_index(args.index);
     builder.add_ms_order(args.ms_order);
+    builder.add_scan_mode(args.scan_mode);
     builder.add_mode(args.mode);
     builder.add_polarity(args.polarity);
     builder.add_ms_level(args.ms_level);
@@ -3731,6 +3842,13 @@ impl<'a> SpectrumDescription<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<MSOrder>(SpectrumDescription::VT_MS_ORDER, Some(MSOrder::Unknown)).unwrap()}
   }
+  #[inline]
+  pub fn scan_mode(&self) -> ScanMode {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<ScanMode>(SpectrumDescription::VT_SCAN_MODE, Some(ScanMode::Full)).unwrap()}
+  }
 }
 
 impl flatbuffers::Verifiable for SpectrumDescription<'_> {
@@ -3750,6 +3868,7 @@ impl flatbuffers::Verifiable for SpectrumDescription<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("filter_string", Self::VT_FILTER_STRING, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<AcquisitionT>>("acquisition", Self::VT_ACQUISITION, false)?
      .visit_field::<MSOrder>("ms_order", Self::VT_MS_ORDER, false)?
+     .visit_field::<ScanMode>("scan_mode", Self::VT_SCAN_MODE, false)?
      .finish();
     Ok(())
   }
@@ -3765,6 +3884,7 @@ pub struct SpectrumDescriptionArgs<'a> {
     pub filter_string: Option<flatbuffers::WIPOffset<&'a str>>,
     pub acquisition: Option<flatbuffers::WIPOffset<AcquisitionT<'a>>>,
     pub ms_order: MSOrder,
+    pub scan_mode: ScanMode,
 }
 impl<'a> Default for SpectrumDescriptionArgs<'a> {
   #[inline]
@@ -3780,6 +3900,7 @@ impl<'a> Default for SpectrumDescriptionArgs<'a> {
       filter_string: None,
       acquisition: None,
       ms_order: MSOrder::Unknown,
+      scan_mode: ScanMode::Full,
     }
   }
 }
@@ -3830,6 +3951,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SpectrumDescriptionBuilder<'a, 
     self.fbb_.push_slot::<MSOrder>(SpectrumDescription::VT_MS_ORDER, ms_order, MSOrder::Unknown);
   }
   #[inline]
+  pub fn add_scan_mode(&mut self, scan_mode: ScanMode) {
+    self.fbb_.push_slot::<ScanMode>(SpectrumDescription::VT_SCAN_MODE, scan_mode, ScanMode::Full);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SpectrumDescriptionBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     SpectrumDescriptionBuilder {
@@ -3857,6 +3982,7 @@ impl core::fmt::Debug for SpectrumDescription<'_> {
       ds.field("filter_string", &self.filter_string());
       ds.field("acquisition", &self.acquisition());
       ds.field("ms_order", &self.ms_order());
+      ds.field("scan_mode", &self.scan_mode());
       ds.finish()
   }
 }

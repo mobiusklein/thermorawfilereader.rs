@@ -1066,6 +1066,8 @@ namespace librawfilereader
             {
                 dataOffset = StoreSpectrumData(scanNumber, stats, builder, accessor, centroidSpectra);
             }
+
+            ScanMode modeT = (ScanMode)(byte)filter.ScanMode;
             var filterString = filter.ToString();
             var filterStringOffset = builder.CreateString(filterString);
 
@@ -1086,6 +1088,7 @@ namespace librawfilereader
             SpectrumDescription.AddFilterString(builder, filterStringOffset);
             SpectrumDescription.AddAcquisition(builder, acquisitionOffset);
             SpectrumDescription.AddMsOrder(builder, (MSOrder)filter.MSOrder);
+            SpectrumDescription.AddScanMode(builder, modeT);
             if (level > 1)
             {
                 var precursor = StorePrecursor(builder, (PrecursorProperties)precursorPropsOf);

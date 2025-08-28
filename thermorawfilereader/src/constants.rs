@@ -211,6 +211,36 @@ impl From<i16> for MSOrder {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum ScanMode
+{
+    Full = 0,
+    Zoom = 1,
+    Sim = 2,
+    Srm = 3,
+    Crm = 4,
+    Any = 5,
+    Q1Ms = 6,
+    Q3Ms = 7,
+    Unknown = u8::MAX,
+}
+
+impl From<u8> for ScanMode {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Self::Full,
+            1 => Self::Zoom,
+            2 => Self::Sim,
+            3 => Self::Srm,
+            4 => Self::Crm,
+            5 => Self::Any,
+            6 => Self::Q1Ms,
+            7 => Self::Q3Ms,
+            _ => Self::Unknown
+        }
+    }
+}
 
 /// This enum mirrors the different types of mass analyzers in Thermo's RawFileReader library
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

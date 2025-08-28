@@ -13,7 +13,7 @@ use flatbuffers::{root, root_unchecked, Vector};
 
 use dotnetrawfilereader_sys::{try_get_runtime, RawVec};
 
-use crate::constants::{IonizationMode, MassAnalyzer, TraceType, MSOrder};
+use crate::constants::{IonizationMode, MSOrder, MassAnalyzer, ScanMode, TraceType};
 use crate::schema::{
     root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
     ChromatogramDescription as ChromatogramDescriptionT, ExtendedSpectrumDataT, FileDescriptionT,
@@ -174,6 +174,10 @@ impl RawSpectrum {
 
     pub fn ms_order(&self) -> MSOrder {
         MSOrder::from(self.view().ms_order().0)
+    }
+
+    pub fn scan_mode(&self) -> ScanMode {
+        ScanMode::from(self.view().scan_mode().0)
     }
 
     /// Retrieve a view of the spectrum array data in a raw
@@ -813,6 +817,11 @@ impl<'a> Acquisition<'a> {
     #[inline(always)]
     pub fn injection_time(&self) -> f32 {
         self.data.injection_time()
+    }
+
+    #[inline(always)]
+    pub fn compensation_voltage(&self) -> Option<f32> {
+        self.data.compensation_voltages()?.iter().next()
     }
 
     #[inline(always)]

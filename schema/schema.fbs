@@ -61,6 +61,18 @@ enum MSOrder : int16 {
     Unknown = 999
 }
 
+enum ScanMode : uint8
+{
+    Full = 0,
+    Zoom = 1,
+    Sim = 2,
+    Srm = 3,
+    Crm = 4,
+    Any = 5,
+    Q1Ms = 6,
+    Q3Ms = 7
+}
+
 enum IonizationMode : uint8
 {
     ElectronImpact = 0,
@@ -275,6 +287,7 @@ table SpectrumDescription {
     filter_string: string;
     acquisition: AcquisitionT;
     ms_order: MSOrder = Unknown;
+    scan_mode: ScanMode = Full;
 }
 
 table ChromatogramData {

@@ -36,8 +36,9 @@ public struct SpectrumDescription : IFlatbufferObject
   public byte[] GetFilterStringArray() { return __p.__vector_as_array<byte>(18); }
   public librawfilereader.AcquisitionT? Acquisition { get { int o = __p.__offset(20); return o != 0 ? (librawfilereader.AcquisitionT?)(new librawfilereader.AcquisitionT()).__assign(__p.__indirect(o + __p.bb_pos), __p.bb) : null; } }
   public librawfilereader.MSOrder MsOrder { get { int o = __p.__offset(22); return o != 0 ? (librawfilereader.MSOrder)__p.bb.GetShort(o + __p.bb_pos) : librawfilereader.MSOrder.Unknown; } }
+  public librawfilereader.ScanMode ScanMode { get { int o = __p.__offset(24); return o != 0 ? (librawfilereader.ScanMode)__p.bb.Get(o + __p.bb_pos) : librawfilereader.ScanMode.Full; } }
 
-  public static void StartSpectrumDescription(FlatBufferBuilder builder) { builder.StartTable(10); }
+  public static void StartSpectrumDescription(FlatBufferBuilder builder) { builder.StartTable(11); }
   public static void AddIndex(FlatBufferBuilder builder, int index) { builder.AddInt(0, index, 0); }
   public static void AddMsLevel(FlatBufferBuilder builder, byte msLevel) { builder.AddByte(1, msLevel, 2); }
   public static void AddTime(FlatBufferBuilder builder, double time) { builder.AddDouble(2, time, 0.0); }
@@ -48,6 +49,7 @@ public struct SpectrumDescription : IFlatbufferObject
   public static void AddFilterString(FlatBufferBuilder builder, StringOffset filterStringOffset) { builder.AddOffset(7, filterStringOffset.Value, 0); }
   public static void AddAcquisition(FlatBufferBuilder builder, Offset<librawfilereader.AcquisitionT> acquisitionOffset) { builder.AddOffset(8, acquisitionOffset.Value, 0); }
   public static void AddMsOrder(FlatBufferBuilder builder, librawfilereader.MSOrder msOrder) { builder.AddShort(9, (short)msOrder, 999); }
+  public static void AddScanMode(FlatBufferBuilder builder, librawfilereader.ScanMode scanMode) { builder.AddByte(10, (byte)scanMode, 0); }
   public static Offset<librawfilereader.SpectrumDescription> EndSpectrumDescription(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<librawfilereader.SpectrumDescription>(o);
@@ -72,6 +74,7 @@ static public class SpectrumDescriptionVerify
       && verifier.VerifyString(tablePos, 18 /*FilterString*/, false)
       && verifier.VerifyTable(tablePos, 20 /*Acquisition*/, librawfilereader.AcquisitionTVerify.Verify, false)
       && verifier.VerifyField(tablePos, 22 /*MsOrder*/, 2 /*librawfilereader.MSOrder*/, 2, false)
+      && verifier.VerifyField(tablePos, 24 /*ScanMode*/, 1 /*librawfilereader.ScanMode*/, 1, false)
       && verifier.VerifyTableEnd(tablePos);
   }
 }
