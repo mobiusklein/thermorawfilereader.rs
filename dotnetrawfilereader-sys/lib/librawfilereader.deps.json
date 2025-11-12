@@ -1,12 +1,11 @@
 {
   "runtimeTarget": {
-    "name": ".NETCoreApp,Version=v8.0/win-AnyCpu",
+    "name": ".NETCoreApp,Version=v8.0",
     "signature": ""
   },
   "compilationOptions": {},
   "targets": {
-    ".NETCoreApp,Version=v8.0": {},
-    ".NETCoreApp,Version=v8.0/win-AnyCpu": {
+    ".NETCoreApp,Version=v8.0": {
       "librawfilereader/1.0.0": {
         "dependencies": {
           "OpenMcdf": "2.3.0.0",
