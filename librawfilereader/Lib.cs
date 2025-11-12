@@ -766,9 +766,9 @@ namespace librawfilereader
             {
                 ExtendedSpectrumDataT.StartBaselineVector(builder, peakData.Baselines.Length);
                 foreach (var b in peakData.Baselines.Reverse())
-            {
-                builder.AddFloat((float)b);
-            }
+                {
+                    builder.AddFloat((float)b);
+                }
                 baselineOffset = builder.EndVector();
             }
 

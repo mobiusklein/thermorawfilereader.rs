@@ -6,6 +6,8 @@ pub fn main() -> io::Result<()> {
     let path = args.next().unwrap();
     let target = args.next().unwrap().parse::<i32>().unwrap();
 
+    let more = args.next().map(|flag| flag == "more").unwrap_or_default();
+
     let mut handle = RawFileReader::open(
         path
     )?;
@@ -43,15 +45,20 @@ pub fn main() -> io::Result<()> {
         println!("Found {data_points} points");
     } else {
         handle.describe(target as usize);
-        let dta = handle.get_extended_spectrum_data(target as usize, false).unwrap();
+        let dta = handle.get_extended_spectrum_data(target as usize, true).unwrap();
         let noise = dta.noise();
         handle.set_centroid_spectra(true);
         let spec = handle.get(target as usize).unwrap();
-        println!("{} peaks, {} noise points", spec.data().unwrap().len(), noise.map(|x| x.len()).unwrap_or_default());
+        println!("{} peaks, {} noise points", spec.data().unwrap().len(), noise.as_ref().map(|x| x.len()).unwrap_or_default());
         // spec.data().unwrap().into_iter().for_each(|(mz, int)| {
         //     println!("{mz}\t{int}")
         // })
-
+        if more {
+            let data = spec.data().unwrap();
+            for (i, (mz, int)) in data.into_iter().enumerate() {
+                println!("{mz}\t{int}\t{:?}", noise.as_ref().map(|v| v.get(i)))
+            }
+        }
     }
     let end = time::Instant::now();
     println!("{:03} seconds", (end - start).as_secs_f32());

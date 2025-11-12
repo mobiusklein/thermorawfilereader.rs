@@ -129,7 +129,7 @@ impl RawSpectrum {
     }
 
     /// View the underlying buffer as a `SpectrumDescription`
-    pub fn view(&self) -> SpectrumDescription {
+    pub fn view(&self) -> SpectrumDescription<'_> {
         unsafe { root_as_spectrum_description_unchecked(&self.data) }
     }
 
@@ -219,7 +219,7 @@ impl RawSpectrum {
     /// Get less essential information about *how* the spectrum was acquired.
     ///
     /// This is a raw FlatBuffer struct. See the [schema](https://github.com/mobiusklein/thermorawfilereader.rs/blob/main/schema/schema.fbs) for more details.
-    pub fn acquisition(&self) -> Option<AcquisitionT> {
+    pub fn acquisition(&self) -> Option<AcquisitionT<'_>> {
         self.view().acquisition()
     }
 }
@@ -240,11 +240,11 @@ impl OwnedSpectrumData {
     }
 
     /// View the underlying buffer as a `SpectrumDescription`
-    pub fn raw_view(&self) -> SpectrumDataT {
+    pub fn raw_view(&self) -> SpectrumDataT<'_> {
         unsafe { root_unchecked::<SpectrumDataT>(&self.data) }
     }
 
-    pub fn view(&self) -> SpectrumData {
+    pub fn view(&self) -> SpectrumData<'_> {
         let view = self.raw_view();
         let mz = view.mz().unwrap_or_default();
         let intensity = view.intensity().unwrap_or_default();
@@ -386,7 +386,7 @@ impl TrailerValues {
     }
 
     /// View the underlying buffer as a `TrailerValuesT`
-    pub fn view(&self) -> TrailerValuesT {
+    pub fn view(&self) -> TrailerValuesT<'_>{
         unsafe { root_unchecked::<TrailerValuesT>(&self.data) }
     }
 
@@ -450,7 +450,7 @@ impl ExtendedSpectrumData {
     }
 
     /// View the underlying buffer as a `ExtendedSpectrumData`
-    pub fn view(&self) -> ExtendedSpectrumDataT {
+    pub fn view(&self) -> ExtendedSpectrumDataT<'_> {
         unsafe { root_unchecked::<ExtendedSpectrumDataT>(&self.data) }
     }
 
@@ -590,7 +590,7 @@ impl InstrumentModel {
     }
 
     /// View the underlying buffer as a `InstrumentModelT`
-    pub fn view(&self) -> InstrumentModelT {
+    pub fn view(&self) -> InstrumentModelT<'_> {
         root::<InstrumentModelT>(&self.data).unwrap()
     }
 
@@ -659,7 +659,7 @@ impl FileDescription {
     }
 
     /// View the underlying buffer as a `FileDescriptionT`
-    pub fn view(&self) -> FileDescriptionT {
+    pub fn view(&self) -> FileDescriptionT<'_> {
         root::<FileDescriptionT>(&self.data).unwrap()
     }
 
@@ -726,7 +726,7 @@ impl InstrumentMethod {
     }
 
     /// View the underlying buffer as a `InstrumentMethodT`
-    pub fn view(&self) -> InstrumentMethodT {
+    pub fn view(&self) -> InstrumentMethodT<'_> {
         root::<InstrumentMethodT>(&self.data).unwrap()
     }
 
@@ -758,7 +758,7 @@ impl ChromatogramDescription {
     }
 
     /// View the underlying buffer as a `ChromatogramDescriptionT`
-    pub fn view(&self) -> ChromatogramDescriptionT {
+    pub fn view(&self) -> ChromatogramDescriptionT<'_> {
         root::<ChromatogramDescriptionT>(&self.data).unwrap()
     }
 
@@ -778,7 +778,7 @@ impl ChromatogramDescription {
     }
 
     /// Access the time-intensity array pair
-    pub fn data(&self) -> Option<ChromatogramData> {
+    pub fn data(&self) -> Option<ChromatogramData<'_>> {
         let view = self.view();
         if let Some(data_view) = view.data() {
             Some(ChromatogramData {
@@ -866,7 +866,7 @@ impl StatusLogCollection {
     }
 
     /// View the underlying buffer as a `StatusLogCollectionT`
-    pub fn view(&self) -> StatusLogCollectionT {
+    pub fn view(&self) -> StatusLogCollectionT<'_> {
         root::<StatusLogCollectionT>(&self.data).unwrap()
     }
 
