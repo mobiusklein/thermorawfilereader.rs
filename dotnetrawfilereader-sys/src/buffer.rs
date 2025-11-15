@@ -81,7 +81,7 @@ pub fn configure_allocator(delegate_loader: &AssemblyDelegateLoader) {
     let set_rust_allocate_memory = delegate_loader
         .get_function_with_unmanaged_callers_only::<fn(extern "system" fn(usize, *mut RawVec<u8>))>(
             pdcstr!("librawfilereader.Exports, librawfilereader"),
-            pdcstr!("SetRustAllocateMemory"),
+            pdcstr!("SetForeignAllocateMemory"),
         )
         .unwrap();
     set_rust_allocate_memory(rust_allocate_memory);

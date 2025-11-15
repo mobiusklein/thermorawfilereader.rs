@@ -1372,18 +1372,18 @@ namespace librawfilereader
 
     public static class Exports
     {
-        private static unsafe delegate*<nuint, RawVec*, void> RustAllocateMemory;
+        private static unsafe delegate*<nuint, RawVec*, void> ForeignAllocateMemory;
 
         private static Dictionary<IntPtr, RawFileReader> OpenHandles = new Dictionary<nint, RawFileReader>();
         private static IntPtr HandleCounter = 1;
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_set_memory_allocator")]
-        public static unsafe void SetRustAllocateMemory(delegate*<nuint, RawVec*, void> rustAllocateMemory) => RustAllocateMemory = rustAllocateMemory;
+        public static unsafe void SetForeignAllocateMemory(delegate*<nuint, RawVec*, void> allocateMemory) => ForeignAllocateMemory = allocateMemory;
 
-        private unsafe static RawVec MemoryToRustVec(Span<byte> buffer, nuint size)
+        private unsafe static RawVec MemoryToRawVec(Span<byte> buffer, nuint size)
         {
             var vec = new RawVec();
-            RustAllocateMemory(size, &vec);
+            ForeignAllocateMemory(size, &vec);
 
             if ((IntPtr)vec.Data == IntPtr.Zero)
             {
@@ -1404,7 +1404,7 @@ namespace librawfilereader
         private unsafe static RawVec BufferToRustVec(byte[] buffer, nuint size)
         {
             var vec = new RawVec();
-            RustAllocateMemory(size, &vec);
+            ForeignAllocateMemory(size, &vec);
 
             if ((IntPtr)vec.Data == IntPtr.Zero)
             {
@@ -1560,7 +1560,7 @@ namespace librawfilereader
             var buffer = reader.SpectrumDescriptionFor(scanNumber);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
 
         /// <summary>
@@ -1578,7 +1578,7 @@ namespace librawfilereader
             var buffer = reader.SpectrumDescriptionFor(scanNumber, includeSignal != 0, centroidSpectra != 0);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
 
         /// <summary>
@@ -1596,7 +1596,7 @@ namespace librawfilereader
             var buffer = reader.SpectrumDataFor(scanNumber, centroidSpectra != 0);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_advanced_packet_data_for")]
@@ -1605,7 +1605,7 @@ namespace librawfilereader
             var buffer = reader.GetAdvancedPacketData(scanNumber, includeSampledNoise != 0);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
 
         /// <summary>
@@ -1620,7 +1620,7 @@ namespace librawfilereader
             var buffer = reader.GetInstrumentInfo();
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_file_description")]
@@ -1629,7 +1629,7 @@ namespace librawfilereader
             var buffer = reader.GetFileMetadata();
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_instrument_method")]
@@ -1638,7 +1638,7 @@ namespace librawfilereader
             var buffer = reader.GetInstrumentMethodFor(method);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_instrument_method_count")]
@@ -1653,7 +1653,7 @@ namespace librawfilereader
             var buffer = reader.GetSummaryTrace(TraceType.TIC);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_bpc")]
@@ -1663,7 +1663,7 @@ namespace librawfilereader
             var buffer = reader.GetSummaryTrace(TraceType.BasePeak);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_raw_trailer_values_for")]
@@ -1672,7 +1672,7 @@ namespace librawfilereader
             var buffer = reader.GetRawTrailersForScan(scanNumber);
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_file_error_message")]
@@ -1686,7 +1686,7 @@ namespace librawfilereader
             var bytes = Encoding.UTF8.GetBytes(message);
             var bytesSpan = bytes.AsSpan();
             var size = bytes.Length;
-            return MemoryToRustVec(bytesSpan, (nuint)size);
+            return MemoryToRawVec(bytesSpan, (nuint)size);
         }
 
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_status_logs")]
@@ -1695,7 +1695,7 @@ namespace librawfilereader
             var buffer = reader.StatusLogs();
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
-            return MemoryToRustVec(bytes, (nuint)size);
+            return MemoryToRawVec(bytes, (nuint)size);
         }
     }
 }
