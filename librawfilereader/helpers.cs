@@ -86,6 +86,7 @@ namespace librawfilereader
         Orbitrap_Fusion_ETD,
         Orbitrap_Ascend,
         Orbitrap_ID_X,
+        Orbitrap_Excedion_Pro,
         TSQ_Quantiva,
         TSQ_Endura,
         TSQ_Altis,
@@ -99,6 +100,7 @@ namespace librawfilereader
         Orbitrap_Eclipse,
         Orbitrap_GC,
         Orbitrap_Astral,
+        Orbitrap_Astral_Zoom,
     }
 
     public enum MatchType
@@ -127,47 +129,58 @@ namespace librawfilereader
 
     static class InstrumentModelHelpers
     {
-        public static InstrumentModelType parseInstrumentModel(string instrumentModel) {
+        public static InstrumentModelType parseInstrumentModel(string instrumentModel)
+        {
             var typeUpper = instrumentModel.ToUpper();
             var noSpaces = typeUpper.Replace(" ", "");
-            foreach(var mapping in NameToModelMapping) {
-                switch(mapping.MatchType) {
-                    case MatchType.Exact: {
-                        if(mapping.Name == typeUpper) {
-                            return mapping.ModelType;
-                        }
-                        break;
-                    }
-                    case MatchType.ExactNoSpaces:
-                    {
-                        if (mapping.Name == typeUpper) {
-                            return mapping.ModelType;
-                        }
-                        break;
-                    }
-                    case MatchType.Contains:
-                    {
-                        if (typeUpper.Contains(mapping.Name)) {
-                            return mapping.ModelType;
-                        }
-                        break;
-                    }
-                    case MatchType.StartsWith: {
-                        if (typeUpper.StartsWith(mapping.Name)) {
-                            return mapping.ModelType;
-                        }
-                        break;
-                    }
-                    case MatchType.EndsWith: {
-                        if (typeUpper.EndsWith(mapping.Name))
+            foreach (var mapping in NameToModelMapping)
+            {
+                switch (mapping.MatchType)
+                {
+                    case MatchType.Exact:
                         {
-                            return mapping.ModelType;
+                            if (mapping.Name == typeUpper)
+                            {
+                                return mapping.ModelType;
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    default: {
-                        throw new System.Exception("Unknown match type");
-                    }
+                    case MatchType.ExactNoSpaces:
+                        {
+                            if (mapping.Name == typeUpper)
+                            {
+                                return mapping.ModelType;
+                            }
+                            break;
+                        }
+                    case MatchType.Contains:
+                        {
+                            if (typeUpper.Contains(mapping.Name))
+                            {
+                                return mapping.ModelType;
+                            }
+                            break;
+                        }
+                    case MatchType.StartsWith:
+                        {
+                            if (typeUpper.StartsWith(mapping.Name))
+                            {
+                                return mapping.ModelType;
+                            }
+                            break;
+                        }
+                    case MatchType.EndsWith:
+                        {
+                            if (typeUpper.EndsWith(mapping.Name))
+                            {
+                                return mapping.ModelType;
+                            }
+                            break;
+                        }
+                    default:
+                        {
+                            throw new System.Exception("Unknown match type");
+                        }
                 }
             }
             return InstrumentModelType.Unknown;
@@ -254,18 +267,23 @@ namespace librawfilereader
     new InstrumentNameToModelMapping("ORBITRAP EXPLORIS 480", InstrumentModelType.Orbitrap_Exploris_480, MatchType.Exact),
     new InstrumentNameToModelMapping("ORBITRAP GC", InstrumentModelType.Orbitrap_GC, MatchType.Contains),
     new InstrumentNameToModelMapping("ECLIPSE", InstrumentModelType.Orbitrap_Eclipse, MatchType.Contains),
-    new InstrumentNameToModelMapping("ASTRAL", InstrumentModelType.Orbitrap_Astral, MatchType.Contains),
     new InstrumentNameToModelMapping("FUSION ETD", InstrumentModelType.Orbitrap_Fusion_ETD, MatchType.Contains),
     new InstrumentNameToModelMapping("FUSION LUMOS", InstrumentModelType.Orbitrap_Fusion_Lumos, MatchType.Contains),
     new InstrumentNameToModelMapping("FUSION", InstrumentModelType.Orbitrap_Fusion, MatchType.Contains),
     new InstrumentNameToModelMapping("ASCEND", InstrumentModelType.Orbitrap_Ascend, MatchType.Contains),
     new InstrumentNameToModelMapping("SURVEYOR PDA", InstrumentModelType.Surveyor_PDA, MatchType.Exact),
     new InstrumentNameToModelMapping("ACCELA PDA", InstrumentModelType.Accela_PDA, MatchType.Exact),
+    new InstrumentNameToModelMapping("ORBITRAP EXCEDION PRO", InstrumentModelType.Orbitrap_Excedion_Pro, MatchType.Contains),
+    new InstrumentNameToModelMapping("ORBITRAP EXCEDION", InstrumentModelType.Orbitrap_Excedion_Pro, MatchType.Contains),
+    new InstrumentNameToModelMapping("ASTRAL", InstrumentModelType.Orbitrap_Astral, MatchType.Contains),
+    new InstrumentNameToModelMapping("ASTRAL ZOOM", InstrumentModelType.Orbitrap_Astral_Zoom, MatchType.Contains),
     };
 
-        public static List<IonizationModeType> GetIonSourcesFor(InstrumentModelType type) {
+        public static List<IonizationModeType> GetIonSourcesFor(InstrumentModelType type)
+        {
             var ionSources = new List<IonizationModeType>();
-            switch (type) {
+            switch (type)
+            {
                 case InstrumentModelType.SSQ_7000:
                 case InstrumentModelType.TSQ_7000:
                 case InstrumentModelType.TSQ_8000_Evo:
@@ -310,6 +328,7 @@ namespace librawfilereader
                 case InstrumentModelType.Orbitrap_Ascend:
                 case InstrumentModelType.Orbitrap_ID_X:
                 case InstrumentModelType.Orbitrap_Astral:
+                case InstrumentModelType.Orbitrap_Astral_Zoom:
                 case InstrumentModelType.TSQ:
                 case InstrumentModelType.TSQ_Quantum:
                 case InstrumentModelType.TSQ_Quantum_Access:
@@ -369,9 +388,11 @@ namespace librawfilereader
             return ionSources;
         }
 
-        public static List<MassAnalyzerType> GetMassAnalyzerFor(InstrumentModelType type) {
+        public static List<MassAnalyzerType> GetMassAnalyzerFor(InstrumentModelType type)
+        {
             var analyzers = new List<MassAnalyzerType>();
-            switch (type) {
+            switch (type)
+            {
                 case InstrumentModelType.Exactive:
                 case InstrumentModelType.Exactive_Plus:
                 case InstrumentModelType.Q_Exactive:
@@ -382,6 +403,7 @@ namespace librawfilereader
                 case InstrumentModelType.Orbitrap_Exploris_120:
                 case InstrumentModelType.Orbitrap_Exploris_240:
                 case InstrumentModelType.Orbitrap_Exploris_480:
+                case InstrumentModelType.Orbitrap_Excedion_Pro:
                     analyzers.Add(MassAnalyzerType.MassAnalyzerFTMS);
                     return analyzers;
 
@@ -408,7 +430,8 @@ namespace librawfilereader
                     }
 
                 case InstrumentModelType.Orbitrap_Astral:
-                    {
+                case InstrumentModelType.Orbitrap_Astral_Zoom:
+                {
                         analyzers.Add(MassAnalyzerType.MassAnalyzerFTMS);
                         analyzers.Add(MassAnalyzerType.MassAnalyzerASTMS);
                         return analyzers;
