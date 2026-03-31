@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
+## [0.6.0] - 2026-03-31
+
+### Added
+
+- Add instruments
+
 ## [0.5.5] - 2025-08-28
 
 ### Added
@@ -145,7 +151,8 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.5...HEAD
+[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.5...v0.6.0
 [0.5.5]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.1...v0.5.3
