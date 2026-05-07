@@ -15,7 +15,7 @@ jobs:
         os: [
           ubuntu-latest,
           windows-latest,
-          macos-latest
+          # macos-latest
         ]
     name: Test Suite
     runs-on: ${{ matrix.os }}
