@@ -47,6 +47,7 @@ pub fn main() -> io::Result<()> {
         handle.describe(target as usize);
         let dta = handle.get_extended_spectrum_data(target as usize, true).unwrap();
         let noise = dta.noise();
+        let charge = dta.charge();
         handle.set_centroid_spectra(true);
         let spec = handle.get(target as usize).unwrap();
         println!("{} peaks, {} noise points", spec.data().unwrap().len(), noise.as_ref().map(|x| x.len()).unwrap_or_default());
@@ -56,7 +57,10 @@ pub fn main() -> io::Result<()> {
         if more {
             let data = spec.data().unwrap();
             for (i, (mz, int)) in data.into_iter().enumerate() {
-                println!("{mz}\t{int}\t{:?}", noise.as_ref().map(|v| v.get(i)))
+                println!(
+                    "{mz}\t{int}\t{:?}\t{:?}",
+                    noise.as_ref().and_then(|v| v.get(i)),
+                    charge.as_ref().and_then(|v| v.get(i)))
             }
         }
     }

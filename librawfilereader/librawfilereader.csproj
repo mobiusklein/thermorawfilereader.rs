@@ -25,6 +25,21 @@
 
   <ItemGroup>
     <Reference Include="ThermoFisher.CommonCore.BackgroundSubtraction">
+      <HintPath>lib/core/update/thermofisher.commoncore.backgroundsubtraction.8.0.35.nupkg</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.Data">
+      <HintPath>lib/core/update/thermofisher.commoncore.backgroundsubtraction.8.0.35.nupkg</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.MassPrecisionEstimator">
+      <HintPath>lib/core/update/thermofisher.commoncore.massprecisionestimator.8.0.35.nupkg</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.RawFileReader">
+      <HintPath>lib/core/update/thermofisher.commoncore.data.8.0.35.nupkg</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.RandomAccessReaderPlugin">
+      <HintPath>lib/core/update/thermofisher.commoncore.randomaccessreaderplugin.8.0.35.nupkg</HintPath>
+    </Reference>
+    <!-- <Reference Include="ThermoFisher.CommonCore.BackgroundSubtraction">
       <HintPath>lib/ThermoFisher.CommonCore.BackgroundSubtraction.dll</HintPath>
     </Reference>
     <Reference Include="ThermoFisher.CommonCore.Data">
@@ -38,7 +53,7 @@
     </Reference>
     <Reference Include="ThermoFisher.CommonCore.RandomAccessReaderPlugin">
       <HintPath>lib/ThermoFisher.CommonCore.RandomAccessReaderPlugin.dll</HintPath>
-    </Reference>
+    </Reference> -->
     <Reference Include="OpenMcdf">
       <HintPath>lib/OpenMcdf.dll</HintPath>
     </Reference>
