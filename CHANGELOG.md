@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog],
 and this project adheres to [Semantic Versioning].
 
+## [0.7.0] - 2026-05-11
+
+### Changed
+
+- Upgrade to ThermoFisher RawFileReader v8.0.35
+
+### Fixed
+
+- Fix macos testing (#3)
+
 ## [0.6.0] - 2026-05-11
 
 ### Changed
@@ -161,7 +171,8 @@ and this project adheres to [Semantic Versioning].
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.7.0...v0.7.0
 [0.6.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.6.0...v0.6.0
 [0.6.0]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.5...v0.6.0
 [0.5.5]: https://github.com/mobiusklein/thermorawfilereader.rs/compare/v0.5.4...v0.5.5
