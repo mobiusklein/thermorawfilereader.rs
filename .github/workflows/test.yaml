@@ -15,7 +15,7 @@ jobs:
         os: [
           ubuntu-latest,
           windows-latest,
-          # macos-latest
+          macos-latest
         ]
     name: Test Suite
     runs-on: ${{ matrix.os }}
@@ -29,7 +29,10 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-
+      - name: Install dotnet runtime
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:

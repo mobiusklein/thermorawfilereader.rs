@@ -1733,7 +1733,7 @@
             Gets or sets number of filled array points.
             </summary>
         </member>
-        <member name="M:ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.CreateTargetSpectrum(ThermoFisher.CommonCore.Data.Business.Scan,ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.FindSegmentedScan,System.Int32,ThermoFisher.CommonCore.Data.Business.MassToFrequencyConverter@)">
+        <member name="M:ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.CreateTargetSpectrum(ThermoFisher.CommonCore.Data.Business.Scan,ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.FindSegmentedScan,System.Int32,ThermoFisher.CommonCore.Data.Interfaces.FtAverageOptions,ThermoFisher.CommonCore.Data.Business.MassToFrequencyConverter@)">
             <summary>
             Create the target array for keeping the averaged profile points.
             </summary>
@@ -1745,6 +1745,9 @@
             </param>
             <param name="scans">
             The scans.
+            </param>
+            <param name="options">
+            The FtAverageOptions.
             </param>
             <param name="massToFrequencyConverter">
             The target Spectrum Parameters.
@@ -1766,7 +1769,7 @@
         </member>
         <member name="M:ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.CreateMassTable(ThermoFisher.CommonCore.Data.Business.MassToFrequencyConverter)">
             <summary>
-            The create mass table.
+            Create mass table.
             </summary>
             <param name="massToFrequencyConverter">
             The target spectrum parameters.
@@ -1838,7 +1841,7 @@
             The set of resampled peaks, which must be merged into the final scan.
             </returns>
         </member>
-        <member name="M:ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.SumUpSpectraResampledParallel2(ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.FindSegmentedScan,ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.ProfileData,System.Int32,System.Int32)">
+        <member name="M:ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.SumUpSpectraResampledParallel2(ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.FindSegmentedScan,ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.ProfileData,System.Int32,System.Int32,System.Int32)">
             <summary>
             Create the average profile spectrum.
             Each scan is analyzed: Determining mass regions which contain non-zero data,
@@ -1857,9 +1860,14 @@
             <param name="taskBatching">
             The minimum number of Resample tasks per thread.
             Creating resampled data for profiles is a fairly fast task. It may be inefficient to queue workers to
-            created the merged data for each scan in the batch.
+            create the merged data for each scan in the batch.
             Setting this >1 will reduce threading overheads, when averaging small batches of scans with low intensity peaks.
             This parameter only affects the re-sampling, as the final merge of the re-sampled data is single threaded.
+            </param>
+            <param name="maxScansInTaskList">
+            The maximum number of scans to load and process in a task list submitted for parallel execution. 
+            Note: values exceeding 500 may cause significant memory consumption.
+            Default: 50 scans
             </param>
             <returns>
             The re-sampled and summed up spectra.
@@ -2280,7 +2288,7 @@
             The CentroidStreamPoint object which has the largest intensity
             </returns>
         </member>
-        <member name="M:ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.CalculateTargetSpectrumParameters(ThermoFisher.CommonCore.Data.Business.Scan,ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.FindSegmentedScan,System.Int32)">
+        <member name="M:ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.CalculateTargetSpectrumParameters(ThermoFisher.CommonCore.Data.Business.Scan,ThermoFisher.CommonCore.BackgroundSubtraction.SpectrumAverager.FindSegmentedScan,System.Int32,ThermoFisher.CommonCore.Data.Interfaces.FtAverageOptions)">
             <summary>
             Calculates and retrieves the necessary parameters for creating 
             the averaged scan from the the given set of raw scans to average.
@@ -2293,6 +2301,9 @@
             </param>
             <param name="scans">
             The scans.
+            </param>
+            <param name="options">
+            The FtAverageOptions.
             </param>
             <returns>
             The calculated target spectrum parameters.
