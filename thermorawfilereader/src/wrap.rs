@@ -5,6 +5,7 @@ use std::iter::{FusedIterator, ExactSizeIterator};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::{io, ptr};
+use std::ops::Deref;
 
 use netcorehost::hostfxr::ManagedFunction;
 use netcorehost::{hostfxr::AssemblyDelegateLoader, pdcstr};
@@ -226,76 +227,72 @@ impl RawSpectrum {
 
 
 pub struct OwnedSpectrumData {
-    data: RawVec<u8>,
+    mz_array: RawVec<u8>,
+    intensity_array: RawVec<u8>,
+    size: usize
 }
 
 impl OwnedSpectrumData {
-    pub fn new(data: RawVec<u8>) -> Self {
-        Self { data }
-    }
-
-    /// Check that the buffer is a valid `SpectrumDescription`
-    pub fn check(&self) -> bool {
-        root::<SpectrumDataT>(&self.data).is_ok()
-    }
-
-    /// View the underlying buffer as a `SpectrumDescription`
-    pub fn raw_view(&self) -> SpectrumDataT<'_> {
-        unsafe { root_unchecked::<SpectrumDataT>(&self.data) }
-    }
-
-    pub fn view(&self) -> SpectrumData<'_> {
-        let view = self.raw_view();
-        let mz = view.mz().unwrap_or_default();
-        let intensity = view.intensity().unwrap_or_default();
-        SpectrumData { mz, intensity }
-    }
-
-    pub fn mz(&self) -> Cow<'_, [f64]> {
-        self.view().mz()
-    }
-
-    pub fn intensity(&self) -> Cow<'_, [f32]> {
-        self.view().intensity()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.view().is_empty()
-    }
-
-    pub fn iter(&self) -> std::iter::Zip<flatbuffers::VectorIter<'_, f64>, flatbuffers::VectorIter<'_, f32>> {
-        self.view().iter()
+    pub fn new(mz_array: RawVec<u8>, intensity_array: RawVec<u8>, size: usize) -> Self {
+        Self { mz_array, intensity_array, size }
     }
 
     pub fn len(&self) -> usize {
-        self.view().len()
+        self.size
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.size == 0
+    }
+
+    #[cfg(target_endian = "little")]
+    pub fn mz(&self) -> Cow<'_, [f64]> {
+        let d = self.mz_array.deref();
+        if d.is_empty() {
+            return Cow::Borrowed(&[])
+        }
+        let v = bytemuck::cast_slice::<u8, f64>(d);
+        Cow::Borrowed(v)
+    }
+
+    #[cfg(target_endian = "big")]
+    pub fn mz(&self) -> Cow<'_, [f64]> {
+        let d = self.mz_array.deref();
+        if d.is_empty() {
+            return Cow::Borrowed(&[])
+        }
+        let (vs, trailer) = d.as_chunks::<8>();
+        if !trailer.is_empty() {
+            panic!("m/z array buffer expected to be perfectly divisible by 8, had {}, {} bytes left over", self.mz_array.len(), trailer.len())
+        }
+        let values: Vec<_> = vs.iter().map(|v| f64::from_le_bytes(*v)).collect();
+        Cow::Owned(values)
+    }
+
+    #[cfg(target_endian = "little")]
+    pub fn intensity(&self) -> Cow<'_, [f32]> {
+        let d = self.intensity_array.deref();
+        if d.is_empty() {
+            return Cow::Borrowed(&[])
+        }
+        let v = bytemuck::cast_slice::<u8, f32>(&d);
+        Cow::Borrowed(v)
+    }
+
+    #[cfg(target_endian = "big")]
+    pub fn intensity(&self) -> Cow<'_, [f32]> {
+        let d = self.intensity_array.deref();
+        if d.is_empty() {
+            return Cow::Borrowed(&[])
+        }
+        let (vs, trailer) = d.as_chunks::<4>();
+        if !trailer.is_empty() {
+            panic!("m/z array buffer expected to be perfectly divisible by 4, had {}, {} bytes left over", self.mz_array.len(), trailer.len())
+        }
+        let values: Vec<_> = vs.iter().map(|v| f32::from_le_bytes(*v)).collect();
+        Cow::Owned(values)
     }
 }
-
-
-pub struct OwnedSpectrumDataIter {
-    inner: OwnedSpectrumData,
-    i: usize
-}
-
-impl Iterator for OwnedSpectrumDataIter {
-    type Item = (f64, f32);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let x = self.at(self.i);
-        self.i += 1;
-        x
-    }
-}
-
-impl OwnedSpectrumDataIter {
-    fn at(&self, i: usize) -> Option<(f64, f32)> {
-        let mz = self.inner.mz().get(i).copied()?;
-        let int = self.inner.intensity().get(i).copied()?;
-        Some((mz, int))
-    }
-}
-
 
 /// A sub-set of a [`RawSpectrum`] corresponding to the m/z and intensity arrays
 /// of a mass spectrum. All data is borrowed internally from the [`RawSpectrum`]'s
@@ -1321,17 +1318,18 @@ impl RawFileReader {
 
     /// Read spectrum signal data separately and explicitly without reading all related metadata
     pub fn get_spectrum_data(&self, index: usize, centroid_spectra: bool) -> Option<OwnedSpectrumData> {
+        let mut mz_bytes: RawVec<u8> = RawVec::from_vec(Vec::new());
+        let mut intensity_bytes: RawVec<u8> = RawVec::from_vec(Vec::new());
         if index >= self.len() {
             return None;
         }
         self.validate_impl();
-        let buffer_fn = self.context.get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32, i32) -> RawVec<u8>>(
+        let buffer_fn = self.context.get_function_with_unmanaged_callers_only::<fn(*mut c_void, i32, i32, *mut RawVec<u8>, *mut RawVec<u8>) -> u32>(
             pdcstr!("librawfilereader.Exports, librawfilereader"),
-            pdcstr!("SpectrumDataFor")
+            pdcstr!("GetSpectrumDataIndirect")
         ).unwrap();
-
-        let buff = buffer_fn(self.raw_file_reader, (index as i32) + 1, centroid_spectra as i32);
-        Some(OwnedSpectrumData::new(buff))
+        let n = buffer_fn(self.raw_file_reader, (index as i32) + 1, centroid_spectra as i32, &mut mz_bytes, &mut intensity_bytes);
+        Some(OwnedSpectrumData::new(mz_bytes, intensity_bytes, n as usize))
     }
 
     /// Get the trailer extra values for scan at `index`.
@@ -1572,10 +1570,16 @@ mod test {
 
         assert_eq!(buf.mode(), SpectrumMode::Centroid);
         let dat = handle.get_spectrum_data(5, false).unwrap();
-        assert_eq!(dat.len(), 0);
+        assert_eq!(dat.len(), 650);
         let dat = handle.get_spectrum_data(5, true).unwrap();
         assert_eq!(dat.len(), buf.data().unwrap().len());
 
+        let buf = handle.get(1).unwrap();
+        assert_eq!(buf.mode(), SpectrumMode::Profile);
+        let dat = handle.get_spectrum_data(1, false).unwrap();
+        assert_eq!(dat.len(), 19800);
+        let dat = handle.get_spectrum_data(1, true).unwrap();
+        assert_eq!(dat.len(), 0);
         Ok(())
     }
 
@@ -1728,6 +1732,39 @@ mod test {
             // eprintln!("{} {} {:?} {:?}", stat_log.name().unwrap(), times.len(), vals.get(0), vals.iter().last());
             assert!(times.len() > 0);
             assert_eq!(times.len(), vals.len());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_indirect_load() -> io::Result<()> {
+        let mut handle = RawFileReader::open("../tests/data/small.RAW")?;
+        for i in  0..handle.len() {
+            let desc = handle.get(i).unwrap();
+            let s1 = desc.data().unwrap();
+            eprintln!("{i}: {} {}", desc.native_id(), s1.len());
+            let s2 = handle.get_spectrum_data(i, handle.get_centroid_spectra()).unwrap();
+            assert_eq!(s1.len(), s2.len());
+            for (a, b) in s1.mz().iter().zip(s2.mz().iter()) {
+                assert_eq!(a, b);
+            }
+            for (a, b) in s1.intensity().iter().zip(s2.intensity().iter()) {
+                assert_eq!(a, b);
+            }
+        }
+        handle.set_centroid_spectra(true);
+        for i in  0..handle.len() {
+            let desc = handle.get(i).unwrap();
+            let s1 = desc.data().unwrap();
+            eprintln!("{i}: {} {}", desc.native_id(), s1.len());
+            let s2 = handle.get_spectrum_data(i, handle.get_centroid_spectra()).unwrap();
+            assert_eq!(s1.len(), s2.len());
+            for (a, b) in s1.mz().iter().zip(s2.mz().iter()) {
+                assert_eq!(a, b);
+            }
+            for (a, b) in s1.intensity().iter().zip(s2.intensity().iter()) {
+                assert_eq!(a, b);
+            }
         }
         Ok(())
     }

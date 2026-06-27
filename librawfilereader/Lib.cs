@@ -13,7 +13,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq;
 using System.Text;
-using System.Diagnostics;
+using System.Buffers.Binary;
 
 namespace librawfilereader
 {
@@ -120,6 +120,21 @@ namespace librawfilereader
         public byte* Data;
         public nuint Len;
         public nuint Capacity;
+
+        public Span<byte> AsSpan()
+        {
+            return new Span<byte>(Data, (int)Len);
+        }
+
+        public Span<byte> AsSpanOffset(int offset)
+        {
+            return AsSpan().Slice(offset);
+        }
+
+        public override string ToString()
+        {
+            return $"RawVec({(long)Data:X}, {Len}/{Capacity})";
+        }
     }
 
     /// <summary>
@@ -740,6 +755,76 @@ namespace librawfilereader
             return offset;
         }
 
+        public unsafe uint GetAdvancedPacketDataIndirect(
+            int scanNumber,
+            RawVec* noiseOut,
+            RawVec* baselineOut,
+            RawVec* massOut,
+            RawVec* chargeOut,
+            RawVec* resolutionOut
+        )
+        {
+            var accessor = GetHandle();
+            var packetData = accessor.GetAdvancedPacketData(scanNumber);
+            var peakData = packetData.CentroidData;
+
+            uint n = (uint)peakData.Length;
+
+            if (peakData.Noises != null && peakData.Noises.Length > 0)
+            {
+                var noiseArr = Exports.AllocateRawVec(n * sizeof(float));
+                var noiseSpan = noiseArr.AsSpan();
+                for(var i = 0; i < peakData.Length; i++)
+                {
+                    BinaryPrimitives.WriteSingleLittleEndian(noiseSpan.Slice(i * 4), (float)peakData.Noises[i]);
+                }
+                *noiseOut = noiseArr;
+            } else { noiseOut->Data = null; }
+            if (peakData.Baselines != null && peakData.Baselines.Length > 0)
+            {
+                var baselineArr = Exports.AllocateRawVec(n * sizeof(float));
+                var baselineSpan = baselineArr.AsSpan();
+                for (var i = 0; i < peakData.Length; i++)
+                {
+                    BinaryPrimitives.WriteSingleLittleEndian(baselineSpan.Slice(i * 4), (float)peakData.Baselines[i]);
+                }
+                *baselineOut = baselineArr;
+            } else { baselineOut->Data = null; }
+            if (peakData.Masses != null && peakData.Masses.Length > 0)
+            {
+                var massArr = Exports.AllocateRawVec(n * sizeof(double));
+                var massSpan = massArr.AsSpan();
+                for (var i = 0; i < peakData.Length; i++)
+                {
+                    BinaryPrimitives.WriteDoubleLittleEndian(massSpan.Slice(i * 4), peakData.Masses[i]);
+                }
+                *massOut = massArr;
+            } else { massOut->Data = null; }
+            if (peakData.Charges != null && peakData.Charges.Length > 0)
+            {
+                var chargeArr = Exports.AllocateRawVec(n * sizeof(float));
+                var chargeSpan = chargeArr.AsSpan();
+                for (var i = 0; i < peakData.Length; i++)
+                {
+                    BinaryPrimitives.WriteSingleLittleEndian(chargeSpan.Slice(i * 4), (float)peakData.Charges[i]);
+                }
+                *chargeOut = chargeArr;
+            }
+            else { chargeOut->Data = null; }
+            if (peakData.Resolutions != null && peakData.Resolutions.Length > 0)
+            {
+                var resolutionArr = Exports.AllocateRawVec(n * sizeof(float));
+                var resolutionSpan = resolutionArr.AsSpan();
+                for (var i = 0; i < peakData.Length; i++)
+                {
+                    BinaryPrimitives.WriteSingleLittleEndian(resolutionSpan.Slice(i * 4), (float)peakData.Resolutions[i]);
+                }
+                *resolutionOut = resolutionArr;
+            }
+            else { resolutionOut->Data = null; }
+            return n;
+        }
+
         public ByteBuffer GetAdvancedPacketData(int scanNumber, bool includeSampledNoise=true) {
             var accessor = GetHandle();
             var packetData = accessor.GetAdvancedPacketData(scanNumber);
@@ -1005,6 +1090,79 @@ namespace librawfilereader
 
         public ByteBuffer SpectrumDescriptionFor(int scanNumber) {
             return SpectrumDescriptionFor(scanNumber, IncludeSignal, CentroidSpectra);
+        }
+
+        public unsafe uint SpectrumDataIndirection(int scanNumber, bool centroidSpectra, RawVec* mzOut, RawVec* intensityOut)
+        {
+            var accessor = GetHandle();
+            var stats = accessor.GetScanStatsForScanNumber(scanNumber);
+            mzOut->Data = null;
+            mzOut->Len = 0;
+            intensityOut->Data = null;
+            intensityOut->Len = 0;
+            if (centroidSpectra && !stats.IsCentroidScan)
+            {
+                var stream = accessor.GetCentroidStream(scanNumber, true);
+                if (stream != null && stream.Length > 0)
+                {
+                    var centroids = stream.GetCentroids();
+                    var mzArr = Exports.AllocateRawVec((uint)centroids.Count * 8);
+                    var intArr = Exports.AllocateRawVec((uint)centroids.Count * 4);
+
+                    var mzSpan = mzArr.AsSpan();
+                    var intSpan = intArr.AsSpan();
+                    for(var i = 0; i < centroids.Count; i++)
+                    {
+                        BinaryPrimitives.WriteDoubleLittleEndian(mzSpan.Slice(i * 8), centroids[i].Mass);
+                        BinaryPrimitives.WriteSingleLittleEndian(intSpan.Slice(i * 4), (float)centroids[i].Intensity);
+                    }
+                    *mzOut = mzArr;
+                    *intensityOut = intArr;
+                    return (uint)centroids.Count;
+                }
+                else
+                {
+                    var centroids = accessor.GetSimplifiedCentroids(scanNumber);
+                    var n = centroids.Masses.Length;
+                    if (n == 0)
+                    {
+                        return 0;
+                    }
+                    var mzArr = Exports.AllocateRawVec((uint)n * 8);
+                    var intArr = Exports.AllocateRawVec((uint)n * 4);
+                    var mzSpan = mzArr.AsSpan();
+                    var intSpan = intArr.AsSpan();
+                    for (var i = 0; i < n; i++)
+                    {
+                        BinaryPrimitives.WriteDoubleLittleEndian(mzSpan.Slice(i * 8), centroids.Masses[i]);
+                        BinaryPrimitives.WriteSingleLittleEndian(intSpan.Slice(i * 4), (float)centroids.Intensities[i]);
+                    }
+                    *mzOut = mzArr;
+                    *intensityOut = intArr;
+                    return (uint)n;
+                }
+            }
+            else
+            {
+                var segScan = accessor.GetSegmentedScanFromScanNumber(scanNumber);
+                if (segScan.PositionCount == 0)
+                {
+                    return 0;
+                }
+                var mzArr = Exports.AllocateRawVec((uint)segScan.PositionCount * 8);
+                var intArr = Exports.AllocateRawVec((uint)segScan.PositionCount * 4);
+
+                var mzSpan = mzArr.AsSpan();
+                var intSpan = intArr.AsSpan();
+                for (var i = 0; i < segScan.PositionCount; i++)
+                {
+                    BinaryPrimitives.WriteDoubleLittleEndian(mzSpan.Slice(i * 8), segScan.Positions[i]);
+                    BinaryPrimitives.WriteSingleLittleEndian(intSpan.Slice(i * 4), (float)segScan.Intensities[i]);
+                }
+                *mzOut = mzArr;
+                *intensityOut = intArr;
+                return (uint)segScan.PositionCount;
+            }
         }
 
         public ByteBuffer SpectrumDataFor(int scanNumber, bool centroidSpectra)
@@ -1380,6 +1538,13 @@ namespace librawfilereader
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_set_memory_allocator")]
         public static unsafe void SetForeignAllocateMemory(delegate*<nuint, RawVec*, void> allocateMemory) => ForeignAllocateMemory = allocateMemory;
 
+        public static unsafe RawVec AllocateRawVec(nuint size)
+        {
+            var vec = new RawVec();
+            ForeignAllocateMemory(size, &vec);
+            return vec;
+        }
+
         private unsafe static RawVec MemoryToRawVec(Span<byte> buffer, nuint size)
         {
             var vec = new RawVec();
@@ -1599,6 +1764,13 @@ namespace librawfilereader
             return MemoryToRawVec(bytes, (nuint)size);
         }
 
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_spectrum_data_indirect")]
+        public static unsafe uint GetSpectrumDataIndirect(IntPtr handleToken, int scanNumber, int centroidSpectra, RawVec* mzOut, RawVec* intensityOut)
+        {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            return reader.SpectrumDataIndirection(scanNumber, centroidSpectra == 1, mzOut, intensityOut);
+        }
+
         [UnmanagedCallersOnly(EntryPoint = "rawfilereader_advanced_packet_data_for")]
         public static unsafe RawVec AdvancedPacketDataFor(IntPtr handleToken, int scanNumber, int includeSampledNoise) {
             RawFileReader reader = GetHandleForToken(handleToken);
@@ -1606,6 +1778,20 @@ namespace librawfilereader
             var bytes = buffer.ToSpan(buffer.Position, buffer.Length - buffer.Position);
             var size = bytes.Length;
             return MemoryToRawVec(bytes, (nuint)size);
+        }
+
+        [UnmanagedCallersOnly(EntryPoint = "rawfilereader_get_advanced_data_indirect")]
+        public static unsafe uint AdvancedPacketDataIndirect(
+            IntPtr handleToken,
+            int scanNumber,
+            RawVec* noiseOut,
+            RawVec* baselineOut,
+            RawVec* massOut,
+            RawVec* chargeOut,
+            RawVec* resolutionOut)
+        {
+            RawFileReader reader = GetHandleForToken(handleToken);
+            return reader.GetAdvancedPacketDataIndirect(scanNumber, noiseOut, baselineOut, massOut, chargeOut, resolutionOut);
         }
 
         /// <summary>

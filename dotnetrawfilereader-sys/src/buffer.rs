@@ -35,6 +35,10 @@ impl<T> RawVec<T> {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len == 0 || self.data.is_null()
+    }
+
     pub fn from_vec(buf: Vec<T>) -> Self {
         let capacity = buf.capacity();
         let len = buf.len();
@@ -54,6 +58,9 @@ impl<T> Deref for RawVec<T> {
     type Target = [T];
 
     fn deref(&self) -> &Self::Target {
+        if self.data == ptr::null_mut() || self.len == 0 {
+            return &[]
+        }
         unsafe { slice::from_raw_parts_mut(self.data, self.len) }
     }
 }
