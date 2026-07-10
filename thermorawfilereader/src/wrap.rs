@@ -1693,6 +1693,18 @@ mod test {
     }
 
     #[test]
+    fn test_parent_index() -> io::Result<()> {
+        let handle = RawFileReader::open("../tests/data/small.RAW")?;
+        let spec = handle.get(0).unwrap();
+        assert!(spec.precursor().is_none());
+        let spec = handle.get(2).unwrap();
+        assert!(spec.precursor().is_some());
+        let prec = spec.precursor().unwrap();
+        assert_eq!(prec.parent_index(), 1);
+        Ok(())
+    }
+
+    #[test]
     fn test_open_unicode_filename() -> io::Result<()> {
         let handle = RawFileReader::open("../tests/data/small_µ.RAW")?;
         let fd = handle.file_description();

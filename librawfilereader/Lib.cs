@@ -543,6 +543,7 @@ namespace librawfilereader
             if (msLevel > 1)
             {
                 GetIntTrailerExtraFor(accessor, scanNumber, MasterScanKey, out masterScanNumber, -1);
+                if (masterScanNumber > 0) masterScanNumber -= 1;
                 GetDoubleTrailerExtraFor(accessor, scanNumber, MonoisotopicMZKey, out monoisotopicMZ);
                 GetShortTrailerExtraFor(accessor, scanNumber, ChargeStateKey, out precursorCharge);
                 GetDoubleTrailerExtraFor(accessor, scanNumber, IsolationLevelKeys[msLevel - 2], out isolationWidth);
@@ -578,6 +579,7 @@ namespace librawfilereader
                 if (masterScanNumber == -1)
                 {
                     masterScanNumber = FindPreviousPrecursor(scanNumber, msLevel, accessor);
+                    if (masterScanNumber > 0) masterScanNumber--;
                 }
 
                 ActivationProperties activation = ExtractActivation(scanNumber, msLevel, filter);
