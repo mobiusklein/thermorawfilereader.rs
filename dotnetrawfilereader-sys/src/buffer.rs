@@ -39,6 +39,18 @@ impl<T> RawVec<T> {
         self.len == 0 || self.data.is_null()
     }
 
+    pub fn into_vec(mut self) -> Vec<T> {
+        let data = self.data;
+        let len = self.len;
+        let capacity = self.capacity;
+
+        self.data = ptr::null_mut();
+        self.len = 0;
+        self.capacity = 0;
+
+        unsafe { Vec::from_raw_parts(data, len, capacity) }
+    }
+
     pub fn from_vec(buf: Vec<T>) -> Self {
         let capacity = buf.capacity();
         let len = buf.len();
@@ -50,6 +62,12 @@ impl<T> RawVec<T> {
                 capacity,
             }
         }
+    }
+}
+
+impl<T> From<RawVec<T>> for Vec<T> {
+    fn from(value: RawVec<T>) -> Vec<T> {
+        value.into_vec()
     }
 }
 

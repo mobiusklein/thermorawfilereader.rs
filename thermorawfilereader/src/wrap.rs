@@ -225,7 +225,15 @@ impl RawSpectrum {
     }
 }
 
-
+/// A [`SpectrumData`]-like type that instead of using FlatBuffers uses
+/// owned [`RawVec`] of little endian bytes for m/z (f64) and intensity (f32)
+/// arrays.
+///
+/// This allocation strategy lets us take direct ownership of those bytes
+/// and doing things with them. It also makes it easier to transfer between
+/// .NET and Rust by allocating a single buffer once, without needing to
+/// go through the incremental buffer growing because *another* part of the
+/// buffer structure grew.
 pub struct OwnedSpectrumData {
     mz_array: RawVec<u8>,
     intensity_array: RawVec<u8>,
@@ -233,18 +241,46 @@ pub struct OwnedSpectrumData {
 }
 
 impl OwnedSpectrumData {
-    pub fn new(mz_array: RawVec<u8>, intensity_array: RawVec<u8>, size: usize) -> Self {
+    pub(crate) fn new(mz_array: RawVec<u8>, intensity_array: RawVec<u8>, size: usize) -> Self {
         Self { mz_array, intensity_array, size }
     }
 
+    /// Get the number of values in the parallel arrays
     pub fn len(&self) -> usize {
         self.size
     }
 
+    /// Test if the arrays are empty
     pub fn is_empty(&self) -> bool {
         self.size == 0
     }
 
+    /// Get a reference to the m/z byte array
+    pub fn mz_le_bytes(&self) -> &[u8] {
+        &self.mz_array
+    }
+
+    /// Get a reference to the intensity byte array
+    pub fn intensity_le_bytes(&self) -> &[u8] {
+        &self.intensity_array
+    }
+
+    /// Convert the internal memory representation into little endian `Vec<u8>` for
+    /// the m/z and intensity arrays
+    pub fn into_le_bytes(self) -> (Vec<u8>, Vec<u8>) {
+        (self.mz_array.into_vec(), self.intensity_array.into_vec())
+    }
+
+    /// Get an iterator over (m/z, intensity) point pairs
+    pub fn iter(&self) -> impl Iterator<Item = (f64, f32)> + ExactSizeIterator + '_ {
+        let (it, _) = self.mz_array.as_chunks::<8>();
+        let mzs = it.into_iter().map(|v| f64::from_le_bytes(*v));
+        let (it, _) = self.intensity_array.as_chunks::<4>();
+        let intensities = it.into_iter().map(|v| f32::from_le_bytes(*v));
+        mzs.zip(intensities)
+    }
+
+    /// Get an architecture-correct m/z array
     #[cfg(target_endian = "little")]
     pub fn mz(&self) -> Cow<'_, [f64]> {
         let d = self.mz_array.deref();
@@ -255,6 +291,7 @@ impl OwnedSpectrumData {
         Cow::Borrowed(v)
     }
 
+    /// Get an architecture-correct m/z array
     #[cfg(target_endian = "big")]
     pub fn mz(&self) -> Cow<'_, [f64]> {
         let d = self.mz_array.deref();
@@ -269,6 +306,7 @@ impl OwnedSpectrumData {
         Cow::Owned(values)
     }
 
+    /// Get an architecture-correct intensity array
     #[cfg(target_endian = "little")]
     pub fn intensity(&self) -> Cow<'_, [f32]> {
         let d = self.intensity_array.deref();
@@ -279,6 +317,7 @@ impl OwnedSpectrumData {
         Cow::Borrowed(v)
     }
 
+    /// Get an architecture-correct intensity array
     #[cfg(target_endian = "big")]
     pub fn intensity(&self) -> Cow<'_, [f32]> {
         let d = self.intensity_array.deref();
@@ -1754,7 +1793,6 @@ mod test {
         for i in  0..handle.len() {
             let desc = handle.get(i).unwrap();
             let s1 = desc.data().unwrap();
-            eprintln!("{i}: {} {}", desc.native_id(), s1.len());
             let s2 = handle.get_spectrum_data(i, handle.get_centroid_spectra()).unwrap();
             assert_eq!(s1.len(), s2.len());
             for (a, b) in s1.mz().iter().zip(s2.mz().iter()) {
@@ -1768,7 +1806,6 @@ mod test {
         for i in  0..handle.len() {
             let desc = handle.get(i).unwrap();
             let s1 = desc.data().unwrap();
-            eprintln!("{i}: {} {}", desc.native_id(), s1.len());
             let s2 = handle.get_spectrum_data(i, handle.get_centroid_spectra()).unwrap();
             assert_eq!(s1.len(), s2.len());
             for (a, b) in s1.mz().iter().zip(s2.mz().iter()) {

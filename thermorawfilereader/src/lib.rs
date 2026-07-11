@@ -30,7 +30,7 @@ pub use crate::wrap::{
     ChromatogramData, ChromatogramDescription, FileDescription, InstrumentConfiguration,
     InstrumentMethod, InstrumentModel, RawFileReader, RawFileReaderError, RawFileReaderIntoIter,
     RawFileReaderIter, RawSpectrum, SpectrumData, Acquisition, ExtendedSpectrumData,
-    StatusLogCollection, StatusLog, TrailerValue, TrailerValues,
+    StatusLogCollection, StatusLog, TrailerValue, TrailerValues, OwnedSpectrumData,
 };
 pub use constants::{IonizationMode, MassAnalyzer, TraceType, MSOrder};
 

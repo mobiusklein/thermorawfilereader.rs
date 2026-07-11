@@ -26,8 +26,8 @@ namespace librawfilereader
 
         public IsolationWindow(double isolationWidth, double monoisotopicMZ, double isolationOffset)
         {
-            LowerMZ = monoisotopicMZ + isolationOffset - isolationWidth;
-            UpperMZ = monoisotopicMZ + isolationOffset + isolationWidth;
+            LowerMZ = monoisotopicMZ + isolationOffset - isolationWidth / 2;
+            UpperMZ = monoisotopicMZ + isolationOffset + isolationWidth / 2;
             TargetMZ = monoisotopicMZ;
         }
     }
@@ -313,11 +313,6 @@ namespace librawfilereader
         /// <returns>The scan number of the most recent lower MS level spectrum</returns>
         int FindPreviousPrecursor(int scanNumber, short msLevel, IRawDataPlus accessor)
         {
-            var cacheLookUp = PreviousMSLevels[scanNumber][msLevel - 1];
-            if (cacheLookUp != null)
-            {
-                return cacheLookUp.Value;
-            }
             int i = scanNumber - 1;
             while (i > 0)
             {
@@ -332,7 +327,6 @@ namespace librawfilereader
                     i -= 1;
                 }
             }
-
             return i;
         }
 
@@ -543,7 +537,9 @@ namespace librawfilereader
             if (msLevel > 1)
             {
                 GetIntTrailerExtraFor(accessor, scanNumber, MasterScanKey, out masterScanNumber, -1);
-                if (masterScanNumber > 0) masterScanNumber -= 1;
+                if (masterScanNumber > 0) {
+                    masterScanNumber -= 1;
+                };
                 GetDoubleTrailerExtraFor(accessor, scanNumber, MonoisotopicMZKey, out monoisotopicMZ);
                 GetShortTrailerExtraFor(accessor, scanNumber, ChargeStateKey, out precursorCharge);
                 GetDoubleTrailerExtraFor(accessor, scanNumber, IsolationLevelKeys[msLevel - 2], out isolationWidth);
@@ -1496,7 +1492,7 @@ namespace librawfilereader
                 lastMSLevels[msLevel] = i;
             }
 
-            PreviousMSLevels = previousMSLevels;
+            // PreviousMSLevels = previousMSLevels;
             MSLevelCounts = msLevelCounts;
         }
 
