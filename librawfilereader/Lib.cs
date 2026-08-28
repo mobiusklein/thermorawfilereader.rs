@@ -36,6 +36,10 @@ namespace librawfilereader
     {
         public DissociationMethod Dissociation;
         public double Energy;
+        public bool IsSupplemental;
+
+        public bool IsElectronDissociation => Dissociation == DissociationMethod.ECD || Dissociation == DissociationMethod.ETD;
+        public bool IsCollisionalDissociation => Dissociation == DissociationMethod.HCD || Dissociation == DissociationMethod.CID;
     }
 
     public struct PrecursorProperties
@@ -44,7 +48,7 @@ namespace librawfilereader
         public int PrecursorCharge;
         public IsolationWindow IsolationWindow;
         public int MasterScanNumber;
-        public ActivationProperties Activation;
+        public List<ActivationProperties> Activation;
     }
 
     public struct AcquisitionProperties
@@ -340,17 +344,59 @@ namespace librawfilereader
             {ActivationType.ProtonTransferReaction, DissociationMethod.PTD},
         };
 
-        ActivationProperties ExtractActivation(int scanNumber, short msLevel, IScanFilter filter)
+        ActivationProperties HandleReaction(IReaction reaction)
         {
-            ActivationProperties activation = new ActivationProperties
-            {
+            var act = new ActivationProperties {
                 Dissociation = DissociationMethod.Unknown,
-                Energy = filter.GetEnergy(msLevel - 2)
+                Energy = reaction.CollisionEnergy,
+                IsSupplemental = false
             };
+            DissociationMethodMap.TryGetValue(reaction.ActivationType, out act.Dissociation);
+            return act;
+        }
 
-            var activationType = filter.GetActivation(msLevel - 2);
-            DissociationMethodMap.TryGetValue(activationType, out activation.Dissociation);
-            return activation;
+        List<ActivationProperties> ExtractActivation(int scanNumber, short msLevel, IScanFilter filter)
+        {
+            var lastIndex = msLevel - 2;
+            while(true)
+            {
+                try
+                {
+                    filter.GetReaction(lastIndex + 1);
+                    lastIndex++;
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    break;
+                }
+            }
+            var lastReaction = filter.GetReaction(lastIndex);
+            List<ActivationProperties> activations = [HandleReaction(lastReaction)];
+            if (filter.SupplementalActivation == TriState.On)
+            {
+                bool reverse = false;
+                bool isSupplemental = false;
+                activations.Add(HandleReaction(filter.GetReaction(lastIndex - 1)));
+                if (activations[0].IsCollisionalDissociation && activations[1].IsElectronDissociation)
+                {
+                    reverse = true;
+                    isSupplemental = true;
+                }
+                else if (activations[0].IsElectronDissociation && activations[1].IsCollisionalDissociation)
+                {
+                    isSupplemental = true;
+                }
+                if (reverse) activations.Reverse();
+                var i = activations.Count - 1;
+
+                if (isSupplemental)
+                {
+                    var last = activations[i];
+                    last.IsSupplemental = true;
+                    activations[i] = last;
+                }
+            }
+            return activations;
         }
 
         private const string InjectionTimeKey = "Ion Injection Time (ms)";
@@ -517,7 +563,8 @@ namespace librawfilereader
             return false;
         }
 
-        (PrecursorProperties?, AcquisitionProperties) ExtractPrecursorAndTrailerMetadata(int scanNumber, short msLevel, IScanFilter filter, IRawDataPlus accessor, ScanStatistics stats)
+        (PrecursorProperties?, AcquisitionProperties) ExtractPrecursorAndTrailerMetadata(
+                int scanNumber, short msLevel, IScanFilter filter, IRawDataPlus accessor, ScanStatistics stats)
         {
             var trailers = accessor.GetTrailerExtraInformation(scanNumber);
 
@@ -550,7 +597,8 @@ namespace librawfilereader
             };
             resolution_opt = resolution == 0.0 ? null : (float)resolution;
 
-            AcquisitionProperties acquisitionProperties = new AcquisitionProperties(injectionTime, new List<double>(), filter.MassAnalyzer, stats.LowMass, stats.HighMass, scanEventNum, resolution_opt);
+            AcquisitionProperties acquisitionProperties = new AcquisitionProperties(
+                injectionTime, new List<double>(), filter.MassAnalyzer, stats.LowMass, stats.HighMass, scanEventNum, resolution_opt);
 
             if (filter.CompensationVoltage == TriState.On)
             {
@@ -578,7 +626,7 @@ namespace librawfilereader
                     if (masterScanNumber > 0) masterScanNumber--;
                 }
 
-                ActivationProperties activation = ExtractActivation(scanNumber, msLevel, filter);
+                List<ActivationProperties> activation = ExtractActivation(scanNumber, msLevel, filter);
                 IsolationWindow window = new IsolationWindow(isolationWidth, monoisotopicMZ, isolationOffset);
                 PrecursorProperties props = new PrecursorProperties
                 {
@@ -1021,6 +1069,24 @@ namespace librawfilereader
 
         Offset<PrecursorT> StorePrecursor(FlatBufferBuilder builder, PrecursorProperties precursorProps)
         {
+            var dis1 = DissociationMethod.Unknown;
+            var dis2 = DissociationMethod.Unknown;
+            var eng1 = 0.0;
+            var eng2 = 0.0;
+            var suppl1 = false;
+            var suppl2 = false;
+            if (precursorProps.Activation.Count > 0)
+            {
+                dis1 = precursorProps.Activation[0].Dissociation;
+                eng1 = precursorProps.Activation[0].Energy;
+                suppl1 = precursorProps.Activation[0].IsSupplemental;
+            }
+            if (precursorProps.Activation.Count > 1)
+            {
+                dis2 = precursorProps.Activation[1].Dissociation;
+                eng2 = precursorProps.Activation[1].Energy;
+                suppl2 = precursorProps.Activation[1].IsSupplemental;
+            }
             var precursor = PrecursorT.CreatePrecursorT(
                     builder,
                     precursorProps.MonoisotopicMZ,
@@ -1030,8 +1096,12 @@ namespace librawfilereader
                     precursorProps.IsolationWindow.LowerMZ,
                     precursorProps.IsolationWindow.TargetMZ,
                     precursorProps.IsolationWindow.UpperMZ,
-                    precursorProps.Activation.Dissociation,
-                    precursorProps.Activation.Energy
+                    dis1,
+                    eng1,
+                    suppl1,
+                    dis2,
+                    eng2,
+                    suppl2
                 );
             return precursor;
         }

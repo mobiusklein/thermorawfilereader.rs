@@ -1398,10 +1398,10 @@ impl<'a> IsolationWindowT {
 // struct ActivationT, aligned to 8
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct ActivationT(pub [u8; 16]);
+pub struct ActivationT(pub [u8; 24]);
 impl Default for ActivationT {
   fn default() -> Self {
-    Self([0; 16])
+    Self([0; 24])
   }
 }
 impl core::fmt::Debug for ActivationT {
@@ -1409,6 +1409,7 @@ impl core::fmt::Debug for ActivationT {
     f.debug_struct("ActivationT")
       .field("dissociation_method", &self.dissociation_method())
       .field("collision_energy", &self.collision_energy())
+      .field("supplemental", &self.supplemental())
       .finish()
   }
 }
@@ -1456,10 +1457,12 @@ impl<'a> ActivationT {
   pub fn new(
     dissociation_method: DissociationMethod,
     collision_energy: f64,
+    supplemental: bool,
   ) -> Self {
-    let mut s = Self([0; 16]);
+    let mut s = Self([0; 24]);
     s.set_dissociation_method(dissociation_method);
     s.set_collision_energy(collision_energy);
+    s.set_supplemental(supplemental);
     s
   }
 
@@ -1521,15 +1524,44 @@ impl<'a> ActivationT {
     }
   }
 
+  pub fn supplemental(&self) -> bool {
+    let mut mem = core::mem::MaybeUninit::<<bool as EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    EndianScalar::from_little_endian(unsafe {
+      core::ptr::copy_nonoverlapping(
+        self.0[16..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        core::mem::size_of::<<bool as EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_supplemental(&mut self, x: bool) {
+    let x_le = x.to_little_endian();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[16..].as_mut_ptr(),
+        core::mem::size_of::<<bool as EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
 }
 
 // struct PrecursorT, aligned to 8
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct PrecursorT(pub [u8; 64]);
+pub struct PrecursorT(pub [u8; 96]);
 impl Default for PrecursorT {
   fn default() -> Self {
-    Self([0; 64])
+    Self([0; 96])
   }
 }
 impl core::fmt::Debug for PrecursorT {
@@ -1541,6 +1573,7 @@ impl core::fmt::Debug for PrecursorT {
       .field("parent_index", &self.parent_index())
       .field("isolation_window", &self.isolation_window())
       .field("activation", &self.activation())
+      .field("activation2", &self.activation2())
       .finish()
   }
 }
@@ -1592,14 +1625,16 @@ impl<'a> PrecursorT {
     parent_index: i32,
     isolation_window: &IsolationWindowT,
     activation: &ActivationT,
+    activation2: &ActivationT,
   ) -> Self {
-    let mut s = Self([0; 64]);
+    let mut s = Self([0; 96]);
     s.set_mz(mz);
     s.set_intensity(intensity);
     s.set_charge(charge);
     s.set_parent_index(parent_index);
     s.set_isolation_window(isolation_window);
     s.set_activation(activation);
+    s.set_activation2(activation2);
     s
   }
 
@@ -1740,7 +1775,19 @@ impl<'a> PrecursorT {
 
   #[allow(clippy::identity_op)]
   pub fn set_activation(&mut self, x: &ActivationT) {
-    self.0[48..48 + 16].copy_from_slice(&x.0)
+    self.0[48..48 + 24].copy_from_slice(&x.0)
+  }
+
+  pub fn activation2(&self) -> &ActivationT {
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid struct in this slot
+    unsafe { &*(self.0[72..].as_ptr() as *const ActivationT) }
+  }
+
+  #[allow(clippy::identity_op)]
+  pub fn set_activation2(&mut self, x: &ActivationT) {
+    self.0[72..72 + 24].copy_from_slice(&x.0)
   }
 
 }

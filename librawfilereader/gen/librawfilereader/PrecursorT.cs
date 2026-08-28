@@ -22,10 +22,19 @@ public struct PrecursorT : IFlatbufferObject
   public int ParentIndex { get { return __p.bb.GetInt(__p.bb_pos + 16); } }
   public librawfilereader.IsolationWindowT IsolationWindow { get { return (new librawfilereader.IsolationWindowT()).__assign(__p.bb_pos + 24, __p.bb); } }
   public librawfilereader.ActivationT Activation { get { return (new librawfilereader.ActivationT()).__assign(__p.bb_pos + 48, __p.bb); } }
+  public librawfilereader.ActivationT Activation2 { get { return (new librawfilereader.ActivationT()).__assign(__p.bb_pos + 72, __p.bb); } }
 
-  public static Offset<librawfilereader.PrecursorT> CreatePrecursorT(FlatBufferBuilder builder, double Mz, float Intensity, int Charge, int ParentIndex, double isolation_window_Lower, double isolation_window_Target, double isolation_window_Upper, librawfilereader.DissociationMethod activation_DissociationMethod, double activation_CollisionEnergy) {
-    builder.Prep(8, 64);
-    builder.Prep(8, 16);
+  public static Offset<librawfilereader.PrecursorT> CreatePrecursorT(FlatBufferBuilder builder, double Mz, float Intensity, int Charge, int ParentIndex, double isolation_window_Lower, double isolation_window_Target, double isolation_window_Upper, librawfilereader.DissociationMethod activation_DissociationMethod, double activation_CollisionEnergy, bool activation_Supplemental, librawfilereader.DissociationMethod activation2_DissociationMethod, double activation2_CollisionEnergy, bool activation2_Supplemental) {
+    builder.Prep(8, 96);
+    builder.Prep(8, 24);
+    builder.Pad(7);
+    builder.PutBool(activation2_Supplemental);
+    builder.PutDouble(activation2_CollisionEnergy);
+    builder.Pad(7);
+    builder.PutByte((byte)activation2_DissociationMethod);
+    builder.Prep(8, 24);
+    builder.Pad(7);
+    builder.PutBool(activation_Supplemental);
     builder.PutDouble(activation_CollisionEnergy);
     builder.Pad(7);
     builder.PutByte((byte)activation_DissociationMethod);

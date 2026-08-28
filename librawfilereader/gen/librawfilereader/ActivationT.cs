@@ -18,9 +18,12 @@ public struct ActivationT : IFlatbufferObject
 
   public librawfilereader.DissociationMethod DissociationMethod { get { return (librawfilereader.DissociationMethod)__p.bb.Get(__p.bb_pos + 0); } }
   public double CollisionEnergy { get { return __p.bb.GetDouble(__p.bb_pos + 8); } }
+  public bool Supplemental { get { return 0!=__p.bb.Get(__p.bb_pos + 16); } }
 
-  public static Offset<librawfilereader.ActivationT> CreateActivationT(FlatBufferBuilder builder, librawfilereader.DissociationMethod DissociationMethod, double CollisionEnergy) {
-    builder.Prep(8, 16);
+  public static Offset<librawfilereader.ActivationT> CreateActivationT(FlatBufferBuilder builder, librawfilereader.DissociationMethod DissociationMethod, double CollisionEnergy, bool Supplemental) {
+    builder.Prep(8, 24);
+    builder.Pad(7);
+    builder.PutBool(Supplemental);
     builder.PutDouble(CollisionEnergy);
     builder.Pad(7);
     builder.PutByte((byte)DissociationMethod);

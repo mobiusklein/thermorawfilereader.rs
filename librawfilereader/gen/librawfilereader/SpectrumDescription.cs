@@ -69,7 +69,7 @@ static public class SpectrumDescriptionVerify
       && verifier.VerifyField(tablePos, 8 /*Time*/, 8 /*double*/, 8, false)
       && verifier.VerifyField(tablePos, 10 /*Polarity*/, 1 /*librawfilereader.Polarity*/, 1, false)
       && verifier.VerifyField(tablePos, 12 /*Mode*/, 1 /*librawfilereader.SpectrumMode*/, 1, false)
-      && verifier.VerifyField(tablePos, 14 /*Precursor*/, 64 /*librawfilereader.PrecursorT*/, 8, false)
+      && verifier.VerifyField(tablePos, 14 /*Precursor*/, 96 /*librawfilereader.PrecursorT*/, 8, false)
       && verifier.VerifyTable(tablePos, 16 /*Data*/, librawfilereader.SpectrumDataVerify.Verify, false)
       && verifier.VerifyString(tablePos, 18 /*FilterString*/, false)
       && verifier.VerifyTable(tablePos, 20 /*Acquisition*/, librawfilereader.AcquisitionTVerify.Verify, false)

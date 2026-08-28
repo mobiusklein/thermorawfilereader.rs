@@ -15,6 +15,7 @@ use flatbuffers::{root, root_unchecked, Vector};
 use dotnetrawfilereader_sys::{try_get_runtime, RawVec};
 
 use crate::constants::{IonizationMode, MSOrder, MassAnalyzer, ScanMode, TraceType};
+use crate::r#gen::{ActivationT, DissociationMethod};
 use crate::schema::{
     root_as_spectrum_description, root_as_spectrum_description_unchecked, AcquisitionT,
     ChromatogramDescription as ChromatogramDescriptionT, ExtendedSpectrumDataT, FileDescriptionT,
@@ -100,6 +101,19 @@ impl From<u32> for RawFileReaderError {
             2 => Self::InvalidFormat,
             _ => Self::Error,
         }
+    }
+}
+
+impl ActivationT {
+    /// If the activation method is a valid record or not
+    pub fn is_valid(&self) -> bool {
+        self.dissociation_method() == DissociationMethod::Unknown && self.collision_energy() == 0.0
+    }
+}
+
+impl PrecursorT {
+    pub fn iter_activations(&self) -> impl Iterator<Item = &ActivationT> + '_ {
+        [self.activation(), self.activation2()].into_iter().filter(|v| v.is_valid())
     }
 }
 

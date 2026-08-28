@@ -183,6 +183,7 @@ struct IsolationWindowT {
 struct ActivationT {
     dissociation_method: DissociationMethod;
     collision_energy: float64;
+    supplemental: bool;
 }
 
 table SpectrumData {
@@ -248,6 +249,7 @@ struct PrecursorT {
     parent_index: int32;
     isolation_window: IsolationWindowT;
     activation: ActivationT;
+    activation2: ActivationT;
 }
 
 table InstrumentMethodT {
