@@ -7,7 +7,17 @@ resolver = "2"
 
 members = ["thermorawfilereader", "dotnetrawfilereader-sys", ]
 
+[workspace.package]
+version = "0.7.3"
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/mobiusklein/thermorawfilereader.rs.git"
 
 [workspace.dependencies]
-
 thiserror = "1.0.63"
+netcorehost = { version = "0.18.0", default-features = false, features = [
+    "nethost"
+]}
+
+dotnetrawfilereader-sys = { version = "0.7.3", path="./dotnetrawfilereader-sys" }
+thermorawfilereader = { version = "0.7.3", path = "./thermorawfilereader" }

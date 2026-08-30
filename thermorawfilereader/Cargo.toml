@@ -1,12 +1,13 @@
 [package]
 name = "thermorawfilereader"
-version = "0.7.3"
-edition = "2024"
+
+version = {workspace = true}
+edition = {workspace = true}
+license = {workspace = true}
+repository = {workspace = true}
 
 description = "A (relatively) high level interface to Thermo Fisher's RawFileReader library"
-license = "Apache-2.0"
 
-repository = "https://github.com/mobiusklein/thermorawfilereader.rs.git"
 documentation = "https://docs.rs/thermorawfilereader"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -32,9 +33,7 @@ netcorehost-latest = ["netcorehost/latest", "dotnetrawfilereader-sys/netcorehost
 
 [dependencies]
 flatbuffers = "25.2.10"
-netcorehost = { version = "0.18.0", default-features = false, features = [
-    "nethost"
-]}
+netcorehost = { workspace = true }
 
 dotnetrawfilereader-sys = { version = "0.7.3", path = "../dotnetrawfilereader-sys/", default-features = false}
 bytemuck = "1.18.0"
