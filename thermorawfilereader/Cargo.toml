@@ -35,7 +35,7 @@ netcorehost-latest = ["netcorehost/latest", "dotnetrawfilereader-sys/netcorehost
 flatbuffers = "25.2.10"
 netcorehost = { workspace = true }
 
-dotnetrawfilereader-sys = { version = "0.7.3", path = "../dotnetrawfilereader-sys/", default-features = false}
+dotnetrawfilereader-sys = { workspace = true, default-features = false}
 bytemuck = "1.18.0"
 
 [dev-dependencies]
