@@ -107,7 +107,7 @@ impl From<u32> for RawFileReaderError {
 impl ActivationT {
     /// If the activation method is a valid record or not
     pub fn is_valid(&self) -> bool {
-        self.dissociation_method() == DissociationMethod::Unknown && self.collision_energy() == 0.0
+        self.dissociation_method() != DissociationMethod::Unknown && self.collision_energy() != 0.0
     }
 }
 
