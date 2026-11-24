@@ -400,7 +400,7 @@ namespace librawfilereader
         }
 
         private const string InjectionTimeKey = "Ion Injection Time (ms)";
-        private const string ScanEventKey = "Scan Evnet";
+        private const string ScanEventKey = "Scan Event";
         private const string MasterScanKey = "Master Scan Number";
         private const string MonoisotopicMZKey = "Monoisotopic M/Z";
         private const string ChargeStateKey = "Charge State";
