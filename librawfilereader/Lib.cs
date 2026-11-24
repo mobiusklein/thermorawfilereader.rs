@@ -610,7 +610,7 @@ namespace librawfilereader
 
             if (msLevel > 1 && isolationWidth == 0.0)
             {
-                isolationWidth = filter.GetIsolationWidth(msLevel - 2) / 2;
+                isolationWidth = Math.Max(filter.GetIsolationWidth(msLevel - 2), 0.0);
             }
             if (msLevel > 1)
             {
