@@ -627,7 +627,7 @@ namespace librawfilereader
                 }
 
                 List<ActivationProperties> activation = ExtractActivation(scanNumber, msLevel, filter);
-                IsolationWindow window = new IsolationWindow(isolationWidth, monoisotopicMZ, isolationOffset);
+                IsolationWindow window = new IsolationWindow(isolationWidth, filter.GetMass(msLevel - 2), isolationOffset);
                 PrecursorProperties props = new PrecursorProperties
                 {
                     PrecursorCharge = precursorCharge,
