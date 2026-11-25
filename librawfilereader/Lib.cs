@@ -372,7 +372,7 @@ namespace librawfilereader
             }
             var lastReaction = filter.GetReaction(lastIndex);
             List<ActivationProperties> activations = [HandleReaction(lastReaction)];
-            if (filter.SupplementalActivation == TriState.On)
+            if (filter.SupplementalActivation == TriState.On && lastIndex > 0)
             {
                 bool reverse = false;
                 bool isSupplemental = false;
@@ -987,7 +987,7 @@ namespace librawfilereader
 
             for(var i = 0; i < trailers.Length; i++) {
                 var label = trailers.Labels[i];
-                var trimmed = label.Substring(0, label.Length - 1);
+                var trimmed = label.TrimEnd(':');
                 var labelOffset = builder.CreateString(trimmed);
                 var valueOffset = builder.CreateString(trailers.Values[i]);
                 var trailerOffset = TrailerValueT.CreateTrailerValueT(builder, labelOffset, valueOffset);
