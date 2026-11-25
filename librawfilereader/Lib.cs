@@ -595,7 +595,7 @@ namespace librawfilereader
             if (!GetDoubleTrailerExtraFor(accessor, scanNumber, OrbitrapResolutionKey, out resolution)) {
                 GetDoubleTrailerExtraFor(accessor, scanNumber, FTResolutionKey, out resolution);
             };
-            resolution_opt = resolution == 0.0 ? null : (float)resolution;
+            resolution_opt = resolution <= 0.0 ? null : (float)resolution;
 
             AcquisitionProperties acquisitionProperties = new AcquisitionProperties(
                 injectionTime, new List<double>(), filter.MassAnalyzer, stats.LowMass, stats.HighMass, scanEventNum, resolution_opt);
