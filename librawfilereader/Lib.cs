@@ -400,8 +400,8 @@ namespace librawfilereader
         }
 
         private const string InjectionTimeKey = "Ion Injection Time (ms)";
-        private const string ScanEventKey = "Scan Evnet";
-        private const string MasterScanKey = "Master Scan";
+        private const string ScanEventKey = "Scan Event";
+        private const string MasterScanKey = "Master Scan Number";
         private const string MonoisotopicMZKey = "Monoisotopic M/Z";
         private const string ChargeStateKey = "Charge State";
         private static readonly string[] IsolationLevelKeys = [
@@ -610,7 +610,7 @@ namespace librawfilereader
 
             if (msLevel > 1 && isolationWidth == 0.0)
             {
-                isolationWidth = filter.GetIsolationWidth(msLevel - 2) / 2;
+                isolationWidth = Math.Max(filter.GetIsolationWidth(msLevel - 2), 0.0);
             }
             if (msLevel > 1)
             {
@@ -627,7 +627,7 @@ namespace librawfilereader
                 }
 
                 List<ActivationProperties> activation = ExtractActivation(scanNumber, msLevel, filter);
-                IsolationWindow window = new IsolationWindow(isolationWidth, monoisotopicMZ, isolationOffset);
+                IsolationWindow window = new IsolationWindow(isolationWidth, filter.GetMass(msLevel - 2), isolationOffset);
                 PrecursorProperties props = new PrecursorProperties
                 {
                     PrecursorCharge = precursorCharge,
